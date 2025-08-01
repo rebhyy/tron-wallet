@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/tabs/tabs.dart';
 import 'package:on_chain_wallet/marketcap/prices/live_currency.dart';
-import 'package:on_chain_wallet/repository/repository.dart';
+import 'package:on_chain_wallet/repository/core/repository.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
 import 'dest_controller.dart';
@@ -334,14 +334,18 @@ class SwapStateController
   }
 
   Future<APPSwapSettings> _readSwapSettings() async {
-    final data = await read(StorageConst.appSetting);
+    final data = await queryStorageData(
+        storage: APPDatabaseConst.appSwapStorage,
+        storageId: APPDatabaseConst.defaultStorageId);
     if (data == null) return APPSwapSettings();
-    return APPSwapSettings.deserialize(hex: data);
+    return APPSwapSettings.deserialize(bytes: data);
   }
 
   Future<void> _writeSwapSettings() async {
-    await write(
-        key: StorageConst.appSetting, value: _settings.toCbor().toCborHex());
+    await insertStorage(
+        storage: APPDatabaseConst.appSwapStorage,
+        storageId: APPDatabaseConst.defaultStorageId,
+        value: _settings);
   }
 
   Future<void> updateSettings(ONUPDATEPROVIDERS onUpdate) async {
@@ -411,5 +415,5 @@ class SwapStateController
   }
 
   @override
-  String get repositoryStorageId => StorageConst.swapSetting;
+  String get tableId => APPDatabaseConst.mainTableName;
 }

@@ -4,11 +4,10 @@ import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/web3/controllers/controllers.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/stellar/stellar.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
-import 'package:on_chain_wallet/wallet/models/transaction/networks/stellar.dart';
+import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart'
     show Web3RequestExceptionConst;
 import 'package:on_chain_wallet/wallet/web3/networks/stellar/methods/methods.dart';
@@ -68,9 +67,19 @@ class WebStellarSignTransactionStateController
                   IWeb3StellarTransactionRawData>
               signedTx,
           required SubmitTransactionSuccess<
-                  IWeb3StellarSignedTransaction<IWeb3StellarTransactionRawData>>
+                  IWeb3StellarSignedTransaction<
+                      IWeb3StellarTransactionRawData>>?
               txId}) async {
-    return [];
+    if (txId == null) return [];
+    final transaction = StellarWalletTransaction(
+        txId: txId.txId,
+        network: network,
+        web3Client: web3ClientInfo(),
+        type: WalletTransactionType.web3Tx);
+    return [
+      IWalletTransaction(
+          transaction: transaction, account: signedTx.transaction.account)
+    ];
   }
 
   @override

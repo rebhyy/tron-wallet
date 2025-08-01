@@ -94,7 +94,6 @@ class RippleWeb3JSStateHandler extends Web3JSStateHandler<
   @override
   Future<Web3MessageCore> request(Web3JsClientRequest params,
       {Web3ChainDefaultIdnetifier? network}) async {
-    Logg.log("callled $network");
     try {
       final state = await getState();
       final method = Web3XRPRequestMethods.fromName(params.request.method);

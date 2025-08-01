@@ -4,7 +4,7 @@ import 'package:on_chain/ada/src/models/certificate/core/types.dart';
 import 'package:on_chain/ada/src/provider/blockfrost/models/models/epoch_parameters.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 
 mixin ADATransactionCertificateController on BaseADATransactionController {
   ADAEpochParametersResponse get latestEpochParams;

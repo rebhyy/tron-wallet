@@ -17,19 +17,15 @@ base mixin CosmosChainRepository on Chain<
   CosmosAccountIBCChannelIds _channelId = CosmosAccountIBCChannelIds();
   CosmosAccountIBCChannelIds get channelId => _channelId;
   Future<void> _loadChannelIds() async {
-    try {
-      final data =
-          await _storage.readStorage(storage: CosmosChainStorage.channelIds);
-      if (data == null) return;
-      _channelId = CosmosAccountIBCChannelIds.deserialize(hex: data);
-    } catch (_) {
-      assert(false, "load cosmos channel ids failed.");
-    }
+    final data = await _storage.queryChainStorage(
+        storage: CosmosChainStorage.channelIds);
+    if (data == null) return;
+    _channelId = CosmosAccountIBCChannelIds.deserialize(bytes: data);
   }
 
   Future<void> _saveChannelId(CosmosIBCChannelId channel) async {
     _channelId.addChannel(channel);
-    await _storage.writeStorageItem(
-        storage: CosmosChainStorage.channelIds, item: _channelId);
+    await _storage.insertChainStorage(
+        storage: CosmosChainStorage.channelIds, value: _channelId);
   }
 }

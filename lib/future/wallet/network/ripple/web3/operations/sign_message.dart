@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/crypto/requets/messages.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/page.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';

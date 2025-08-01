@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:on_chain_bridge/models/size/models/rect.dart';
 import 'package:on_chain_wallet/app/core.dart'
-    show APPSetting, APPWalletSetting, StateConst, StorageConst;
+    show APPSetting, APPWalletSetting, StateConst, APPDatabaseConst;
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/core/observer.dart';
@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/app/models/models/currencies.dart';
 import 'package:on_chain_wallet/future/tools/frame_tracker/desktop_frame_tracker.dart';
 import 'package:on_chain_wallet/future/wallet/controller/tabs/tabs.dart';
-import 'package:on_chain_wallet/repository/repository.dart';
+import 'package:on_chain_wallet/repository/core/repository.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/status.dart';
 import 'wallet/ui_wallet.dart';
 import 'wallet/cross/cross.dart'
@@ -35,11 +35,7 @@ class APPStatus {
 }
 
 class WalletProvider extends StateController
-    with
-        BaseRepository,
-        APPRepository,
-        DesktopFrameTracker,
-        WalletProviderTabController {
+    with BaseRepository, DesktopFrameTracker, WalletProviderTabController {
   WalletProvider(
       {required APPSetting appSetting,
       required this.observer,
@@ -62,6 +58,13 @@ class WalletProvider extends StateController
   @override
   APPSetting get appSetting => _appSetting;
 
+  Future<void> _saveAppSetting() async {
+    await insertStorage(
+        storage: APPDatabaseConst.appSettingStorage,
+        storageId: APPDatabaseConst.defaultStorageId,
+        value: _appSetting);
+  }
+
   void toggleBrightness() {
     ThemeController.toggleBrightness();
     notify(StateConst.main);
@@ -69,7 +72,7 @@ class WalletProvider extends StateController
     _appSetting = _appSetting.copyWith(
         appBrightness: ThemeController.appBrightness,
         appColor: ThemeController.appColorHex);
-    saveAppSetting(_appSetting);
+    _saveAppSetting();
   }
 
   void changeColor(Color color) {
@@ -78,38 +81,43 @@ class WalletProvider extends StateController
     _appSetting = _appSetting.copyWith(
         appBrightness: ThemeController.appBrightness,
         appColor: ThemeController.appColorHex);
-    saveAppSetting(_appSetting);
+    _saveAppSetting();
   }
 
   @override
   void updateWalletSetting(APPWalletSetting setting) {
     _appSetting = _appSetting.copyWith(walletSetting: setting);
-    saveAppSetting(_appSetting);
+    _saveAppSetting();
   }
 
   void changeCurrency(Currency? currency) {
     if (currency == null || _appSetting.currency == currency) return;
     this.currency.changeCurrency(currency);
     _appSetting = _appSetting.copyWith(currency: currency);
-    saveAppSetting(_appSetting);
+    _saveAppSetting();
   }
 
   Future<void> _initWallet() async {
-    final init = await MethodUtils.call(() async {
-      return await wallet.init();
-    });
-    if (init.hasError) {
-      _status = APPStatus.error(init.error!.tr);
+    if (!appSetting.config.dbSupported) {
+      _status = APPStatus.error("database_initialization_failed_desc".tr);
     } else {
-      _status = APPStatus.ready;
+      final init = await MethodUtils.call(() async {
+        return await wallet.init();
+      });
+      if (init.hasError) {
+        _status = APPStatus.error(init.error!.tr);
+      } else {
+        _status = APPStatus.ready;
+      }
     }
+
     notify();
   }
 
   @override
   Future<void> onUpdateFrame(WidgetRect rect) async {
     _appSetting = _appSetting.copyWith(size: rect);
-    await saveAppSetting(_appSetting);
+    await _saveAppSetting();
   }
 
   StreamSubscription<WalletActionEvent>? _onWalletStatus;
@@ -154,7 +162,7 @@ class WalletProvider extends StateController
   }
 
   @override
-  String get repositoryStorageId => StorageConst.appStorageKeyId;
+  String get tableId => APPDatabaseConst.mainTableName;
 
   @override
   bool get supportWebView => _appSetting.config.supportWebView;

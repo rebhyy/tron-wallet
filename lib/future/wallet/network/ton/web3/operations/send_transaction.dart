@@ -9,7 +9,7 @@ import 'package:on_chain_wallet/future/wallet/network/ton/web3/controllers/contr
 import 'package:on_chain_wallet/future/wallet/network/ton/web3/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ton/client/ton.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
@@ -94,8 +94,20 @@ class WebTonSendTransactionStateController
       buildWalletTransaction(
           {required IWeb3TonSignedTransaction<IWeb3TonTransactionRawData>
               signedTx,
-          required SubmitTransactionSuccess txId}) async {
-    return[ ];
+          required SubmitTransactionSuccess? txId}) async {
+    if (txId == null) return [];
+    final total = signedTx.transaction.transactionData.messages
+        .map((e) => e.amount.balance)
+        .sum;
+    final transaction = TonWalletTransaction(
+        txId: txId.txId,
+        network: network,
+        totalOutput:
+            WalletTransactionIntegerAmount(amount: total, network: network));
+    return [
+      IWalletTransaction(
+          transaction: transaction, account: signedTx.transaction.account)
+    ];
   }
 
   @override

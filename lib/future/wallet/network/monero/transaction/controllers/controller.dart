@@ -75,11 +75,15 @@ abstract class MoneroTransactionStateController
   }
 
   @override
-  Widget onTxCompleteWidget(IMoneroSignedTransaction signedTx,
-      MoneroWalletTransaction transaction, SubmitTransactionSuccess txId) {
+  Widget onTxCompleteWidget(
+      {required IMoneroSignedTransaction signedTx,
+      required MoneroWalletTransaction transaction,
+      required SubmitTransactionSuccess<IMoneroSignedTransaction> txId,
+      required MoneroChain account}) {
     return SuccessTransactionTextView(
-      network: network,
-      txIds: [txId.txId],
+      txId: txId.txId,
+      account: account,
+      transaction: transaction,
       additionalWidget: (context) {
         return FixedElevatedButton(
             onPressed: () {

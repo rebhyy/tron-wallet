@@ -1,51 +1,25 @@
 part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
-class ChainStorageManagerUtils {
-  /// storage id for save chain data
-  static String buildStorageId(int networkId, String walletid) {
-    return "${StorageConst.walletStorageKey}${walletid}_${networkId.toString()}";
-  }
+/// for chain storage management networkid and [NetworkType.id] allowed to [100000 - 1]
+class ChainStorageManager with BaseRepository {
+  static const int maxAddressItemLimit = 300;
 
-  /// base storage id for save network stroage ids like tx,token, and ...
-  static String buildChainStorageId(int networkId, String walletid) {
-    return "${StorageConst.chainSorageKey}${walletid}_${networkId.toString()}_";
-  }
-
-  static String buildSharedStorageId(NetworkType network, String walletid) {
-    return "${StorageConst.chainSharedSorageKey}${walletid}_${network.value}_";
-  }
-
-  static String buildChainStorageStorageId(String chainStorageId, int storageId,
-      {String? suffix}) {
-    return "$chainStorageId${storageId}_${suffix ?? ''}";
-  }
-
-  static (int, String?) cleanUpChainStorageKey(
-      {required String key, required String chainStorageId}) {
-    assert(key.startsWith(chainStorageId), "invalid chain storage key");
-    final withoutChain = key.replaceFirst(chainStorageId, '');
-    final parts = withoutChain.split('_');
-    final int storageId = int.parse(parts[0]);
-    final suffix = withoutChain.substring(parts[0].length + 1);
-    final String? prefix = suffix.isEmpty ? null : suffix;
-    return (storageId, prefix);
-  }
-}
-
-class ChainStorageManager {
   final ChainConfig config;
+
+  /// storage id
   final int networkId;
+
+  /// table name
   final String id;
-  final String storageId;
-  final String chainStorageId;
-  final String sharedStorageId;
-  ChainStorageManager._(
-      {required this.networkId,
-      required this.id,
-      required this.storageId,
-      required this.chainStorageId,
-      required this.config,
-      required this.sharedStorageId});
+
+  /// shared storage id [NetworkType.id]
+  final NetworkType networkType;
+  ChainStorageManager._({
+    required this.networkId,
+    required this.id,
+    required this.config,
+    required this.networkType,
+  });
   factory ChainStorageManager(
       {required WalletNetwork network,
       required String id,
@@ -53,152 +27,171 @@ class ChainStorageManager {
     return ChainStorageManager._(
         networkId: network.value,
         id: id,
-        storageId: ChainStorageManagerUtils.buildStorageId(network.value, id),
-        chainStorageId:
-            ChainStorageManagerUtils.buildChainStorageId(network.value, id),
         config: config,
-        sharedStorageId:
-            ChainStorageManagerUtils.buildSharedStorageId(network.type, id));
+        networkType: network.type);
   }
-  String _buildStorageKey(ChainStorageKey storage, {String? suffix}) {
-    assert(config.storageKeys.contains(storage), "invalid storage key");
-    return ChainStorageManagerUtils.buildChainStorageStorageId(
-        chainStorageId, storage.storageId,
-        suffix: suffix);
-  }
-
-  String _buildSharedStorageKey(ChainStorageKey storage, {String? suffix}) {
-    assert(config.storageKeys.contains(storage), "invalid storage key");
-    assert(storage.isSharedStorage, "invalid storage key");
-    return ChainStorageManagerUtils.buildChainStorageStorageId(
-        sharedStorageId, storage.storageId,
-        suffix: suffix);
-  }
-
-  Future<String?> readStorage(
-      {required ChainStorageKey storage, String? identifier}) async {
-    final String key = _buildStorageKey(storage, suffix: identifier);
-    return await AppNativeMethods.platform.readSecure(key);
-  }
-
-  Future<String?> readSharedStorage(
-      {required ChainStorageKey storage, String? identifier}) async {
-    final String key = _buildSharedStorageKey(storage, suffix: identifier);
-    return await AppNativeMethods.platform.readSecure(key);
+  Future<List<ITableDataStructA>> _queriesStorage(
+      {required int storage,
+      ChainStorageKey? storageKey,
+      String? key,
+      String? keyA,
+      int? offset,
+      int? limit,
+      int? createdAtLt,
+      int? createdAtGt,
+      IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc}) async {
+    return await queriesStorage(
+        storageId: storageKey?.storageId,
+        storage: storage,
+        key: key,
+        keyA: keyA,
+        offset: offset,
+        limit: limit,
+        ordering: ordering,
+        createdAtLt: createdAtLt,
+        createdAtGt: createdAtGt);
   }
 
-  Future<List<List<int>>> readStorages(
-      {required ChainStorageKey storage, String? identifier}) async {
-    final String key = _buildStorageKey(storage, suffix: identifier);
-    final data = await AppNativeMethods.platform.readAllSecure(prefix: key);
-    return data.values.map(BytesUtils.fromHexString).toList();
+  Future<List<List<int>>> queriesChainStorage(
+      {required ChainStorageKey storage,
+      ChainAccount? address,
+      String? keyA,
+      int? offset,
+      int? limit,
+      IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc}) async {
+    final data = await _queriesStorage(
+        storage: networkId,
+        key: address?.identifier,
+        storageKey: storage,
+        keyA: keyA,
+        offset: offset,
+        limit: limit,
+        ordering: ordering);
+    return data.map((e) => e.data).toList();
   }
 
-  Future<List<List<int>>> readAccountStorages(
-      {required ChainAccount account,
-      required ChainStorageKey storageKey}) async {
-    assert(account.network == networkId, "invalid chain account.");
-    final String key = _buildStorageKey(storageKey, suffix: account.identifier);
-    final keys = await AppNativeMethods.platform.readAllSecure(prefix: key);
-    return keys.values.map(BytesUtils.fromHexString).toList();
+  Future<List<List<int>>> queriesChainSharedStorage(
+      {required ChainStorageKey storage,
+      String? key,
+      String? keyA,
+      int? offset,
+      int? limit,
+      IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc}) async {
+    final data = await _queriesStorage(
+        storageKey: storage,
+        key: key,
+        storage: networkType.id,
+        keyA: keyA,
+        offset: offset,
+        limit: limit,
+        ordering: ordering);
+    return data.map((e) => e.data).toList();
   }
 
-  Future<List<int>?> readAccountStorage(
-      {required ChainAccount account,
-      required ChainStorageKey storageKey}) async {
-    assert(account.network == networkId, "invalid chain account.");
-    final String key = _buildStorageKey(storageKey, suffix: account.identifier);
-    final data = await AppNativeMethods.platform.readSecure(key);
-    if (data == null) return null;
-    return BytesUtils.fromHexString(data);
+  Future<List<int>?> queryChainStorage({
+    required ChainStorageKey storage,
+    ChainAccount? address,
+    String? keyA,
+  }) async {
+    return await queryStorageData(
+        storage: networkId,
+        storageId: storage.storageId,
+        key: address?.identifier,
+        keyA: keyA);
   }
 
-  Future<void> writeAccountStorage(
-      {required ChainAccount account,
-      required ChainStorageKey storageKey,
-      CborSerializable? item,
-      String? identifier}) async {
-    String suffix = account.identifier;
-    if (identifier != null) {
-      suffix = "$suffix-$identifier";
-    }
-    await writeStorageItem(storage: storageKey, item: item, identifier: suffix);
+  Future<bool> insertChainStorage(
+      {required CborSerializable value,
+      required ChainStorageKey storage,
+      ChainAccount? address,
+      String? keyA}) async {
+    final data = await insertStorage(
+        storage: networkId,
+        storageId: storage.storageId,
+        key: address?.identifier,
+        keyA: keyA,
+        value: value);
+    return data;
   }
 
-  Future<void> cleanAddressStorage(
-      {required ChainAccount account,
-      required ChainStorageKey storageKey}) async {
-    final String key = _buildStorageKey(storageKey, suffix: account.identifier);
-    await AppNativeMethods.platform.removeAllSecure(prefix: key);
+  Future<bool> removeChainStorage(
+      {ChainStorageKey? storage, ChainAccount? address, String? keyA}) async {
+    return await removeStorage(
+        storage: networkId,
+        storageId: storage?.storageId,
+        key: address?.identifier,
+        keyA: keyA);
+  }
+
+  Future<List<int>?> queryChainSharedStorage({
+    required ChainStorageKey storage,
+    String? key,
+    String? keyA,
+  }) async {
+    return queryStorageData(
+      storage: networkType.id,
+      storageId: storage.storageId,
+      key: key,
+      keyA: keyA,
+    );
+  }
+
+  Future<bool> insertChainSharedStorage(
+      {required CborSerializable value,
+      required ChainStorageKey storage,
+      String? key,
+      String? keyA}) async {
+    return insertStorage(
+        storage: networkType.id,
+        storageId: storage.storageId,
+        key: key,
+        keyA: keyA,
+        value: value);
   }
 
   Future<List<WalletBackupChainRepository>> readAllRepositories() async {
-    final shared =
-        await AppNativeMethods.platform.readAllSecure(prefix: sharedStorageId);
-    final keys =
-        await AppNativeMethods.platform.readAllSecure(prefix: chainStorageId);
+    final shared = await _queriesStorage(
+      storage: networkType.id,
+    );
+    final keys = await _queriesStorage(storage: networkId);
     List<WalletBackupChainRepository> chainRepositories = [];
-    for (final i in keys.entries) {
-      final storageKey = ChainStorageManagerUtils.cleanUpChainStorageKey(
-          key: i.key, chainStorageId: chainStorageId);
+    for (final i in keys) {
       final storage = config.storageKeys
-          .firstWhereOrNull((e) => e.storageId == storageKey.$1);
-      // assert(storage != null, "invalid storage!");
+          .firstWhereOrNull((e) => e.storageId == i.storageId);
       if (storage == null) {
-        NetworkType.monero;
         continue;
       }
       final repository = WalletBackupChainRepository(
-          identifier: storageKey.$2,
-          storageID: storageKey.$1,
-          value: i.value,
-          networkID: networkId);
+          identifier: i.key,
+          storageID: storage.storageId,
+          value: i.data,
+          networkID: networkId,
+          identifier2: i.keyA,
+          createdAt: i.createdAt);
       chainRepositories.add(repository);
     }
     List<WalletBackupChainRepository> sharedRepositories = [];
-    for (final i in shared.entries) {
-      final storageKey = ChainStorageManagerUtils.cleanUpChainStorageKey(
-          key: i.key, chainStorageId: sharedStorageId);
+    for (final i in shared) {
       final storage = config.storageKeys
-          .firstWhereOrNull((e) => e.storageId == storageKey.$1);
+          .firstWhereOrNull((e) => e.storageId == i.storageId);
       assert(storage != null, "unknow storage key ");
       assert(storage?.isSharedStorage == true, "unknow storage key ");
       if (storage == null || !storage.isSharedStorage) continue;
       final repository = WalletBackupChainRepository(
-          identifier: storageKey.$2,
-          storageID: storageKey.$1,
-          value: i.value,
-          networkID: networkId);
+          storageID: storage.storageId,
+          value: i.data,
+          networkID: networkId,
+          identifier: i.key,
+          identifier2: i.keyA,
+          createdAt: i.createdAt);
       sharedRepositories.add(repository);
     }
-    assert(() {
-      for (final i in chainRepositories) {
-        final storageKey = config.storageKeys
-            .firstWhereOrNull((e) => e.storageId == i.storageID);
-        if (storageKey == null) return false;
-        final String key = _buildStorageKey(storageKey, suffix: i.identifier);
-
-        if (keys.containsKey(key)) return true;
-        return false;
-      }
-      return true;
-    }(), "invalid storage id");
-    assert(() {
-      for (final i in sharedRepositories) {
-        final storageKey = config.storageKeys
-            .firstWhereOrNull((e) => e.storageId == i.storageID);
-        if (storageKey == null) return false;
-        final String key =
-            _buildSharedStorageKey(storageKey, suffix: i.identifier);
-        if (!shared.containsKey(key)) return false;
-      }
-      return true;
-    }(), "invalid shared storage id");
     return [...chainRepositories, ...sharedRepositories];
   }
 
   Future<void> restoreChainRepositories(
       List<WalletBackupChainRepository> repositories) async {
+    List<ITableInsertOrUpdateStructA> params = [];
     for (final i in repositories) {
       if (i.networkID != networkId) {
         throw WalletExceptionConst.invalidData(
@@ -208,77 +201,28 @@ class ChainStorageManager {
           .firstWhereOrNull((e) => e.storageId == i.storageID);
       assert(storageKey != null, "unknown storage key");
       if (storageKey == null) continue;
-      if (storageKey.isSharedStorage) {
-        await _writeSharedStorageItem(
-            storage: storageKey, item: i.value, identifier: i.identifier);
-      } else {
-        await _writeStorageItem(
-            storage: storageKey, item: i.value, identifier: i.identifier);
-      }
+      final createdAt = i.createdAt;
+      final param = ITableInsertOrUpdateStructA(
+          data: i.value,
+          storage: storageKey.isSharedStorage ? networkType.id : networkId,
+          storageId: storageKey.storageId,
+          key: i.identifier,
+          keyA: i.identifier2,
+          createdAt: createdAt == null
+              ? null
+              : DateTimeUtils.fromSecondsSinceEpoch(createdAt),
+          tableName: tableId);
+      params.add(param);
     }
-  }
 
-  Future<void> _write({required String key, required String? item}) async {
-    if (item == null) {
-      await AppNativeMethods.platform.removeSecure(key);
-      return;
-    }
-    await AppNativeMethods.platform.writeSecure(key, item);
+    await insertAllStorage(params);
   }
-
-  Future<void> _writeStorageItem(
-      {required ChainStorageKey storage,
-      required String? item,
-      String? identifier}) async {
-    final String key = _buildStorageKey(storage, suffix: identifier);
-    await _write(key: key, item: item);
-  }
-
-  Future<void> writeStorageItem(
-      {required ChainStorageKey storage,
-      required CborSerializable? item,
-      String? identifier}) async {
-    await _writeStorageItem(
-        storage: storage,
-        item: item?.toCbor().toCborHex(),
-        identifier: identifier);
-  }
-
-  Future<void> _writeSharedStorageItem(
-      {required ChainStorageKey storage,
-      required String? item,
-      String? identifier}) async {
-    final String key = _buildSharedStorageKey(storage, suffix: identifier);
-    await _write(key: key, item: item);
-  }
-
-  Future<void> writeSharedStorageItem(
-      {required ChainStorageKey storage,
-      required CborSerializable? item,
-      String? identifier}) async {
-    await _writeSharedStorageItem(
-        storage: storage,
-        item: item?.toCbor().toCborHex(),
-        identifier: identifier);
-  }
-
-  int _latestId = 0;
 
   Future<void> saveAccount(Chain chain) async {
-    if (chain.network.value != networkId || chain.id != id) {
-      throw WalletExceptionConst.invalidData(messsage: "invalid network id.");
-    }
-    final data = chain.toCbor().encode();
-    final latestId = Crc32.quickIntDigest(data);
-    if (_latestId == latestId) {
-      return;
-    }
-    _latestId = latestId;
-    await AppNativeMethods.platform
-        .writeSecure(storageId, BytesUtils.toHexString(data));
+    await insertChainStorage(
+        value: chain, storage: AccountChainStorageKey.account);
   }
 
-  Future<String?> loadAccount() async {
-    return await AppNativeMethods.platform.readSecure(storageId);
-  }
+  @override
+  String get tableId => id;
 }

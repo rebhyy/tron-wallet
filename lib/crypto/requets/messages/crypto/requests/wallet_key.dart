@@ -13,10 +13,10 @@ class CryptoRequestWalletKey
       : key = key.asImmutableBytes,
         checksum = checksum.asImmutableBytes;
   factory CryptoRequestWalletKey.fromString(
-      {required String key, required String checksum}) {
-    final checksumBytes = BytesUtils.fromHexString(checksum);
+      {required String key, required List<int> checksum}) {
+    // final checksumBytes = BytesUtils.fromHexString(checksum);
     final keyBytes = StringUtils.encode(key);
-    return CryptoRequestWalletKey._(key: keyBytes, checksum: checksumBytes);
+    return CryptoRequestWalletKey._(key: keyBytes, checksum: checksum);
   }
 
   factory CryptoRequestWalletKey.deserialize(

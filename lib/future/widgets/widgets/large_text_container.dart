@@ -41,14 +41,11 @@ class LargeTextContainer extends StatelessWidget {
           return Row(
             children: [
               Expanded(
-                  child: ConditionalWidget(
-                enable: copyable,
-                onActive: (context) => CopyableTextWidget(
-                    text: text, maxLines: maxLines, color: color),
-                onDeactive: (context) => Text(
-                  text,
-                  style: context.textTheme.bodyMedium?.copyWith(color: color),
-                ),
+                  child: Text(
+                text,
+                style: context.textTheme.bodyMedium?.copyWith(color: color),
+                maxLines: maxLines,
+                overflow: TextOverflow.ellipsis,
               )),
               IconButton(
                   onPressed: () {
@@ -61,11 +58,15 @@ class LargeTextContainer extends StatelessWidget {
         }
         return ConditionalWidget(
           enable: copyable,
-          onActive: (context) =>
-              CopyableTextWidget(text: text, maxLines: maxLines, color: color),
+          onActive: (context) => CopyableTextWidget(
+            text: text,
+            maxLines: maxLines,
+            color: color,
+          ),
           onDeactive: (context) => Text(
             text,
             style: context.textTheme.bodyMedium?.copyWith(color: color),
+            maxLines: maxLines,
           ),
         );
       },

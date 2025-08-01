@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain/solidity/abi/abi.dart';
-import 'package:on_chain_wallet/app/constant/global/link.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/operations/typed_data.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/page.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/networks/ethereum/models/typed_data.dart';
 
@@ -25,20 +24,14 @@ class Web3EthereumSignTypedDataStateView extends StatelessWidget {
         domain: controller.params.domain,
       ),
       WidgetConstant.height20,
+      Text("message".tr, style: context.textTheme.titleMedium),
+      WidgetConstant.height8,
       ContainerWithBorder(
         enableTap: false,
         padding: EdgeInsets.zero,
         child: APPExpansionListTile(
           title:
-              Text("message".tr, style: context.onPrimaryTextTheme.titleMedium),
-          subtitle: TextAndLinkView(
-            text: "eth_sign_typed_data_desc"
-                .tr
-                .replaceOne(controller.params.method.name),
-            url: LinkConst.aboutEthereumTypedData,
-            linkDesc: "read_more".tr,
-            style: context.onPrimaryTextTheme.bodyMedium,
-          ),
+              Text("message".tr, style: context.onPrimaryTextTheme.bodyMedium),
           children:
               List.generate(controller.params.typedDataJson.length, (index) {
             final key = controller.params.typedDataJson.keys.elementAt(index);

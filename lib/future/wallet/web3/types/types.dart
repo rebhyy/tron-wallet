@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
@@ -43,11 +44,44 @@ class Web3UpdatePermissionRequest {
     return requiredPermissions;
   }
 
-  Web3UpdatePermissionRequest(
-      {this.lockedChains = const [],
-      this.lockedNetworks = const [],
+  Web3UpdatePermissionRequest._(
+      {List<Chain> lockedChains = const [],
+      List<NetworkType> lockedNetworks = const [],
       required this.authentication,
-      this.client});
+      this.client})
+      : lockedChains = lockedChains.immutable,
+        lockedNetworks = lockedNetworks.immutable;
+  factory Web3UpdatePermissionRequest.chain(
+      {List<Chain> lockedChains = const [],
+      required Web3APPAuthentication authentication,
+      Web3ClientInfo? client}) {
+    return Web3UpdatePermissionRequest._(
+        authentication: authentication,
+        lockedChains: lockedChains,
+        client: client,
+        lockedNetworks: lockedChains
+            .map((e) => e.network.type.isBitcoin
+                ? NetworkType.bitcoinAndForked
+                : e.network.type)
+            .toSet()
+            .toList());
+  }
+  factory Web3UpdatePermissionRequest(
+      {required Web3APPAuthentication authentication, Web3ClientInfo? client}) {
+    return Web3UpdatePermissionRequest._(
+      authentication: authentication,
+      client: client,
+    );
+  }
+  factory Web3UpdatePermissionRequest.network(
+      {List<NetworkType> networks = const [],
+      required Web3APPAuthentication authentication,
+      Web3ClientInfo? client}) {
+    return Web3UpdatePermissionRequest._(
+        authentication: authentication,
+        client: client,
+        lockedNetworks: networks.toSet().toList());
+  }
   bool get hasLockedNetwork => lockedNetworks.isNotEmpty;
   bool get hasLockedChain => lockedChains.isNotEmpty;
   bool networkDisabled(NetworkType network) {

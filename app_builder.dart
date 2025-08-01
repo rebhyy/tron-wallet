@@ -541,9 +541,13 @@ class _IoWebViewScriptsBuilder {
     File file = File("assets/webview/script.js.deps");
     file.deleteSync(recursive: true);
     file = File("assets/webview/script.js");
-    file.copySync(
-      r'/Users/macbookpro/Documents/projects/onchain_web3_js_examples/public/webview.js',
-    );
+    if (File(
+            "/Users/macbookpro/Documents/projects/onchain_web3_js_examples/public/webview.js")
+        .existsSync()) {
+      file.copySync(
+        r'/Users/macbookpro/Documents/projects/onchain_web3_js_examples/public/webview.js',
+      );
+    }
   }
 
   static Future<void> buildWebViewPage(
@@ -565,9 +569,13 @@ class _IoWebViewScriptsBuilder {
     File file = File("assets/webview/script_page.js.deps");
     file.deleteSync(recursive: true);
     file = File("assets/webview/script_page.js");
-    file.copySync(
-      r'/Users/macbookpro/Documents/projects/onchain_web3_js_examples/public/webview_page.js',
-    );
+    if (File(
+            r'/Users/macbookpro/Documents/projects/onchain_web3_js_examples/public/webview_page.js')
+        .existsSync()) {
+      file.copySync(
+        r'/Users/macbookpro/Documents/projects/onchain_web3_js_examples/public/webview_page.js',
+      );
+    }
   }
 }
 

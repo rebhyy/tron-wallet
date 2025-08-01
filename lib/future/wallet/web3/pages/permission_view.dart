@@ -110,7 +110,6 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
   late Web3APPAuthentication application;
   List<Web3AccountAcitvity> activities = [];
   String applicationName = "";
-  // NetworkType? get lockedNetwork => widget.web3RequestController?.network;
   NetworkType chainType = NetworkType.ethereum;
   bool showUpdateButton = false;
   int _selectedIndex = 1;
@@ -150,6 +149,7 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
     application = currentApplication.clone();
     applicationName = application.name;
     active = application.active;
+
     findInitNetwork();
     progressKey.backToIdle();
     showUpdateButton = true;

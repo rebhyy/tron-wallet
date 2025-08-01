@@ -20,7 +20,7 @@ class CardanoHTTPService extends HTTPService<CardanoAPIProvider>
   Future<BaseServiceResponse<T>> doRequest<T>(BlockFrostRequestDetails params,
       {Duration? timeout}) async {
     return await serviceRequest<T>(params,
-        uri: params.toUri(url, version: version), allowStatus: [200, 404, 400]);
+        uri: params.toUri(url, version: version), allowStatus: [200]);
   }
 
   @override

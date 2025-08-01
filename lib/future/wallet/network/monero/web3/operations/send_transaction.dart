@@ -5,8 +5,8 @@ import 'package:on_chain_wallet/future/state_managment/extension/extension.dart'
 import 'package:on_chain_wallet/future/wallet/network/monero/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/web3/controllers/controllers.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/web3/pages/send_transaction.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/monero/monero.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/monero.dart';
@@ -89,8 +89,9 @@ class WebMoneroSignTransactionStateController
   Future<List<IWalletTransaction<MoneroWalletTransaction, IMoneroAddress>>>
       buildWalletTransaction(
           {required IMoneroSignedTransaction signedTx,
-          required SubmitTransactionSuccess<IMoneroSignedTransaction>
+          required SubmitTransactionSuccess<IMoneroSignedTransaction>?
               txId}) async {
+    if (txId == null) return [];
     final List<IWalletTransaction<MoneroWalletTransaction, IMoneroAddress>>
         transactions = [];
     final signers = signedTx.transaction.transactionData.payments

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/form.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 
 class TransactionStateSendTransaction extends StatelessWidget {

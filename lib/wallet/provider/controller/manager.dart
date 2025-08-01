@@ -35,7 +35,7 @@ mixin WalletManager on _WalletController {
         CryptoRequestGenerateMasterKey.fromStorageWithStringKey(
             storageData: _wallet.data,
             key: password,
-            checksum: _wallet.checksum));
+            checksum: _wallet.checkSumBytes));
     _massterKey = storageKey.masterKey;
     _walletKey = storageKey.walletKey;
     _onUnlock();
@@ -102,7 +102,8 @@ mixin WalletManager on _WalletController {
       throw WalletExceptionConst.walletIsLocked;
     }
 
-    final keyBytes = await _core._toWalletPassword(password, _wallet.checksum);
+    final keyBytes =
+        await _core._toWalletPassword(password, _wallet.checkSumBytes);
     if (!BytesUtils.bytesEqual(keyBytes, _walletKey)) {
       throw WalletExceptionConst.incorrectPassword;
     }
@@ -120,7 +121,8 @@ mixin WalletManager on _WalletController {
       throw WalletExceptionConst.passwordUsedBefore;
     }
     final keyBytes = await _validatePassword(password);
-    final newKey = await _core._toWalletPassword(newPassword, _wallet.checksum);
+    final newKey =
+        await _core._toWalletPassword(newPassword, _wallet.checkSumBytes);
     final encrypt = await crypto.cryptoIsolateRequest(
         CryptoRequestGenerateMasterKey.fromStorage(
             storageData: _wallet.data, key: keyBytes, newKey: newKey));
@@ -316,7 +318,7 @@ mixin WalletManager on _WalletController {
   /// -[chain]: network for remove
   Future<void> _removeChain(Chain chain) async {
     await _appChains.removeChain(chain);
-    await _core._removeAccount(chain);
+    // await _core._removeAccount(chain);
   }
 
   /// update address balance

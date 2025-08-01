@@ -197,11 +197,13 @@ extension QuickContextAccsess on BuildContext {
       WidgetContext? sliver,
       String? label,
       double? maxWidth,
-      bool dismissible = true}) async {
+      bool dismissible = true,
+      String? routeName}) async {
     return await showAdaptiveDialog(
       context: this,
       useRootNavigator: true,
       barrierDismissible: dismissible,
+      routeSettings: routeName == null ? null : RouteSettings(name: routeName),
       builder: (context) {
         return DialogView(
             title: label,

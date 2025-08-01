@@ -39,8 +39,10 @@ class WalletExceptionConst {
       WalletException("data_verification_failed");
   static const WalletException importedKeyDerivationNotAllowed =
       WalletException("imported_key_derivation_not_allowed");
-  static WalletException invalidData({String? messsage}) =>
-      const WalletException("data_verification_failed");
+  static WalletException invalidData({String? messsage}) {
+    return const WalletException("data_verification_failed");
+  }
+
   static WalletException castingFailed({String? messsage}) =>
       const WalletException("data_casting_failed");
   static const WalletException invalidRequest =
@@ -175,4 +177,7 @@ class WalletExceptionConst {
       WalletException("network_does_not_exist");
   static const WalletException invalidHexBytes =
       WalletException("invalid_hex_bytes_string");
+
+  static const WalletException verificationWalletDataFailed =
+      WalletException("wallet_data_verification_failed");
 }

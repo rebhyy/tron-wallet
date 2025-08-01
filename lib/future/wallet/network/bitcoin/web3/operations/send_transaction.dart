@@ -13,13 +13,14 @@ import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/types/
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/controllers/controllers.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/bitcoin/core/core.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
-import 'package:on_chain_wallet/wallet/models/transaction/networks/ethereum.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/bitcoin.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/constant/constants/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/models/send_transaction.dart';
@@ -191,11 +192,31 @@ class Web3BitcoinSendTransactionStateController
   }
 
   @override
-  Future<List<IWalletTransaction<EthWalletTransaction, IBitcoinAddress>>>
+  Future<List<IWalletTransaction<BitcoinWalletTransaction, IBitcoinAddress>>>
       buildWalletTransaction(
           {required IWeb3BitcoinSignedPaymentTransaction signedTx,
-          required SubmitTransactionSuccess txId}) async {
-    return [];
+          required SubmitTransactionSuccess? txId}) async {
+    if (txId == null) return [];
+    List<IWalletTransaction<BitcoinWalletTransaction, IBitcoinAddress>>
+        transactions = [];
+    final accounts = signedTx.transaction.accounts.toSet();
+    for (final i in accounts) {
+      final totalInputs = inputs
+          .where((e) => e.address == i)
+          .map((e) => e.utxo)
+          .toList()
+          .sumOfUtxosValue();
+      if (totalInputs == BigInt.zero) continue;
+      final tx = BitcoinWalletTransaction(
+          txId: txId.txId,
+          totalOutput: WalletTransactionIntegerAmount(
+              amount: totalInputs, network: network),
+          scriptHash: i.networkAddress.pubKeyHash(),
+          web3Client: web3ClientInfo(),
+          network: network);
+      transactions.add(IWalletTransaction(transaction: tx, account: i));
+    }
+    return transactions;
   }
 
   @override

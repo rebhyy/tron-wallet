@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/operations/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/operations/sign_message.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/client/client.dart';
@@ -199,7 +199,8 @@ abstract class Web3TronStateController<RESPONSE, CLIENT extends TronClient?,
         Web3TronChain,
         T,
         Web3TronRequest<RESPONSE, T>,
-        Web3RequestResponseData<RESPONSE>> {
+        Web3RequestResponseData<RESPONSE>,
+        TronWalletTransaction> {
   Web3TronStateController(
       {required super.walletProvider, required super.request});
 

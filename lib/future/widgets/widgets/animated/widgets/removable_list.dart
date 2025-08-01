@@ -26,10 +26,6 @@ class APPRemovableListState extends State<APPAnimatedRemovableList> {
     key.currentState?.removeItem(index, builder);
   }
 
-  // void insertAllItems(int index, int length) {
-  //   key.currentState?.insertAllItems(index, length);
-  // }
-
   @override
   Widget build(BuildContext context) {
     return SliverAnimatedList(

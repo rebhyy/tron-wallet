@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/form.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
@@ -46,7 +46,7 @@ class _TransactionStateBuilderState extends State<TransactionStateBuilder>
     return NetworkAccountControllerView<NetworkClient, ChainAccount, Chain>(
         key: ValueKey(controller),
         title: controller.operation.value.tr,
-        childBulder: (wallet, account, client, address, onAccountChanged) {
+        childBulder: (wallet, account, client, address, _) {
           return StreamPageProgress(
             controller: controller.pageKey,
             initialWidget:
@@ -54,29 +54,28 @@ class _TransactionStateBuilderState extends State<TransactionStateBuilder>
             builder: (context) {
               return CustomScrollView(slivers: [
                 SliverConstraintsBoxView(
+                    padding: WidgetConstant.paddingHorizontal20,
                     sliver: MultiSliver(children: [
-                  Text("account".tr, style: context.textTheme.titleMedium),
-                  WidgetConstant.height8,
-                  ContainerWithBorder(
-                    onRemoveIcon:
-                        Icon(Icons.edit, color: context.onPrimaryContainer),
-                    onRemove: controller.allowSwitchAddress
-                        ? () {
-                            context
-                                .selectOrSwitchAccount(
-                                    account: controller.account,
-                                    showMultiSig: true)
-                                .then(switchAccount);
-                          }
-                        : null,
-                    child: AddressDetailsView(
-                        address: controller.address,
-                        color: context.onPrimaryContainer,
-                        key: ValueKey(controller.address)),
-                  ),
-                  WidgetConstant.height20,
-                  controller.onPageBuilder(context),
-                ]))
+                      Text("account".tr, style: context.textTheme.titleMedium),
+                      WidgetConstant.height8,
+                      ContainerWithBorder(
+                        onRemoveIcon:
+                            Icon(Icons.edit, color: context.onPrimaryContainer),
+                        onRemove: () {
+                          context
+                              .selectOrSwitchAccount(
+                                  account: controller.account,
+                                  showMultiSig: true)
+                              .then(switchAccount);
+                        },
+                        child: AddressDetailsView(
+                            address: controller.address,
+                            color: context.onPrimaryContainer,
+                            key: ValueKey(controller.address)),
+                      ),
+                      WidgetConstant.height20,
+                      controller.onPageBuilder(context),
+                    ]))
               ]);
             },
           );

@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/future/wallet/network/monero/web3/controllers/pr
 import 'package:on_chain_wallet/future/wallet/network/monero/web3/types/types.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/monero/params/core/request.dart';
 import 'dart:async';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 
 abstract class Web3MoneroTransactionStateController<RESPONSE,
         T extends Web3MoneroRequestParam<RESPONSE>>

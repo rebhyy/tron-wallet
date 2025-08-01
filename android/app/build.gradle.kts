@@ -49,8 +49,8 @@ android {
     }
     buildTypes {
         getByName("release") {
-            println("Using DEBUG signing config for release build.")
             signingConfig = if (localProperties.getProperty("storePassword").isNullOrEmpty()) {
+                println("Using DEBUG signing config for release build.")
                 signingConfigs.getByName("debug")
             } else {
                 println("Using RELEASE signing config.")

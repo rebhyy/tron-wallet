@@ -1,25 +1,16 @@
 part of 'package:on_chain_wallet/wc/wc.dart';
 
 class WalletConnectStorage
-    with DisposableMixin, NativeSecureStorageImpl, StreamStateController {
-  static const String _sessionKey = "sessions_";
-  static const String _messageKey = "msg_";
+    with DisposableMixin, BaseRepository, StreamStateController {
   @override
-  final String storageId;
+  String get tableId => walletKey;
+  final String walletKey;
   final _lock = SynchronizedLock();
   bool _isReady = false;
   Map<String, SessionData> _activeSessions = {};
   Map<int, PublishRequest> _pendingMessage = {};
 
-  WalletConnectStorage(this.storageId);
-
-  String _getAppKey(String topic) {
-    return _sessionKey + topic;
-  }
-
-  String _getMessagekey(int id) {
-    return _messageKey + id.toString();
-  }
+  WalletConnectStorage(this.walletKey);
 
   SessionData? getSession({String? topic, String? peerKey}) {
     if (topic != null) {
@@ -32,16 +23,22 @@ class WalletConnectStorage
   }
 
   Future<void> _deletePendingMessage(int id) async {
-    final String key = _getMessagekey(id);
-    await delete(key);
+    await removeStorage(
+      key: "$id",
+      storage: APPDatabaseConst.web3AuthStorage,
+      storageId: APPDatabaseConst.web3WcMessageId,
+    );
     _pendingMessage.remove(id);
   }
 
   Future<void> _savePendingMessage(PublishRequest message) async {
-    final String key = _getMessagekey(message.correlationId);
-
     _pendingMessage[message.correlationId] = message;
-    await write(key: key, value: message.toCbor().toCborHex());
+    await insertStorage(
+      key: "${message.correlationId}",
+      value: message,
+      storage: APPDatabaseConst.web3AuthStorage,
+      storageId: APPDatabaseConst.web3WcMessageId,
+    );
   }
 
   Future<void> setPendingMessage(WcInternalPublishMessageEvent event) async {
@@ -62,22 +59,32 @@ class WalletConnectStorage
   }
 
   Future<void> setSession(SessionData session) async {
-    final String key = _getAppKey(session.topic);
     session = session.copyWith(latestAction: DateTime.now());
-    await write(key: key, value: session.toCbor().toCborHex());
+    await insertStorage(
+      key: session.topic,
+      value: session,
+      storage: APPDatabaseConst.web3AuthStorage,
+      storageId: APPDatabaseConst.web3WcSessionStorageId,
+    );
     _activeSessions[session.topic] = session;
     notify();
   }
 
   Future<void> deleteSesshins() async {
-    await deleteAll(identifier: _sessionKey);
+    await removeStorage(
+      storage: APPDatabaseConst.web3AuthStorage,
+      storageId: APPDatabaseConst.web3WcSessionStorageId,
+    );
     _activeSessions.clear();
     notify();
   }
 
   Future<void> deleteSession(String topic) async {
-    final String key = _getAppKey(topic);
-    await delete(key);
+    await removeStorage(
+      key: topic,
+      storage: APPDatabaseConst.web3AuthStorage,
+      storageId: APPDatabaseConst.web3WcSessionStorageId,
+    );
     _activeSessions.remove(topic);
     notify();
   }
@@ -89,23 +96,42 @@ class WalletConnectStorage
   }
 
   Future<Map<String, SessionData>> _initSessions() async {
-    final data = await readAll(identifier: _sessionKey);
+    final data = await queriesStorageData(
+      storage: APPDatabaseConst.web3AuthStorage,
+      storageId: APPDatabaseConst.web3WcSessionStorageId,
+    );
     final sessions =
-        data.values.map((e) => SessionData.deserialize(hex: e)).toList();
+        data.map((e) => SessionData.deserialize(bytes: e)).toList();
     final expired = sessions.where((e) => e.isExpired).toList();
     final active = sessions.where((e) => !e.isExpired).toList();
-    deleteMultiple(expired.map((e) => _getAppKey(e.topic)).toList());
+    final removeItems = expired
+        .map((e) => ITableRemoveStructA(
+            storage: APPDatabaseConst.web3AuthStorage,
+            storageId: APPDatabaseConst.web3WcSessionStorageId,
+            tableName: tableId,
+            key: e.topic))
+        .toList();
+    removeAllStorage(removeItems);
     return {for (final i in active) i.topic: i};
   }
 
   Future<Map<int, PublishRequest>> _getPendingMessage() async {
-    final data = await readAll(identifier: _messageKey);
+    final data = await queriesStorageData(
+      storage: APPDatabaseConst.web3AuthStorage,
+      storageId: APPDatabaseConst.web3WcMessageId,
+    );
     final sessions =
-        data.values.map((e) => PublishRequest.deserialize(hex: e)).toList();
+        data.map((e) => PublishRequest.deserialize(bytes: e)).toList();
     final expired = sessions.where((e) => e.isExpired()).toList();
     final active = sessions.where((e) => !e.isExpired()).toList();
-    deleteMultiple(
-        expired.map((e) => _getMessagekey(e.correlationId)).toList());
+    final removeItems = expired
+        .map((e) => ITableRemoveStructA(
+            storage: APPDatabaseConst.web3AuthStorage,
+            storageId: APPDatabaseConst.web3WcMessageId,
+            tableName: tableId,
+            key: "${e.correlationId}"))
+        .toList();
+    removeAllStorage(removeItems);
     return {for (final i in active) i.correlationId: i};
   }
 

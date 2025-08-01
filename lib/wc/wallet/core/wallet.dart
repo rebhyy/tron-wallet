@@ -25,12 +25,12 @@ class Web3WalletConnectHandler {
   final WalletConnectStorage _storage;
   final SynchronizedLock _lock = SynchronizedLock();
 
-  Web3WalletConnectHandler(
-      {required this.sendRequest,
-      required this.authRequest,
-      required this.defaultAuth,
-      required String storageKey})
-      : _storage = WalletConnectStorage(storageKey);
+  Web3WalletConnectHandler({
+    required this.sendRequest,
+    required this.authRequest,
+    required this.defaultAuth,
+    required String walletKey,
+  }) : _storage = WalletConnectStorage(walletKey);
   StreamValue<WcRpcSocketStatus> get connectionStatus =>
       walletConnectCore.connectionStatus;
   StreamValue<void> get onSessionUpdated => _storage.notifier;

@@ -23,7 +23,9 @@ import 'package:on_chain_wallet/wallet/models/transaction/networks/xrp.dart';
 
 enum WalletTransactionType {
   send(0),
-  web3(1);
+  web3(1),
+  web3Sign(2),
+  web3Tx(3);
 
   final int value;
   const WalletTransactionType(this.value);
@@ -48,7 +50,7 @@ class WalletAccountTransactions<TRANSACTION extends ChainTransaction> {
       _transactions.where((e) => e.status.inMempool).toList();
   factory WalletAccountTransactions({required List<TRANSACTION> transactions}) {
     final txes = transactions.clone();
-    txes.sort((a, b) => b.time.compareTo(a.time));
+    // txes.sort((a, b) => b.time.compareTo(a.time));
     return WalletAccountTransactions._(transactions: txes);
   }
   void addTx(TRANSACTION tx) {
@@ -59,7 +61,7 @@ class WalletAccountTransactions<TRANSACTION extends ChainTransaction> {
     } else {
       txes.add(tx);
     }
-    txes.sort((a, b) => b.time.compareTo(a.time));
+    // txes.sort((a, b) => b.time.compareTo(a.time));
     _transactions = txes.toSet().toImutableList;
     _havePendingTxes = _transactions.any((e) => e.status.inMempool);
   }
@@ -67,7 +69,7 @@ class WalletAccountTransactions<TRANSACTION extends ChainTransaction> {
   void removeTx(TRANSACTION tx) {
     final txes = _transactions.clone();
     txes.remove(tx);
-    txes.sort((a, b) => a.time.compareTo(b.time));
+    // txes.sort((a, b) => a.time.compareTo(b.time));
     _transactions = txes.immutable;
     _havePendingTxes = _transactions.any((e) => e.status.inMempool);
   }
@@ -135,14 +137,15 @@ abstract class ChainTransaction with CborSerializable, Equatable {
 
   ChainTransaction(
       {required this.txId,
-      required this.time,
+      DateTime? time,
       this.web3Client,
       required WalletTransactionAmount? totalOutput,
-      required List<WalletTransactionOutput> outputs,
+      List<WalletTransactionOutput> outputs = const [],
       required WalletTransactionStatus status,
       this.type = WalletTransactionType.send})
       : outputs = outputs.immutable,
         _status = status,
+        time = time ?? DateTime.now(),
         totalOutput = (totalOutput?.amount.isZero ?? true) ? null : totalOutput;
   static T deserialize<T extends ChainTransaction>(WalletNetwork network,
       {List<int>? bytes, String? cborHex, CborObject? object}) {

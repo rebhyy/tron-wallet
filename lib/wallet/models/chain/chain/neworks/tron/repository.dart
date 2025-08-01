@@ -20,8 +20,8 @@ base mixin TronChainRepository on Chain<
       return null;
     }
     final storagekey = TronChainStorageKey.accountInfo;
-    final data = await _storage.readAccountStorage(
-        account: address, storageKey: storagekey);
+    final data =
+        await _storage.queryChainStorage(address: address, storage: storagekey);
     if (data == null) return null;
     final accountInfo = MethodUtils.nullOnException(
         () => TronAccountInfo.deserialize(bytes: data));
@@ -37,8 +37,12 @@ base mixin TronChainRepository on Chain<
       return;
     }
     final storageKey = TronChainStorageKey.accountInfo;
-    await _storage.writeAccountStorage(
-        account: address, storageKey: storageKey, item: accountInfo);
+    if (accountInfo == null) {
+      await _storage.removeChainStorage(address: address, storage: storageKey);
+      return;
+    }
+    await _storage.insertChainStorage(
+        address: address, storage: storageKey, value: accountInfo);
   }
 
   Future<TronAccountResourceInfo?> _getTronAccountResource(
@@ -48,8 +52,8 @@ base mixin TronChainRepository on Chain<
       return null;
     }
     final storagekey = TronChainStorageKey.accountResource;
-    final data = await _storage.readAccountStorage(
-        account: address, storageKey: storagekey);
+    final data =
+        await _storage.queryChainStorage(address: address, storage: storagekey);
     if (data == null) return null;
     final accountInfo = MethodUtils.nullOnException(
         () => TronAccountResourceInfo.deserialize(bytes: data));
@@ -66,7 +70,11 @@ base mixin TronChainRepository on Chain<
       return;
     }
     final storagekey = TronChainStorageKey.accountResource;
-    await _storage.writeAccountStorage(
-        account: address, storageKey: storagekey, item: accountResource);
+    if (accountResource == null) {
+      await _storage.removeChainStorage(address: address, storage: storagekey);
+      return;
+    }
+    await _storage.insertChainStorage(
+        address: address, storage: storagekey, value: accountResource);
   }
 }

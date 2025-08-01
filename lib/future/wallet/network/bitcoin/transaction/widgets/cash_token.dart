@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/operations/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 
 class TransactionStateAlert extends StatelessWidget {

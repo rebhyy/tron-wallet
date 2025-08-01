@@ -442,7 +442,8 @@ class CosmosClient extends NetworkClient<CosmosWalletTransaction,
       final result =
           await provider.request(TendermintRequestAbciQuery(request: request));
       final denomUnit = result.metadata.denomUnits
-          .firstWhere((e) => e.denom == result.metadata.display);
+          .firstWhereOrNull((e) => e.denom == result.metadata.display);
+      if (denomUnit == null) return null;
       return Token(
           name: CosmosConst.extractFactoryTokenName(result.metadata.name ??
               result.metadata.symbol ??
@@ -451,8 +452,8 @@ class CosmosClient extends NetworkClient<CosmosWalletTransaction,
               result.metadata.symbol ?? denomUnit.denom),
           decimal: denomUnit.exponent ?? 0);
     });
-    if (metadata.hasResult) {
-      token.updaetTokenMetadata(metadata.result);
+    if (metadata.hasResult && metadata.result != null) {
+      token.updaetTokenMetadata(metadata.result!);
       return;
     }
     final asset = await findAsset(

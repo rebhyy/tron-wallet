@@ -7,7 +7,7 @@ import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/types
 import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/client/ethereum.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 
-mixin EthereumTransactionFeeController {
+mixin EthereumTransactionFeeController on DisposableMixin {
   WalletEthereumNetwork get network;
   EthereumClient get client;
   StreamSubscription<EthereumTransactionGasInfo>? _listener;
@@ -67,7 +67,7 @@ mixin EthereumTransactionFeeController {
     ]);
   }
 
-  Map<String, dynamic> buildEstimateTx();
+  Map<String, dynamic>? buildEstimateTx();
   BigInt getMaxFeeInput();
   int? get fixedGasLimit => null;
 
@@ -147,7 +147,9 @@ mixin EthereumTransactionFeeController {
     _listener = _fetchGasFee().listen(_onUpdateFee);
   }
 
+  @override
   void dispose() {
+    super.dispose();
     _listener?.cancel();
     _listener = null;
     txFee.dispose();

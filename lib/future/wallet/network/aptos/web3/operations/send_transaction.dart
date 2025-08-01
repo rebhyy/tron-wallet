@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/controll
 import 'package:on_chain_wallet/future/wallet/network/aptos/web3/controllers/controllers.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/aptos/aptos.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
@@ -157,7 +157,8 @@ class Web3AptosSignTransactionStateController
       buildWalletTransaction(
           {required IWeb3AptosSignedTransaction<IWeb3AptosTransactionData>
               signedTx,
-          required SubmitTransactionSuccess txId}) async {
+          required SubmitTransactionSuccess? txId}) async {
+    if (txId == null) return [];
     return [
       IWalletTransaction(
           transaction: AptosWalletTransaction(

@@ -1,39 +1,121 @@
-part of 'package:on_chain_wallet/repository/repository.dart';
+import 'package:on_chain_bridge/database/database.dart';
+import 'package:on_chain_wallet/app/core.dart';
 
 mixin BaseRepository {
-  String get repositoryStorageId;
-  String _toKey(String storageId, String key) {
-    assert(key.trim().isNotEmpty && key != StorageConst.walletStorageKey);
-    return "${StorageConst.baseStoragePrefix}${storageId}_$key";
+  String get tableId;
+
+  Future<bool> insertStorage(
+      {required int storage,
+      int storageId = APPDatabaseConst.defaultStorageId,
+      String? key,
+      String? keyA,
+      required CborSerializable value}) async {
+    final statement = ITableInsertOrUpdateStructA(
+        storage: storage,
+        storageId: storageId,
+        key: key,
+        keyA: keyA,
+        data: value.toCbor().encode(),
+        tableName: tableId);
+    return await AppNativeMethods.platform.writeDb(statement);
   }
 
-  Future<void> write({required String key, required String value}) async {
-    await AppNativeMethods.platform
-        .writeSecure(_toKey(repositoryStorageId, key), value);
+  Future<ITableDataStructA?> queryStorage({
+    required int storage,
+    int storageId = APPDatabaseConst.defaultStorageId,
+    String? key,
+    String? keyA,
+  }) async {
+    ITableReadStructA query = ITableReadStructA(
+        tableName: tableId,
+        storage: storage,
+        storageId: storageId,
+        key: key,
+        keyA: keyA);
+    final data = await AppNativeMethods.platform.readDb(query);
+    return data;
   }
 
-  Future<String?> read(String key) async {
-    return await AppNativeMethods.platform
-        .readSecure(_toKey(repositoryStorageId, key));
+  Future<List<int>?> queryStorageData({
+    required int storage,
+    int storageId = APPDatabaseConst.defaultStorageId,
+    String? key,
+    String? keyA,
+  }) async {
+    final data = await queryStorage(
+        key: key, keyA: keyA, storage: storage, storageId: storageId);
+    return data?.data;
   }
 
-  Future<void> deleteAll({String? identifier}) async {
-    await AppNativeMethods.platform
-        .removeAllSecure(prefix: _toKey(repositoryStorageId, identifier ?? ''));
+  Future<List<ITableDataStructA>> queriesStorage({
+    required int storage,
+    int? storageId = APPDatabaseConst.defaultStorageId,
+    String? key,
+    String? keyA,
+    int? limit,
+    int? offset,
+    int? createdAtLt,
+    int? createdAtGt,
+    IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc,
+  }) async {
+    ITableReadStructA query = ITableReadStructA(
+        tableName: tableId,
+        storage: storage,
+        storageId: storageId,
+        key: key,
+        keyA: keyA,
+        limit: limit,
+        offset: offset,
+        createdAtGt: createdAtLt,
+        createdAtLt: createdAtGt,
+        ordering: ordering);
+    final data = await AppNativeMethods.platform.readAllDb(query);
+    return data;
   }
 
-  Future<Map<String, String>> readAll({String? identifier}) async {
-    return await AppNativeMethods.platform
-        .readAllSecure(prefix: _toKey(repositoryStorageId, identifier ?? ''));
+  Future<List<List<int>>> queriesStorageData({
+    required int storage,
+    int? storageId = APPDatabaseConst.defaultStorageId,
+    String? key,
+    String? keyA,
+    int? limit,
+    int? offset,
+    int? createdAtLt,
+    int? createdAtGt,
+    IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc,
+  }) async {
+    final data = await queriesStorage(
+        createdAtGt: createdAtGt,
+        createdAtLt: createdAtLt,
+        key: key,
+        keyA: keyA,
+        limit: limit,
+        offset: offset,
+        ordering: ordering,
+        storage: storage,
+        storageId: storageId);
+    return data.map((e) => e.data).toList();
   }
 
-  Future<void> remove(String key) async {
-    await AppNativeMethods.platform
-        .removeSecure(_toKey(repositoryStorageId, key));
+  Future<bool> removeStorage(
+      {required int storage,
+      int? storageId = APPDatabaseConst.defaultStorageId,
+      String? key,
+      String? keyA}) async {
+    final statement = ITableRemoveStructA(
+        storage: storage,
+        storageId: storageId,
+        key: key,
+        keyA: keyA,
+        tableName: tableId);
+    return await AppNativeMethods.platform.removeDb(statement);
   }
 
-  Future<void> deleteMultiple(List<String> keys) async {
-    await AppNativeMethods.platform.removeMultipleSecure(
-        keys.map((e) => _toKey(repositoryStorageId, e)).toList());
+  Future<void> removeAllStorage(List<ITableRemoveStructA> items) async {
+    await AppNativeMethods.platform.removeAllDb(items);
+  }
+
+  Future<void> insertAllStorage(List<ITableInsertOrUpdateStructA> items) async {
+    await AppNativeMethods.platform.writeAllDb(items);
   }
 }

@@ -12,7 +12,7 @@ import 'package:on_chain_wallet/future/wallet/network/sui/web3/controllers/contr
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/sui/client/client.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
@@ -115,9 +115,18 @@ class WebSuiSignTransactionStateController
           {required IWeb3SuiSignedTransaction<IWeb3SuiTransactionRawData>
               signedTx,
           required SubmitTransactionSuccess<
-                  IWeb3SuiSignedTransaction<IWeb3SuiTransactionRawData>>
+                  IWeb3SuiSignedTransaction<IWeb3SuiTransactionRawData>>?
               txId}) async {
-    return [];
+    if (txId == null) return [];
+    final transaction = SuiWalletTransaction(
+        txId: txId.txId,
+        web3Client: web3ClientInfo(),
+        network: network,
+        type: WalletTransactionType.web3Tx);
+    return [
+      IWalletTransaction<SuiWalletTransaction, ISuiAddress>(
+          account: signedTx.transaction.account, transaction: transaction)
+    ];
   }
 
   @override

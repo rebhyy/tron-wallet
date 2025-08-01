@@ -2,7 +2,7 @@ import 'package:on_chain_wallet/app/dev/logger.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/web3/operations/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/web3/operations/sign_message.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/client/client.dart';
@@ -34,7 +34,8 @@ abstract class Web3XRPStateController<RESPONSE, CLIENT extends XRPClient?,
         Web3XRPChain,
         T,
         Web3XRPRequest<RESPONSE, T>,
-        Web3RequestResponseData<RESPONSE>> {
+        Web3RequestResponseData<RESPONSE>,
+        XRPWalletTransaction> {
   Web3XRPStateController(
       {required super.walletProvider, required super.request});
 

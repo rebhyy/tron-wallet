@@ -70,6 +70,14 @@ class IoCryptoWorker extends IsolateCryptoWoker {
     connector?.getResult(
         args: message, timeout: timeout, encryptPart: encryptPart);
   }
+
+  @override
+  int get maxSyncThread {
+    if (AppNativeMethods.platform.platform.isDesktop) {
+      return 6;
+    }
+    return 2;
+  }
 }
 
 typedef _OnIsolateError = Function(WorkerMode mode);
@@ -140,9 +148,17 @@ class _WorkerConnection {
       initPort.handler = (SendPort initialMessage) {
         final commandPort = initialMessage;
         _WorkerConnection worker;
+        appLogger.debug(
+            runtime: "_WorkerConnection",
+            functionName: "_init",
+            msg: "start worker ${mode.name}");
         switch (mode) {
           case WorkerMode.sync1:
           case WorkerMode.sync2:
+          case WorkerMode.sync3:
+          case WorkerMode.sync4:
+          case WorkerMode.sync5:
+          case WorkerMode.sync6:
             worker = _SyncWorkerConnection(
                 receivePort: ReceivePort.fromRawReceivePort(initPort),
                 sendPort: commandPort,
@@ -179,6 +195,10 @@ class _WorkerConnection {
             break;
           case WorkerMode.sync1:
           case WorkerMode.sync2:
+          case WorkerMode.sync3:
+          case WorkerMode.sync4:
+          case WorkerMode.sync5:
+          case WorkerMode.sync6:
             await Isolate.spawn(
                 _WorkerConnection._startStreamRemoteIsolate,
                 _IoEncryptedInitialRequest(

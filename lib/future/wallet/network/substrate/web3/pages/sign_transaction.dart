@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/future/wallet/global/pages/receipt_address_view.
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/widgets/payload.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/operations/sign_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/pages/fee.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/page.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
 

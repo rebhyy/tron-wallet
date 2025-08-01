@@ -6,13 +6,13 @@ import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/types/
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/operations/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/operations/sign_message.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/operations/sign_psbt_transaction.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/client/client.dart';
 import 'package:on_chain_wallet/wallet/models/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
-import 'package:on_chain_wallet/wallet/models/transaction/networks/ethereum.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/networks/bitcoin.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 
 abstract class Web3BitcoinStateController<
@@ -31,7 +31,8 @@ abstract class Web3BitcoinStateController<
         Web3BitcoinChain,
         T,
         Web3BitcoinRequest<RESPONSE, T>,
-        Web3RequestResponseData<RESPONSE>> {
+        Web3RequestResponseData<RESPONSE>,
+        BitcoinWalletTransaction> {
   Web3BitcoinStateController(
       {required super.walletProvider, required super.request});
 
@@ -83,7 +84,7 @@ abstract class BaseWeb3BitcoinTransactionStateController<
         E,
         TRANSACTION,
         SIGNEDTX,
-        EthWalletTransaction,
+        BitcoinWalletTransaction,
         SubmitTransactionSuccess<SIGNEDTX>> {
   BaseWeb3BitcoinTransactionStateController(
       {required super.walletProvider, required super.request});

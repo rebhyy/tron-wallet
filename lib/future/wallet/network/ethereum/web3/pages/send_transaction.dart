@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/widge
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/operations/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/pages/fee.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/page.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 

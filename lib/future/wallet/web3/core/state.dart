@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/exception.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/widgets/parogress.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
@@ -25,10 +25,6 @@ mixin Web3StatePageController<WEB3REQUEST extends Web3Request>
   StreamWeb3PageProgressController pageKey = StreamWeb3PageProgressController(
       initialStatus: Web3ProgressStatus.progress);
   StreamSubscription<dynamic>? _listener;
-
-  // void focusOnButtonKey() {
-  //   buttonKey.ensureKeyVisible();
-  // }
 
   void _onChangeStatus(Web3RequestCompleterEvent event) {
     switch (event.type) {
@@ -116,7 +112,8 @@ abstract class Web3StateController<
             WALLETACCOUNT, CHANACCOUNT, WEB3CHAIN>,
         WEB3REQUEST extends Web3NetworkRequest<RESPONSE, NETWORKADDRESS, CHAIN,
             CHANACCOUNT, WALLETACCOUNT, WEB3CHAIN, PARAMS>,
-        FINALRESULT extends Web3RequestResponseData<RESPONSE>>
+        FINALRESULT extends Web3RequestResponseData<RESPONSE>,
+        T extends ChainTransaction>
     with
         DisposableMixin,
         StreamStateController,
@@ -244,7 +241,10 @@ abstract class Web3StateController<
       pageKey.errorResponse(error: exception);
       request.error(e);
       appLogger.error(
-          runtime: runtimeType, functionName: "acceptRequest", msg: e);
+          runtime: runtimeType,
+          functionName: "acceptRequest",
+          msg: e,
+          trace: s);
     }
   }
 

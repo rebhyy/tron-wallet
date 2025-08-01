@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:blockchain_utils/utils/binary/utils.dart';
+import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain/solana/src/rpc/models/models/commitment.dart';
 import 'package:on_chain/solana/src/rpc/models/models/encoding.dart';
@@ -11,12 +13,12 @@ import 'package:on_chain_wallet/future/wallet/network/solana/web3/controllers/co
 import 'package:on_chain_wallet/future/wallet/network/solana/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/web3/types/transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/solana/solana.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';
-import 'package:on_chain_wallet/wallet/models/transaction/networks/solana.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/params/models/transaction.dart';
 
@@ -145,9 +147,25 @@ class WebSolanaSignTransactionStateController
           {required IWeb3SolanaSignedTransaction<IWeb3SolanaTransactionRawData>
               signedTx,
           required SubmitTransactionSuccess<
-                  IWeb3SolanaSignedTransaction<IWeb3SolanaTransactionRawData>>
+                  IWeb3SolanaSignedTransaction<IWeb3SolanaTransactionRawData>>?
               txId}) async {
-    return [];
+    if (txId == null) return [];
+    final id = StringUtils.encode(txId.txId, type: StringEncoding.base58);
+    final tx = txId.signedTransaction.finalTransactionData.firstWhereOrNull(
+        (e) => e.info.transaction.signatures
+            .any((e) => BytesUtils.bytesEqual(e, id)));
+    assert(tx != null);
+    if (tx == null) return [];
+    final transaction = SolanaWalletTransaction(
+      txId: txId.txId,
+      type: WalletTransactionType.web3Tx,
+      web3Client: web3ClientInfo(),
+      outputs: [],
+      network: network,
+    );
+    return [
+      IWalletTransaction(transaction: transaction, account: tx.info.signer)
+    ];
   }
 
   @override

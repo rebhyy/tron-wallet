@@ -55,7 +55,6 @@ enum MoneroChainStorage implements ChainStorageKey {
   contacts(0),
   transaction(1),
   defaultTracker(11),
-  // syncRequests(12),
   walletRPC(13),
   addressUtxos(14),
   syncChain(101);

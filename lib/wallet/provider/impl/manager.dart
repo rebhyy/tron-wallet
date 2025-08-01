@@ -91,7 +91,7 @@ mixin WalletsManager on _WalletCore {
     }
   }
 
-  Future<void> _updateWallet(HDWallet wallet) async {
+  Future<void> _updateWallet(MainWallet wallet) async {
     await _wallets.updateWallet(wallet);
     await _writeHdWallet(_wallets);
   }
@@ -136,11 +136,11 @@ mixin WalletsManager on _WalletCore {
     }, lockId: lockId);
   }
 
-  Future<void> _initPage({HDWallet? slectedWallet}) async {
+  Future<void> _initPage({MainWallet? slectedWallet}) async {
     final currentController = _wallet;
     if (_wallets.hasWallet) {
       final wallet =
-          await _wallets.getInitializeWallet(name: slectedWallet?.name);
+          await _wallets.getInitializeWallet(key: slectedWallet?.key);
       final controller =
           await WalletController._setup(this as WalletCore, wallet);
       _wallet = controller;
@@ -151,22 +151,20 @@ mixin WalletsManager on _WalletCore {
   }
 
   Future<void> _setup(
-      {required HDWallet hdWallet,
+      {required MainWallet hdWallet,
       required String password,
       required WalletUpdateInfosData walletInfos,
       WalletRestoreV2? backup}) async {
     if (!StrUtils.isStrongPassword(password)) {
       throw WalletExceptionConst.incorrectPassword;
     }
-    final updatedWallet = HDWallet(
-        checksum: hdWallet.checksum,
-        name: walletInfos.name,
-        data: hdWallet.data,
-        requiredPassword: walletInfos.requirmentPassword,
-        locktime: walletInfos.lockTime,
-        network: 0,
-        protectWallet: walletInfos.protectWallet);
-    final pw = await _toWalletPassword(password, updatedWallet.checksum);
+    final updatedWallet = hdWallet.updateSettings(
+        newLockTime: walletInfos.lockTime,
+        reqPassword: walletInfos.requirmentPassword,
+        newName: walletInfos.name,
+        protectWallet: walletInfos.protectWallet,
+        network: 0);
+    final pw = await _toWalletPassword(password, updatedWallet.checkSumBytes);
     await crypto.cryptoIsolateRequest(
         CryptoRequestGenerateMasterKey.fromStorage(
             storageData: updatedWallet.data, key: pw));
@@ -177,19 +175,19 @@ mixin WalletsManager on _WalletCore {
   }
 
   Future<void> _initializeWallet(
-      {required HDWallet wallet, WalletRestoreV2? backup}) async {
+      {required MainWallet wallet, WalletRestoreV2? backup}) async {
     await _removeWalletStorage(wallet);
     if (backup == null) return;
     await _setupWalletBackupAccounts(wallet: wallet, backup: backup);
   }
 
   Future<List<int>> _toWalletPassword(
-      String password, String walletCheckSum) async {
+      String password, List<int> walletCheckSum) async {
     return await crypto.cryptoIsolateRequest(CryptoRequestWalletKey.fromString(
         key: password, checksum: walletCheckSum));
   }
 
-  Future<bool> _switchWallet(HDWallet switchWallet) async {
+  Future<bool> _switchWallet(MainWallet switchWallet) async {
     if (switchWallet.name == _controller._wallet.name) return false;
     await _initPage(slectedWallet: switchWallet);
     await _writeHdWallet(_wallets);

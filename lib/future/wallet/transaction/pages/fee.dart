@@ -3,8 +3,8 @@ import 'package:on_chain_wallet/app/models/models/typedef.dart';
 import 'package:on_chain_wallet/app/utils/list/extension.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/form.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 
 class TransactionFeeView extends StatelessWidget {
   const TransactionFeeView(

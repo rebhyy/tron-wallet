@@ -157,7 +157,7 @@ class WebViewController
     }
   }
 
-  final bool isWorker = false;
+  final bool isWorker = true;
 
   Future<void> _activeScript(WebViewEvent event) async {
     final auth = tabsAuthenticated[event.viewId];

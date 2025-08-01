@@ -4,7 +4,6 @@ import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
 import 'package:on_chain_wallet/wc/core/types/exception.dart';
@@ -47,8 +46,6 @@ class _WalletConnectViewState extends State<WalletConnectView>
   }
 
   Future<void> onRemoveSession(ShimmerAction<Web3ClientInfo> session) async {
-    session.setAction(true);
-    updateState();
     final accept = await context.openSliverDialog(
         widget: (context) {
           return DialogTextView(
@@ -57,6 +54,8 @@ class _WalletConnectViewState extends State<WalletConnectView>
         },
         label: "remove_session".tr);
     if (accept != true) return;
+    session.setAction(true);
+    updateState();
     await walletConnect.removeSession(session.object);
     sessions.remove(session);
     session.setAction(false);
@@ -91,7 +90,7 @@ class _WalletConnectViewState extends State<WalletConnectView>
       lockedChains =
           walletChain.where((e) => chainIds.contains(e.network.value)).toList();
     }
-    final request = Web3UpdatePermissionRequest(
+    final request = Web3UpdatePermissionRequest.chain(
         lockedChains: lockedChains, authentication: app.authentication);
     await context.openDialogPage(
       "update_permission".tr,
@@ -148,8 +147,7 @@ class _WalletConnectViewState extends State<WalletConnectView>
           child: (context) {
             return CustomScrollView(
               slivers: [
-                SliverConstraintsBoxView(
-                    sliver: APPStreamBuilder(
+                APPStreamBuilder(
                   value: walletConnect.connectionStatus,
                   builder: (context, value) => MultiSliver(children: [
                     SliverToBoxAdapter(
@@ -186,87 +184,94 @@ class _WalletConnectViewState extends State<WalletConnectView>
                         WidgetConstant.height20,
                       ]),
                     ),
-                    SliverVisibility(
-                        visible: sessions.isNotEmpty && !value.isDispose,
-                        sliver: MultiSliver(children: [
-                          SliverToBoxAdapter(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("sessions".tr,
-                                    style: context.textTheme.titleMedium),
-                                WidgetConstant.height8,
-                              ],
-                            ),
-                          ),
-                          SliverList.separated(
-                              itemBuilder: (context, index) {
-                                final obj = sessions[index];
-                                final client = sessions[index].object;
-                                return Shimmer(
-                                    onActive: (enable, context) {
-                                      return ContainerWithBorder(
-                                        onRemove: () {},
-                                        enableTap: false,
-                                        onRemoveWidget: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                  tooltip: "remove_session".tr,
-                                                  onPressed: () =>
-                                                      onRemoveSession(obj),
-                                                  icon: Icon(
-                                                      Icons.remove_circle,
-                                                      color: context
-                                                          .onPrimaryContainer)),
-                                              IconButton(
-                                                  tooltip:
-                                                      "update_permission".tr,
-                                                  onPressed: () {
-                                                    updateApplicationAuthenticated(
-                                                        obj);
-                                                  },
-                                                  icon: Icon(Icons.security,
-                                                      color: context
-                                                          .onPrimaryContainer)),
-                                            ]),
-                                        child: Row(
-                                          children: [
-                                            CircleAPPImageView(
-                                              client.image,
-                                              radius: APPConst.circleRadius25,
-                                              onError: (c) => const Icon(
-                                                  Icons.broken_image,
-                                                  size: APPConst.double40),
-                                            ),
-                                            WidgetConstant.width8,
-                                            Flexible(
-                                                child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                    SliverConstraintsBoxView(
+                        padding: WidgetConstant.paddingHorizontal20,
+                        sliver: SliverVisibility(
+                            visible: sessions.isNotEmpty && !value.isDispose,
+                            sliver: MultiSliver(children: [
+                              SliverToBoxAdapter(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("sessions".tr,
+                                        style: context.textTheme.titleMedium),
+                                    WidgetConstant.height8,
+                                  ],
+                                ),
+                              ),
+                              SliverList.separated(
+                                  itemBuilder: (context, index) {
+                                    final obj = sessions[index];
+                                    final client = sessions[index].object;
+                                    return Shimmer(
+                                        onActive: (enable, context) {
+                                          return ContainerWithBorder(
+                                            onRemove: () {},
+                                            enableTap: false,
+                                            onRemoveWidget: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                      tooltip:
+                                                          "remove_session".tr,
+                                                      onPressed: () =>
+                                                          onRemoveSession(obj),
+                                                      icon: Icon(
+                                                          Icons.remove_circle,
+                                                          color: context
+                                                              .onPrimaryContainer)),
+                                                  IconButton(
+                                                      tooltip:
+                                                          "update_permission"
+                                                              .tr,
+                                                      onPressed: () {
+                                                        updateApplicationAuthenticated(
+                                                            obj);
+                                                      },
+                                                      icon: Icon(Icons.security,
+                                                          color: context
+                                                              .onPrimaryContainer)),
+                                                ]),
+                                            child: Row(
                                               children: [
-                                                OneLineTextWidget(client.name,
-                                                    style: context
-                                                        .onPrimaryTextTheme
-                                                        .labelLarge),
-                                                OneLineTextWidget(client.url,
-                                                    style: context
-                                                        .onPrimaryTextTheme
-                                                        .bodyMedium),
+                                                CircleAPPImageView(
+                                                  client.image,
+                                                  radius:
+                                                      APPConst.circleRadius25,
+                                                  onError: (c) => const Icon(
+                                                      Icons.broken_image,
+                                                      size: APPConst.double40),
+                                                ),
+                                                WidgetConstant.width8,
+                                                Flexible(
+                                                    child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    OneLineTextWidget(
+                                                        client.name,
+                                                        style: context
+                                                            .onPrimaryTextTheme
+                                                            .labelLarge),
+                                                    OneLineTextWidget(
+                                                        client.url,
+                                                        style: context
+                                                            .onPrimaryTextTheme
+                                                            .bodyMedium),
+                                                  ],
+                                                )),
                                               ],
-                                            )),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                    enable: !obj.action);
-                              },
-                              itemCount: sessions.length,
-                              separatorBuilder: (context, index) =>
-                                  WidgetConstant.divider)
-                        ]))
+                                            ),
+                                          );
+                                        },
+                                        enable: !obj.action);
+                                  },
+                                  itemCount: sessions.length,
+                                  separatorBuilder: (context, index) =>
+                                      WidgetConstant.divider)
+                            ])))
                   ]),
-                )),
+                )
               ],
             );
           }),

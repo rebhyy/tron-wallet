@@ -61,7 +61,7 @@ abstract class JSBasePageController {
     if (err.message != null) {
       jsConsole.error(err.message);
     }
-    _wait?.completeError(err);
+    _wait?.complete();
   }
 
   void handleWalletMessage(WalletMessage walletResponse) {

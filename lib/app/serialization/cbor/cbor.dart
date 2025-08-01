@@ -1,5 +1,6 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/utils/utils.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain/on_chain.dart';
 

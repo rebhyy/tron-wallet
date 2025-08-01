@@ -8,7 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/types/t
 import 'package:on_chain_wallet/future/wallet/network/ripple/web3/controllers/controllers.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ripple/client/ripple.dart';
@@ -79,9 +79,22 @@ class WebXRPSendTransactionStateController
           {required IWeb3XRPSignedTransaction<IWeb3XRPTransactionRawData>
               signedTx,
           required SubmitTransactionSuccess<
-                  IWeb3XRPSignedTransaction<IWeb3XRPTransactionRawData>>
+                  IWeb3XRPSignedTransaction<IWeb3XRPTransactionRawData>>?
               txId}) async {
-    return [];
+    if (txId == null) return [];
+    final transaction = XRPWalletTransaction(
+        web3Client: web3ClientInfo(),
+        type: WalletTransactionType.web3Tx,
+        txId: txId.txId,
+        network: network,
+        outputs: [
+          XRPWalletTransactionOperationOutput(
+              name: signedTx.finalTransactionData.transactionType.value)
+        ]);
+    return [
+      IWalletTransaction(
+          transaction: transaction, account: signedTx.transaction.account)
+    ];
   }
 
   BigInt maxInputFee() {

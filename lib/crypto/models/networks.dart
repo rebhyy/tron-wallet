@@ -6,7 +6,7 @@ class NetworkType {
   final String name;
   final List<int> tag;
   final int mainNetworkId;
-  final int value;
+  final int id;
   final String caip2;
   static const int tagLength = 3;
   bool get isBitcoin =>
@@ -16,93 +16,93 @@ class NetworkType {
     required this.name,
     required this.tag,
     required this.mainNetworkId,
-    required this.value,
+    required this.id,
     required this.caip2,
   });
   static const NetworkType bitcoinAndForked = NetworkType._(
       name: "Bitcoin",
       tag: CryptoKeyConst.bitconNetwork,
       mainNetworkId: 0,
-      value: 0,
+      id: 10000,
       caip2: "bip122");
   static const NetworkType bitcoinCash = NetworkType._(
       name: "BitcoinCash",
       tag: CryptoKeyConst.bitcoinCashNetwork,
       mainNetworkId: 0,
-      value: 1,
+      id: 10001,
       caip2: "bch");
   static const NetworkType xrpl = NetworkType._(
       name: "XRPL",
       tag: CryptoKeyConst.xrpNetwork,
       mainNetworkId: 30,
-      value: 2,
+      id: 10002,
       caip2: "xrpl");
   static const NetworkType ethereum = NetworkType._(
       name: "Ethereum",
       tag: CryptoKeyConst.evmNetwork,
       mainNetworkId: 100,
-      value: 3,
+      id: 10003,
       caip2: 'eip155');
   static const NetworkType tron = NetworkType._(
       name: "Tron",
       tag: CryptoKeyConst.tvmNetwork,
       mainNetworkId: 1001,
-      value: 4,
+      id: 10004,
       caip2: 'tron');
   static const NetworkType solana = NetworkType._(
       name: "Solana",
       tag: CryptoKeyConst.solanaNetwork,
       mainNetworkId: 33,
-      value: 5,
+      id: 10005,
       caip2: 'solana');
   static const NetworkType cardano = NetworkType._(
       name: "Cardano",
       tag: CryptoKeyConst.cardanoNetwork,
       mainNetworkId: 50,
-      value: 6,
+      id: 10006,
       caip2: 'cardano');
   static const NetworkType cosmos = NetworkType._(
       name: "Cosmos",
       tag: CryptoKeyConst.cosmosNetwork,
       mainNetworkId: 200,
-      value: 7,
+      id: 10007,
       caip2: 'cosmos');
   static const NetworkType ton = NetworkType._(
       name: "TON",
       tag: CryptoKeyConst.tonNetwork,
       mainNetworkId: 300,
-      value: 8,
+      id: 10008,
       caip2: 'tvm');
   static const NetworkType substrate = NetworkType._(
       name: "Substrate",
       tag: CryptoKeyConst.substrateNetwork,
       mainNetworkId: 400,
-      value: 9,
+      id: 10009,
       caip2: 'polkadot');
   static const NetworkType stellar = NetworkType._(
       name: "Stellar",
       tag: CryptoKeyConst.stellar,
       mainNetworkId: 600,
-      value: 10,
+      id: 10010,
       caip2: 'stellar');
   static const NetworkType monero = NetworkType._(
       name: "Monero",
       tag: CryptoKeyConst.monero,
       mainNetworkId: 700,
-      value: 11,
+      id: 10011,
       caip2: 'monero');
   static const NetworkType aptos = NetworkType._(
       name: "Aptos",
       tag: CryptoKeyConst.aptos,
       mainNetworkId: 810,
-      value: 12,
+      id: 10012,
       caip2: 'aptos');
 
   static const NetworkType sui = NetworkType._(
       name: "Sui",
       tag: CryptoKeyConst.sui,
       mainNetworkId: 800,
-      value: 13,
+      id: 10013,
       caip2: 'sui');
 
   static const List<NetworkType> values = [
@@ -123,7 +123,7 @@ class NetworkType {
   ];
 
   static NetworkType fromValue(int? value) {
-    return values.firstWhere((e) => e.value == value,
+    return values.firstWhere((e) => e.id == value,
         orElse: () => throw WalletExceptionConst.incorrectNetwork);
   }
 

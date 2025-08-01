@@ -210,9 +210,7 @@ mixin Web3RequestControllerImpl on CryptoWokerImpl {
     if (currentApp == null) return;
     final dapp = await walletCore.getWeb3Dapp(currentApp.client);
     final request = Web3UpdatePermissionRequest(
-        lockedChains: [],
-        authentication: dapp.result.authentication,
-        client: currentApp.client);
+        authentication: dapp.result.authentication, client: currentApp.client);
     onUpdate(
       request,
       (networks) async {

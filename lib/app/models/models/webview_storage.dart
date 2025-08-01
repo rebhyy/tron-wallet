@@ -1,52 +1,19 @@
-import 'package:blockchain_utils/cbor/cbor.dart';
-import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
 
 enum WebViewStorageType {
-  tab(maxStorageLength: 4, tags: APPSerializationConst.webviewStorageTab),
-  hisotry(
-      maxStorageLength: 100, tags: APPSerializationConst.webviewStorageHistory),
-  bookmark(
-      maxStorageLength: 100,
-      tags: APPSerializationConst.webviewStorageBookmark);
+  tab(storageId: 0),
+  hisotry(storageId: 1),
+  bookmark(storageId: 2);
 
-  const WebViewStorageType(
-      {required this.maxStorageLength, required this.tags});
-  final int maxStorageLength;
-  final List<int> tags;
-  static WebViewStorageType fromTag(List<int>? tags) {
-    return values.firstWhere((e) => BytesUtils.bytesEqual(e.tags, tags),
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
-  }
-
-  String get storageKey => "_${name}_";
+  const WebViewStorageType({required this.storageId});
+  final int storageId;
 }
 
-abstract class WebViewStorage with CborSerializable {
+abstract class WebViewStorage {
   abstract final WebViewStorageType type;
   List<WebViewTab> _tabs;
   List<WebViewTab> get tabs => _tabs;
   WebViewStorage(List<WebViewTab> tabs) : _tabs = tabs.imutable;
-  factory WebViewStorage.deserialize(
-      {List<int>? bytes, CborObject? object, String? hex}) {
-    final CborTagValue tag =
-        CborSerializable.decode(cborBytes: bytes, hex: hex, object: object);
-    final type = WebViewStorageType.fromTag(tag.tags);
-    final objects = tag.getList;
-    final tabs = objects
-        .elementAt<List<dynamic>>(0)
-        .map((e) => WebViewTab.deserialize(object: e))
-        .toList();
-    tabs.sort((a, b) => b.lastVisit.compareTo(a.lastVisit));
-    switch (type) {
-      case WebViewStorageType.bookmark:
-        return WebViewBookmarkStorage(tabs);
-      case WebViewStorageType.hisotry:
-        return WebViewHistoryStorage(tabs);
-      case WebViewStorageType.tab:
-        return WebViewTabStorage(tabs);
-    }
-  }
 
   void clear() {
     _tabs = <WebViewTab>[].imutable;
@@ -63,20 +30,12 @@ abstract class WebViewStorage with CborSerializable {
     final tabs = List<WebViewTab>.from(_tabs);
     tabs.add(newTab);
     tabs.sort((a, b) => b.lastVisit.compareTo(a.lastVisit));
-    _tabs = tabs.take(type.maxStorageLength).imutable;
+    _tabs = tabs.imutable;
   }
 
   WebViewTab? getLastObject() {
     if (_tabs.isEmpty) return null;
     return _tabs.first;
-  }
-
-  @override
-  CborTagValue toCbor() {
-    return CborTagValue(
-        CborListValue.fixedLength(
-            [CborListValue.fixedLength(tabs.map((e) => e.toCbor()).toList())]),
-        type.tags);
   }
 }
 
@@ -102,7 +61,7 @@ class WebViewTabStorage extends WebViewStorage {
     final tabs = List<WebViewTab>.from(_tabs);
     tabs[find] = newTab;
     tabs.sort((a, b) => b.lastVisit.compareTo(a.lastVisit));
-    _tabs = List<WebViewTab>.unmodifiable(tabs.take(type.maxStorageLength));
+    _tabs = List<WebViewTab>.unmodifiable(tabs);
   }
 }
 
@@ -128,7 +87,7 @@ class WebViewBookmarkStorage extends WebViewStorage {
     });
   }
 
-  void addOrRemoveFromBookMark(WebViewTab newTab) {
+  bool addOrRemoveFromBookMark(WebViewTab newTab) {
     final find = _tabs.indexWhere((e) {
       if (newTab.path != null) {
         return e.path == newTab.path;
@@ -137,10 +96,11 @@ class WebViewBookmarkStorage extends WebViewStorage {
     });
     if (find < 0) {
       addNewTab(newTab);
-      return;
+      return true;
     }
     final tabs = List<WebViewTab>.from(_tabs);
     tabs.removeAt(find);
-    _tabs = tabs.take(type.maxStorageLength).imutable;
+    _tabs = tabs.imutable;
+    return false;
   }
 }

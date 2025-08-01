@@ -11,6 +11,7 @@ class CborTagsConst {
 
   /// chain handler
   static const List<int> chainHandler = [60, 3];
+  static const List<int> subWallet = [60, 4];
 
   static const List<int> coingeckoInfo = [60, 12];
   static const List<int> coingeckoCoins = [60, 13];

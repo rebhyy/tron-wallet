@@ -85,9 +85,9 @@ class APPSetting with CborSerializable {
 
   factory APPSetting.deserialize(
     PlatformConfig config, {
-    String? hex,
+    List<int>? bytes,
   }) {
-    if (hex == null) {
+    if (bytes == null) {
       return APPSetting._(
           appColor: null,
           appBrightness: null,
@@ -97,7 +97,7 @@ class APPSetting with CborSerializable {
     }
     try {
       final CborListValue cbor = CborSerializable.cborTagValue(
-          hex: hex, tags: APPSerializationConst.appSettingTag);
+          cborBytes: bytes, tags: APPSerializationConst.appSettingTag);
       final String? colorHex = cbor.elementAs(0);
       final String? brightnessName = cbor.elementAs(1);
       final Currency currency =

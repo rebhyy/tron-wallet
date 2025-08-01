@@ -4,8 +4,6 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/web3/controller/web3_request_controller.dart';
-import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
@@ -119,7 +117,7 @@ class _WalletConnectActiveSessionsState extends State<_ManageWeb3DapssView>
             .toList();
       }
     }
-    final request = Web3UpdatePermissionRequest(
+    final request = Web3UpdatePermissionRequest.chain(
         lockedChains: lockedChains, authentication: app.object.authentication);
     await context.openDialogPage(
       "update_permission".tr,

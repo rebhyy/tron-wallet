@@ -13,6 +13,7 @@ abstract class IsolateCryptoWoker {
 
   void init(bool useIsolate);
   bool get hasIsolate;
+  int get maxSyncThread;
 
   Future<T> _call<T>(
       {required Future<T> Function() onIsolate,

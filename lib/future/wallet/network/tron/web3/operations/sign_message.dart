@@ -1,8 +1,9 @@
+import 'package:blockchain_utils/signer/const/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/crypto/requets/messages.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/page.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/params/models/sign_message_v2.dart';
@@ -19,20 +20,21 @@ class Web3TronSignMessageStateController extends Web3TronStateController<String,
   @override
   Future<Web3RequestResponseData<String>> getResponse() async {
     final sign = await walletProvider.wallet.walletRequest(
-      WalletRequestSignMessage(
-          message: payloadMessage,
-          index: defaultAccount.keyIndex.cast(),
-          network: NetworkType.tron),
-    );
+        WalletRequestSignMessage(
+            message: payloadMessage,
+            index: defaultAccount.keyIndex.cast(),
+            network: NetworkType.tron));
     return Web3RequestResponseData<String>(response: sign.result.signatureHex);
   }
 
   @override
   Widget widgetBuilder(BuildContext context) {
     return Web3StateSignMessageView(
-        controller: this,
-        message: message,
-        content: content,
-        isPersonalSign: true);
+      controller: this,
+      message: message,
+      content: content,
+      isPersonalSign: true,
+      prefix: CryptoSignerConst.tronSignMessagePrefix,
+    );
   }
 }

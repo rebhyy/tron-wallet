@@ -6,76 +6,86 @@ enum LogType { debug, warning, error }
 
 const appLogger = _APPLogger(mode: LoggerMode.dev);
 
+typedef LOGWHEN = bool Function();
+
 class _APPLogger {
   final LoggerMode mode;
-  const _APPLogger({this.mode = LoggerMode.dev});
+  const _APPLogger({this.mode = LoggerMode.silent});
 
-  void debug({
-    Object? runtime,
-    Object? functionName,
-    Object? msg,
-  }) =>
-      _log(
-          className: runtime?.toString(),
-          functionName: functionName?.toString(),
-          type: LogType.debug,
-          message: msg);
+  void debug(
+      {Object? runtime, Object? functionName, Object? msg, LOGWHEN? when}) {
+    return _log(
+        className: runtime?.toString(),
+        functionName: functionName?.toString(),
+        type: LogType.debug,
+        message: msg,
+        when: when);
+  }
 
-  void warn({
-    Object? runtime,
-    Object? functionName,
-    Object? msg,
-  }) =>
+  void warn(
+          {Object? runtime,
+          Object? functionName,
+          Object? msg,
+          LOGWHEN? when}) =>
       _log(
           className: runtime?.toString(),
           functionName: functionName?.toString(),
           type: LogType.warning,
-          message: msg);
+          message: msg,
+          when: when);
 
   void error(
           {Object? runtime,
           Object? functionName,
           Object? msg,
-          StackTrace? trace}) =>
+          StackTrace? trace,
+          LOGWHEN? when}) =>
       _log(
           className: runtime?.toString(),
           functionName: functionName?.toString(),
           type: LogType.error,
           message: msg?.toString(),
-          stackTrace: trace);
+          stackTrace: trace,
+          when: when);
   void _log(
       {String? className,
       String? functionName,
       required LogType type,
       Object? message,
-      StackTrace? stackTrace}) {
-    if (mode == LoggerMode.silent) return;
+      StackTrace? stackTrace,
+      LOGWHEN? when}) {
+    assert(() {
+      () {
+        if (mode == LoggerMode.silent) return;
+        if (when != null && !when()) return;
+        final prefix = _logPrefix(type);
+        final output = StringBuffer()..write(prefix);
+        if (className != null || functionName != null) {
+          output.write("[${className ?? ''}.${functionName ?? ''}]");
+        }
+        if (message != null) {
+          output.write(" $message");
+        }
+        if (type == LogType.error && stackTrace != null) {
+          final traceInfo = StackTraceInfo.parseStackTrace(stackTrace);
+          if (traceInfo != null) output.writeln('\n$traceInfo');
+        }
+        final finalMessage = output.toString();
 
-    final prefix = _logPrefix(type);
-    final output = StringBuffer()..write(prefix);
-    if (className != null || functionName != null) {
-      output.write("[${className ?? ''}.${functionName ?? ''}]");
-    }
-    if (message != null) {
-      output.write(" $message");
-    }
-    if (type == LogType.error && stackTrace != null) {
-      final traceInfo = StackTraceInfo.parseStackTrace(stackTrace);
-      if (traceInfo != null) output.writeln('\n$traceInfo');
-    }
-    final finalMessage = output.toString();
-
-    switch (type) {
-      case LogType.debug:
-        _debug(finalMessage);
-        break;
-      case LogType.warning:
-        _warning(finalMessage);
-        return;
-      case LogType.error:
-        _error(finalMessage);
-        break;
-    }
+        switch (type) {
+          case LogType.debug:
+            _debug(finalMessage);
+            break;
+          case LogType.warning:
+            _warning(finalMessage);
+            return;
+          case LogType.error:
+            _error(finalMessage);
+            break;
+        }
+      }();
+      return true;
+    }());
   }
 
   String _logPrefix(LogType type) {

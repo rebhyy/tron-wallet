@@ -18,18 +18,18 @@ base mixin MoneroChainRepository on Chain<
   MoneroAddressUtxos get _accountUtxos;
 
   Future<void> _saveDefaultTracker() async {
-    await _storage.writeStorageItem(
-        storage: MoneroChainStorage.defaultTracker, item: defaultTracker);
+    await _storage.insertChainStorage(
+        storage: MoneroChainStorage.defaultTracker, value: defaultTracker);
   }
 
   Future<MoneroAccountBlocksTracker> _getDefaultTracker() async {
     try {
-      final data = await _storage.readStorage(
+      final data = await _storage.queryChainStorage(
           storage: MoneroChainStorage.defaultTracker);
       if (data == null) {
         return MoneroAccountBlocksTracker.start();
       }
-      return MoneroAccountBlocksTracker.deserialize(hex: data);
+      return MoneroAccountBlocksTracker.deserialize(bytes: data);
     } catch (e) {
       assert(false, "tracker deserialization failed.");
       return MoneroAccountBlocksTracker.start();
@@ -37,24 +37,24 @@ base mixin MoneroChainRepository on Chain<
   }
 
   Future<MoneroSyncChain> _getSyncChain() async {
-    final data =
-        await _storage.readSharedStorage(storage: MoneroChainStorage.syncChain);
+    final data = await _storage.queryChainSharedStorage(
+        storage: MoneroChainStorage.syncChain);
     if (data == null) {
       return MoneroSyncChain.mainnet;
     }
-    return MoneroSyncChain.deserialize(hex: data);
+    return MoneroSyncChain.deserialize(bytes: data);
   }
 
   Future<void> _saveSyncChain(MoneroSyncChain syncChain) async {
-    await _storage.writeSharedStorageItem(
-        storage: MoneroChainStorage.syncChain, item: syncChain);
+    await _storage.insertChainSharedStorage(
+        storage: MoneroChainStorage.syncChain, value: syncChain);
   }
 
   Future<MoneroAPIProvider?> _getWalletRPC() async {
     final data =
-        await _storage.readStorage(storage: MoneroChainStorage.walletRPC);
+        await _storage.queryChainStorage(storage: MoneroChainStorage.walletRPC);
     if (data == null) return null;
-    return MoneroAPIProvider.fromCborBytesOrObject(hex: data);
+    return MoneroAPIProvider.fromCborBytesOrObject(bytes: data);
   }
 
   Future<MoneroWalletClient?> _getWalletClient() async {
@@ -64,21 +64,27 @@ base mixin MoneroChainRepository on Chain<
   }
 
   Future<void> _saveWalletRpc(MoneroAPIProvider? provider) async {
-    await _storage.writeStorageItem(
-        storage: MoneroChainStorage.walletRPC, item: provider);
+    if (provider == null) {
+      await _storage.removeChainStorage(storage: MoneroChainStorage.walletRPC);
+      return;
+    }
+
+    await _storage.insertChainStorage(
+        storage: MoneroChainStorage.walletRPC, value: provider);
   }
 
   Future<void> _saveUtxos() async {
     final storageKey = MoneroChainStorage.addressUtxos;
-    await _storage.writeStorageItem(storage: storageKey, item: _accountUtxos);
+    await _storage.insertChainStorage(
+        storage: storageKey, value: _accountUtxos);
   }
 
   Future<MoneroAddressUtxos> _getAccountUtxos() async {
     final storagekey = MoneroChainStorage.addressUtxos;
-    final data = await _storage.readStorage(storage: storagekey);
+    final data = await _storage.queryChainStorage(storage: storagekey);
     if (data == null) return MoneroAddressUtxos();
     try {
-      return MoneroAddressUtxos.deserialize(hex: data);
+      return MoneroAddressUtxos.deserialize(bytes: data);
     } catch (e) {
       assert(false, 'monero address deserialization failed. $e');
       return MoneroAddressUtxos();

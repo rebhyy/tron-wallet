@@ -1,26 +1,21 @@
-class StorageConst {
-  StorageConst._();
+import 'package:on_chain_bridge/database/database.dart';
 
-  /// hd wallet
-  static const String hdWallets = "HDW";
+class APPDatabaseConst {
+  static const String mainTableName = "onchain";
+  static const int defaultStorageId = 0;
+  static const int accountStorageId = 1000;
 
-  /// chains
-  static const String walletStorageKey = "HDW_";
-  static const String chainSorageKey = "CS_";
-  static const String chainSharedSorageKey = "CSS_";
-  static const String web3StorageKey = "WEB3_";
-  static const String walletConnectStorageKey = "WEB3WC_";
+  static const int appSettingStorage = 1;
+  static const int appSwapStorage = 2;
+  static const int webviewStorage = 5;
+  static const int hdWalletStorage = 4;
 
-  /// webview ..
-  static const String webview = "WV";
+  static const int web3AuthStorage = 100000;
+  static const int web3WcSessionStorageId = 1;
+  static const int web3WcMessageId = 2;
 
-  /// detect storage version
-  static const String storageVersion = "SV";
-
-  ///
-  static const String baseStoragePrefix = "SV_";
-  static const String fullAppSettingStorageId = "SV_app_setting";
-  static const String appStorageKeyId = "app";
-  static const String appSetting = "setting";
-  static const String swapSetting = "swap";
+  static const ITableReadStructA appSettingQuery = ITableReadStructA(
+      tableName: mainTableName,
+      storage: appSettingStorage,
+      storageId: defaultStorageId);
 }

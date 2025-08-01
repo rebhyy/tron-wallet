@@ -696,6 +696,9 @@ class MoneroAccountBlocksTracker with CborSerializable {
     ];
   }
 
+  /// 1915832
+  /// 1911983
+
   Future<Stream<void>?> getHeightRequest(
       {required Future<
                   SyncRequestController<MoneroSyncBlocksResponse,
@@ -769,7 +772,7 @@ class MoneroAccountBlocksTracker with CborSerializable {
         }
       }
 
-      Future.wait(List.generate(2,
+      Future.wait(List.generate(totalThread,
               (i) => startSync(getOffset: () => getNextOffset(), processId: i)))
           .then((e) {
         controller?.add(null);

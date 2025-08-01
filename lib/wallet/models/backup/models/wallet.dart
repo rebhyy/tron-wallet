@@ -95,26 +95,34 @@ abstract final class WalletBackupCore {
 }
 
 final class WalletBackupChainRepository with CborSerializable {
-  final String value;
+  final List<int> value;
   final int storageID;
   final int networkID;
+  final int? createdAt;
   final String? identifier;
+  final String? identifier2;
 
   const WalletBackupChainRepository._(
       {required this.storageID,
       required this.identifier,
       required this.value,
-      required this.networkID});
+      required this.networkID,
+      required this.identifier2,
+      required this.createdAt});
   factory WalletBackupChainRepository(
       {required int storageID,
       required String? identifier,
-      required String value,
-      required int networkID}) {
+      required String? identifier2,
+      required List<int> value,
+      required int networkID,
+      required int? createdAt}) {
     return WalletBackupChainRepository._(
         storageID: storageID,
         identifier: identifier,
         value: value,
-        networkID: networkID);
+        networkID: networkID,
+        identifier2: identifier2,
+        createdAt: createdAt);
   }
   factory WalletBackupChainRepository.deserialize(
       {List<int>? bytes, CborObject? obj, String? hex}) {
@@ -128,13 +136,22 @@ final class WalletBackupChainRepository with CborSerializable {
         value: values.elementAs(0),
         storageID: values.elementAs(1),
         identifier: values.elementAs(2),
-        networkID: values.elementAs(3));
+        identifier2: values.elementAs(3),
+        networkID: values.elementAs(4),
+        createdAt: values.elementAs(5));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborListValue.fixedLength([value, storageID, identifier, networkID]),
+        CborListValue.fixedLength([
+          CborBytesValue(value),
+          storageID,
+          identifier,
+          identifier2,
+          networkID,
+          createdAt
+        ]),
         CborTagsConst.walletBackupChainStorageIds);
   }
 }
@@ -331,7 +348,7 @@ final class WalletRestoreV2 {
     required WalletMasterKeys masterKeys,
     required List<WalletChainBackup> chains,
     required List<ChainAccount> invalidAddresses,
-    required HDWallet wallet,
+    required MainWallet wallet,
     required bool verifiedChecksum,
     required List<Web3APPAuthentication> dapps,
   }) {
@@ -348,7 +365,7 @@ final class WalletRestoreV2 {
   final List<ChainAccount> invalidAddresses;
   final List<Web3APPAuthentication> dapps;
 
-  final HDWallet wallet;
+  final MainWallet wallet;
   final bool? verifiedChecksum;
   final int totalAccounts;
   bool get hasFailedAccount => invalidAddresses.isNotEmpty;

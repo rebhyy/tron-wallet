@@ -64,18 +64,17 @@ dependencies:
       url: https://github.com/mrtnetwork/onchain_swap.git
       ref: main 
   on_chain_bridge:
-    # path: ../onchain_bridge
     git:
       url: https://github.com/mrtnetwork/onchain_bridge.git
       ref: main
   bitcoin_base: ^6.7.0
   # bitcoin_base:
   #   path: ../bitcoin_base
-  # xrpl_dart: ^6.0.0
-  xrpl_dart:
-    git:
-      url: https://github.com/mrtnetwork/xrpl_dart.git
-      ref: main
+  xrpl_dart: ^7.0.0
+  # xrpl_dart:
+  #   git:
+  #     url: https://github.com/mrtnetwork/xrpl_dart.git
+  #     ref: main
   on_chain: ^6.9.0
   # on_chain:
   #   path: ../On_chain

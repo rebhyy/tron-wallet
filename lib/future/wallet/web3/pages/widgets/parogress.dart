@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
+import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/web3/core/exception/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/request/web_request.dart';
 
@@ -73,21 +73,28 @@ class StreamWeb3PageProgressController extends StreamValue<Web3ProgressStatus> {
   }
 
   void responseTx(
-      {required List<SubmitTransactionResult> txIds,
-      required WalletNetwork network}) {
+      {required List<SubmitTransactionResult> txIds, required Chain account}) {
     response(
         widget: ProgressMultipleTextView(
+            account: account,
             texts: txIds.map((e) {
               if (e.status.isFailed) {
-                return ProgressMultipleTextViewObject.error(
+                return ProgressTxStatusErrorView(
                     message: e.cast<SubmitTransactionFailed>().error);
               }
-              final txId = e.cast<SubmitTransactionSuccess>().txId;
-              return ProgressMultipleTextViewObject.success(
-                  message: txId, openUrl: network.getTransactionExplorer(txId));
+              final txId = e.cast<SubmitTransactionSuccess>();
+              return ProgressTxStatusSuccessView(
+                  txId: txId.txId,
+                  warning: txId.warning,
+                  openUrl: account.network.getTransactionExplorer(txId.txId),
+                  transaction: account.addresses
+                      .firstWhereOrNull((e) =>
+                          e == txId.signedTransaction.transaction.account)
+                      ?.transactions
+                      .firstWhereOrNull((e) => e.txId == txId.txId));
             }).toList(),
-            logo: network.token.assetLogo,
-            title: network.networkName));
+            logo: account.network.token.assetLogo,
+            title: account.network.networkName));
   }
 
   void processs({String? text}) {

@@ -19,7 +19,7 @@ class BitcoinParams extends NetworkCoinParams<BaseBitcoinAPIProvider> {
         cborBytes: bytes, object: obj, tags: CborTagsConst.bitconNetworkParam);
 
     return BitcoinParams(
-        token: Token.deserialize(obj: values.getCborTag(2)),
+        token: Token.deserialize(obj: values.elementAs<CborTagValue>(2)),
         transacationNetwork: BasedUtxoNetwork.fromName(values.elementAs(3)),
         providers: values
             .elementAsListOf<CborTagValue>(4)

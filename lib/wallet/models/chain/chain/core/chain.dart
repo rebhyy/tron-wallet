@@ -49,7 +49,6 @@ abstract final class Chain<
         CryptoWokerImpl {
   @override
   final ChainStorageManager _storage;
-  String get storageId => _storage.storageId;
 
   NETWORK _network;
   @override

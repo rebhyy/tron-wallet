@@ -75,7 +75,7 @@ class _WalletLoginPageViewState extends State<WalletLoginPageView>
         leading: IconButton(
             onPressed: () {
               context
-                  .openSliverDialog<HDWallet>(
+                  .openSliverDialog<MainWallet>(
                       widget: (c) => SwitchWalletView(
                             wallets: wallet.wallet.wallets,
                             selectedWallet: wallet.wallet.wallet,

@@ -9,6 +9,7 @@ final class WalletMasterKeys with CborSerializable {
   final List<int> _checksum;
   final APPBip39Languages _language;
   final List<ImportedKeyStorage> _customKeys;
+  final List<SubWalletMasterKeys> _subWallets;
   List<int> get checksum => _checksum;
 
   AccessMnemonicResponse mnemonic() {
@@ -20,6 +21,7 @@ final class WalletMasterKeys with CborSerializable {
     required List<int> mnemonic,
     required List<int> seedBytes,
     required List<ImportedKeyStorage> customKeys,
+    List<SubWalletMasterKeys> subWallets = const [],
     required List<int> entropySeedBytes,
     required List<int> cardanoLegacyByronSeed,
     required List<int> cardanoIcarusSeed,
@@ -32,7 +34,8 @@ final class WalletMasterKeys with CborSerializable {
         _entopySeed = entropySeedBytes.asImmutableBytes,
         _mnemonic = mnemonic.asImmutableBytes,
         _customKeys = customKeys.immutable,
-        _language = language;
+        _language = language,
+        _subWallets = subWallets.immutable;
   List<int> _getSeed(SeedTypes type) {
     switch (type) {
       case SeedTypes.bip39:
@@ -175,7 +178,9 @@ final class WalletMasterKeys with CborSerializable {
             CborListValue.fixedLength(
                 _customKeys.map((e) => e.toCbor()).toList()),
             CborBytesValue(_checksum),
-            _language.value
+            _language.value,
+            CborListValue.fixedLength(
+                _subWallets.map((e) => e.toCbor()).toList()),
           ]),
           CryptoKeyConst.backupMasterKey);
     }
@@ -190,7 +195,9 @@ final class WalletMasterKeys with CborSerializable {
           CborBytesValue(_cardanoIcarusSeed),
           CborBytesValue(_checksum),
           CborBytesValue(_entopySeed),
-          _language.value
+          _language.value,
+          CborListValue.fixedLength(
+              _subWallets.map((e) => e.toCbor()).toList()),
         ]),
         CryptoKeyConst.mnemonic);
   }
@@ -307,7 +314,8 @@ final class WalletMasterKeys with CborSerializable {
                 created: e.created,
                 name: e.name,
                 keyType: e.keyType))
-            .toList());
+            .toList(),
+        subWallets: _subWallets.map((e) => e._checksum).toList());
     final storageBytes = _toStorage(key: key);
     return (encryptedMasterKey, storageBytes);
   }
@@ -337,5 +345,61 @@ final class WalletMasterKeys with CborSerializable {
       CborBytesValue(encrypt)
     ]);
     return toCbor.encode();
+  }
+}
+
+abstract class SubWalletMasterKeys with CborSerializable {
+  abstract final List<int> _checksum;
+}
+
+final class Bip39WalletMasterKeys extends SubWalletMasterKeys {
+  final List<int> _mnemonic;
+  final List<int> _seed;
+  final List<int> _entopySeed;
+  final List<int> _cardanoLegacyByronSeed;
+  final List<int> _cardanoIcarusSeed;
+  @override
+  final List<int> _checksum;
+  final List<int>? _passphrase;
+  final APPBip39Languages _language;
+  List<int> get checksum => _checksum;
+
+  AccessMnemonicResponse mnemonic() {
+    final encode = Bip39MnemonicEncoder(_language.language).encode(_mnemonic);
+    return AccessMnemonicResponse._(encode);
+  }
+
+  Bip39WalletMasterKeys._({
+    required List<int> mnemonic,
+    required List<int> seedBytes,
+    required List<int> entropySeedBytes,
+    required List<int> cardanoLegacyByronSeed,
+    required List<int> cardanoIcarusSeed,
+    required List<int> checksum,
+    List<int>? passphrase,
+    required APPBip39Languages language,
+  })  : _seed = seedBytes.asImmutableBytes,
+        _cardanoLegacyByronSeed = cardanoLegacyByronSeed.asImmutableBytes,
+        _cardanoIcarusSeed = cardanoIcarusSeed.asImmutableBytes,
+        _checksum = checksum.asImmutableBytes,
+        _entopySeed = entropySeedBytes.asImmutableBytes,
+        _mnemonic = mnemonic.asImmutableBytes,
+        _language = language,
+        _passphrase = passphrase?.asImmutableBytes;
+
+  @override
+  CborTagValue toCbor({bool backup = false}) {
+    return CborTagValue(
+        CborListValue.fixedLength([
+          CborBytesValue(_mnemonic),
+          CborBytesValue(_seed),
+          _passphrase == null ? null : CborBytesValue(_passphrase),
+          CborBytesValue(_cardanoLegacyByronSeed),
+          CborBytesValue(_cardanoIcarusSeed),
+          CborBytesValue(_checksum),
+          CborBytesValue(_entopySeed),
+          _language.value
+        ]),
+        CryptoKeyConst.mnemonic);
   }
 }

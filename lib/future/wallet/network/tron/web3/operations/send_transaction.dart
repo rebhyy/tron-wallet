@@ -2,8 +2,7 @@ import 'dart:async';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain/on_chain.dart';
-import 'package:on_chain_wallet/app/error/exception.dart';
-import 'package:on_chain_wallet/app/utils/method/utiils.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/controllers/fee.dart';
@@ -14,7 +13,7 @@ import 'package:on_chain_wallet/future/wallet/network/tron/web3/controllers/cont
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/tron/client/tron.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
@@ -152,8 +151,25 @@ class WebTronSendTransactionStateController
       buildWalletTransaction(
           {required IWeb3TronSignedTransaction<IWeb3TronTransactionRawData>
               signedTx,
-          required SubmitTransactionSuccess txId}) async {
-    return [];
+          required SubmitTransactionSuccess? txId}) async {
+    if (txId == null) return [];
+    final transaction = TronWalletTransaction(
+        web3Client: web3ClientInfo(),
+        type: WalletTransactionType.web3Sign,
+        txId: txId.txId,
+        network: network,
+        outputs: [
+          TronWalletTransactionOperationOutput(
+              name: signedTx.finalTransactionData.rawData
+                  .getContract()
+                  .contractType
+                  .name)
+        ]);
+
+    return [
+      IWalletTransaction(
+          transaction: transaction, account: signedTx.transaction.account)
+    ];
   }
 
   BigInt getMaxFeeInput() {
@@ -186,6 +202,14 @@ class WebTronSendTransactionStateController
   @override
   Widget widgetBuilder(BuildContext context) {
     return Web3TronSignTransactionStateView(this);
+  }
+
+  @override
+  void onAccountUpdated(ITronAddress e) {
+    super.onAccountUpdated(e);
+    if (e == defaultAccount) {
+      estimateFee();
+    }
   }
 
   @override

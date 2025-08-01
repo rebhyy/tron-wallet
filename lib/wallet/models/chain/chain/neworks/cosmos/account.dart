@@ -162,7 +162,7 @@ final class CosmosChain extends Chain<
   @override
   Future<void> _initInternal({bool client = true}) async {
     await super._initInternal(client: client);
-    await _loadChannelIds();
+    _loadChannelIds();
   }
 
   @override

@@ -1,6 +1,6 @@
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:stellar_dart/stellar_dart.dart';
 
 mixin StellarTransactionMemoontroller on BaseStellarTransactionController {

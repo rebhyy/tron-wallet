@@ -16,8 +16,8 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
 
   Chain get currentChain => _controller._appChains.chain;
   WalletNetwork get network => _controller.network;
-  HDWallet get wallet => _controller._wallet;
-  List<HDWallet> get wallets => _wallets.wallets.values.toList()
+  MainWallet get wallet => _controller._wallet;
+  List<MainWallet> get wallets => _wallets.wallets.values.toList()
     ..sort((a, b) => b.created.compareTo(a.created));
   Web3WalletConnectHandler get walletConnect =>
       _controller.walletConnectHandler;
@@ -29,7 +29,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
       homePageStatus.isOpen ? _controller._appChains.coinIds() : [];
 
   Future<MethodResult<void>> setup(
-      {required HDWallet hdWallet,
+      {required MainWallet hdWallet,
       required String password,
       required WalletUpdateInfosData walletInfos}) async {
     final result = await _callSynchronized(
@@ -152,7 +152,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     return result;
   }
 
-  Future<MethodResult<bool>> switchWallet(HDWallet wallet) async {
+  Future<MethodResult<bool>> switchWallet(MainWallet wallet) async {
     return await _callSynchronized(() async {
       return await _switchWallet(wallet);
     }, action: () => WalletActionEventType.switchWallet);
@@ -404,28 +404,23 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
         action: () => WalletActionEventType.backup);
   }
 
-  Future<HDWallet> createWallet(
+  Future<MainWallet> createWallet(
       {required String mnemonic,
       required String? passphrase,
       required String password}) async {
     if (passphrase?.isEmpty ?? false) {
       throw WalletExceptionConst.invalidMnemonicPassphrase;
     }
-    final checksum = await crypto.generateRandomBytes(
-        length: CreateHDWalletConst.checksumLength,
-        existsKeys:
-            _wallets.wallets.values.map((e) => e.checkSumBytes).toList());
+    final newWallet = _wallets.createNewMainWallet(
+        name: StrUtils.addNumberToMakeUnique(
+            _wallets.walletNames, HDWalletsConst.initializeName));
     final encrypt = await crypto.cryptoIsolateRequest(
         CryptoRequestCreateHDWallet(
             mnemonic: mnemonic,
             passphrase: passphrase,
             password: password,
-            checksum: checksum));
-    return HDWallet.setup(
-        checksum: BytesUtils.toHexString(checksum),
-        name: StrUtils.addNumberToMakeUnique(
-            _wallets.walletNames, HDWalletsConst.initializeName),
-        data: encrypt.storageData);
+            checksum: newWallet.checkSumBytes));
+    return newWallet.updateData(encrypt.storageData);
   }
 
   Future<WalletRestoreV2> restoreWalletBackupV3(
@@ -439,12 +434,10 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
       if (passhphrase?.isEmpty ?? false) {
         throw WalletExceptionConst.invalidMnemonicPassphrase;
       }
-      final checksum = await crypto.generateRandomHex(
-        length: CreateHDWalletConst.checksumLength,
-        existsKeys:
-            _wallets.wallets.values.map((e) => e.checkSumBytes).toList(),
-      );
-      final key = await _toWalletPassword(password, checksum);
+      final newWallet = _wallets.createNewMainWallet(
+          name: StrUtils.addNumberToMakeUnique(
+              _wallets.walletNames, HDWalletsConst.initializeName));
+      final key = await _toWalletPassword(password, newWallet.checkSumBytes);
       final resotreKey = await crypto.cryptoIsolateRequest(
           CryptoRequestRestoreBackupMasterKey(
               key: key,
@@ -452,7 +445,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
               passphrase: passhphrase));
       return await _validateBackupAccounts(
           backup: backup as WalletBackup,
-          checksum: checksum,
+          wallet: newWallet.updateData(resotreKey.storageData),
           resotreKey: resotreKey,
           key: key);
     } on WalletException catch (e) {
@@ -468,7 +461,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
   Future<WalletRestoreV2> _validateBackupAccounts({
     required WalletBackup backup,
     required CryptoRestoreBackupMasterKeyResponse resotreKey,
-    required String checksum,
+    required MainWallet wallet,
     required List<int> key,
   }) async {
     final setupKey = resotreKey.masterKey;
@@ -479,11 +472,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
           dapps: const [],
           invalidAddresses: const [],
           verifiedChecksum: false,
-          wallet: HDWallet.setup(
-              checksum: checksum,
-              name: StrUtils.addNumberToMakeUnique(
-                  _wallets.walletNames, HDWalletsConst.initializeName),
-              data: resotreKey.storageData));
+          wallet: wallet);
     }
     final List<WalletChainBackup> validateChains = [];
     final List<ChainAccount> invalidAddresses = [];
@@ -532,7 +521,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
                 addresses: c.chain.addresses
                     .where((e) => addresses.contains(e))
                     .toList(),
-                id: checksum),
+                id: wallet.key),
             repositories: c.repositories);
 
         validateChains.add(chain);
@@ -544,11 +533,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
         dapps: backup.dapps,
         chains: validateChains,
         invalidAddresses: invalidAddresses,
-        wallet: HDWallet.setup(
-            checksum: checksum,
-            name: StrUtils.addNumberToMakeUnique(
-                _wallets.walletNames, HDWalletsConst.initializeName),
-            data: resotreKey.storageData),
+        wallet: wallet,
         verifiedChecksum: true);
   }
 }

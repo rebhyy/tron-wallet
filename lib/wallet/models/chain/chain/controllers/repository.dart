@@ -17,43 +17,60 @@ mixin ChainRepository<
 
   Future<List<CONTACT>> _getContacts() async {
     final storagekey = _storage.config.contactsStorageKey;
-    final data = await _storage.readStorages(storage: storagekey);
+    final data = await _storage.queriesChainStorage(storage: storagekey);
     final contacts = data
         .map((e) => ContactCore.deserialize<CONTACT>(network, bytes: e))
         .toList()
         .whereType<CONTACT>()
         .toList();
+    appLogger.debug(
+        when: () => contacts.isNotEmpty,
+        runtime: runtimeType,
+        functionName: "_getContacts ${network.networkName}",
+        msg: "${contacts.length} contacts founds.");
     assert(
         contacts.length == data.length, "some contact deserialization failed.");
     return contacts;
   }
 
-  Future<void> _saveContact(CONTACT cotact) async {
+  Future<void> _saveContact(CONTACT contact) async {
     final storageKey = _storage.config.contactsStorageKey;
-    await _storage.writeStorageItem(
-        storage: storageKey, item: cotact, identifier: cotact.identifier);
+    await _storage.insertChainStorage(
+        storage: storageKey, value: contact, keyA: contact.identifier);
   }
 
   Future<void> _removeContact(CONTACT contact) async {
     final storageKey = _storage.config.contactsStorageKey;
-    await _storage.writeStorageItem(
-        storage: storageKey, item: null, identifier: contact.identifier);
+    await _storage.removeChainStorage(
+        storage: storageKey, keyA: contact.identifier);
   }
 
   ///
 
-  Future<List<TOKEN>> _getTokens(ADDRESS address) async {
+  Future<List<TOKEN>> _getTokens(ADDRESS address,
+      {int? offset,
+      int? limit,
+      IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc}) async {
     final storagekey = _storage.config.tokenStorageKey;
     assert(address.network == network.value, "address does not exists");
     if (storagekey == null || address.network != network.value) return [];
-    final data = await _storage.readAccountStorages(
-        account: address, storageKey: storagekey);
+    final data = await _storage.queriesChainStorage(
+      address: address,
+      storage: storagekey,
+      limit: limit,
+      offset: offset,
+      ordering: ordering,
+    );
     final tokens = data
         .map((e) => TokenCore.deserialize<TOKEN>(bytes: e))
         .toList()
         .whereType<TOKEN>()
         .toList();
-
+    appLogger.debug(
+        when: () => tokens.isNotEmpty,
+        runtime: runtimeType,
+        functionName: "_getTokens ${network.networkName}",
+        msg: "${address.viewAddress} ${tokens.length} tokens founds.");
     assert(tokens.length == data.length, "some token deserialization failed.");
     return tokens;
   }
@@ -68,11 +85,11 @@ mixin ChainRepository<
         address.network != network.value) {
       return;
     }
-    await _storage.writeAccountStorage(
-        account: address,
-        storageKey: storageKey,
-        item: token,
-        identifier: token.identifier);
+    await _storage.insertChainStorage(
+        address: address,
+        storage: storageKey,
+        value: token,
+        keyA: token.identifier);
   }
 
   Future<void> _removeToken(
@@ -87,37 +104,48 @@ mixin ChainRepository<
       return;
     }
 
-    await _storage.writeAccountStorage(
-        account: address,
-        storageKey: storageKey,
-        item: null,
-        identifier: token.identifier);
+    await _storage.removeChainStorage(
+        address: address, storage: storageKey, keyA: token.identifier);
   }
 
   Future<void> _cleanAddressRepositories({required ADDRESS address}) async {
     assert(address.network == network.value, "address does not exists");
     if (address.network != network.value) return;
-    final storages = _storage.config.addressStorage;
-    for (final i in storages) {
-      await _storage.cleanAddressStorage(account: address, storageKey: i);
-    }
+    await _storage.removeChainStorage(address: address);
+    appLogger.debug(
+        runtime: runtimeType,
+        functionName: "_cleanAddressRepositories ${network.networkName}",
+        msg: address.viewAddress);
   }
 
-  Future<List<NFT>> _getNfts(ADDRESS address) async {
+  Future<List<NFT>> _getNfts(ADDRESS address,
+      {int? offset,
+      int? limit,
+      IDatabaseQueryOrdering ordering = IDatabaseQueryOrdering.desc}) async {
     final storagekey = _storage.config.nftStorageKey;
     if (storagekey == null) return [];
     assert(address.network == network.value, "address does not exists");
     if (address.network != network.value) {
       return [];
     }
-    final data = await _storage.readAccountStorages(
-        account: address, storageKey: storagekey);
+    final data = await _storage.queriesChainStorage(
+      address: address,
+      storage: storagekey,
+      limit: limit,
+      offset: offset,
+      ordering: ordering,
+    );
     final nfts = data
         .map((e) => MethodUtils.nullOnException(
             () => NFTCore.deserialize<NFT>(bytes: e)))
         .toList()
         .whereType<NFT>()
         .toList();
+    appLogger.debug(
+        when: () => nfts.isNotEmpty,
+        runtime: runtimeType,
+        functionName: "_getNfts ${network.networkName}",
+        msg: "${address.viewAddress} ${nfts.length} founds.");
     assert(nfts.length == data.length, "some nft deserialization failed.");
     return nfts;
   }
@@ -132,11 +160,11 @@ mixin ChainRepository<
         address.network != network.value) {
       return;
     }
-    await _storage.writeAccountStorage(
-        account: address,
-        storageKey: storageKey,
-        item: nft,
-        identifier: nft.identifier);
+    await _storage.insertChainStorage(
+        address: address,
+        storage: storageKey,
+        value: nft,
+        keyA: nft.identifier);
   }
 
   Future<void> _removeNFT({required ADDRESS address, required NFT nft}) async {
@@ -149,11 +177,8 @@ mixin ChainRepository<
         address.network != network.value) {
       return;
     }
-    await _storage.writeAccountStorage(
-        account: address,
-        storageKey: storageKey,
-        item: null,
-        identifier: nft.identifier);
+    await _storage.removeChainStorage(
+        address: address, storage: storageKey, keyA: nft.identifier);
   }
 
   Future<List<TRANSACTION>> _getTransactions(ADDRESS address) async {
@@ -161,14 +186,21 @@ mixin ChainRepository<
     if (address.network != network.value) {
       return [];
     }
-    final data = await _storage.readAccountStorages(
-        account: address, storageKey: _storage.config.transactionStorageKey);
+    final data = await _storage.queriesChainStorage(
+        address: address,
+        storage: _storage.config.transactionStorageKey,
+        limit: ChainStorageManager.maxAddressItemLimit);
     final txes = data
         .map((e) => MethodUtils.nullOnException(
             () => ChainTransaction.deserialize<TRANSACTION>(network, bytes: e)))
         .toList()
         .whereType<TRANSACTION>()
         .toList();
+    appLogger.debug(
+        when: () => txes.isNotEmpty,
+        runtime: runtimeType,
+        functionName: "_getTransactions ${network.networkName}",
+        msg: "${address.viewAddress} ${txes.length} founds.");
     assert(
         txes.length == data.length, "some transaction deserialization failed.");
     return txes;
@@ -180,11 +212,11 @@ mixin ChainRepository<
     if (address.network != network.value) {
       return;
     }
-    await _storage.writeAccountStorage(
-        account: address,
-        storageKey: _storage.config.transactionStorageKey,
-        item: transaction,
-        identifier: transaction.txId);
+    await _storage.insertChainStorage(
+        address: address,
+        storage: _storage.config.transactionStorageKey,
+        value: transaction,
+        keyA: transaction.txId);
   }
 
   Future<void> _removeTransaction(
@@ -196,10 +228,9 @@ mixin ChainRepository<
         !address.transactions.contains(transaction)) {
       return;
     }
-    await _storage.writeAccountStorage(
-        account: address,
-        storageKey: _storage.config.transactionStorageKey,
-        item: null,
-        identifier: transaction.txId);
+    await _storage.removeChainStorage(
+        address: address,
+        storage: _storage.config.transactionStorageKey,
+        keyA: transaction.txId);
   }
 }

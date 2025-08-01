@@ -76,7 +76,7 @@ class _SetupWalletPages extends StatelessWidget {
   final List<String>? mnemonic;
   final SetupWalletPage page;
   final OnValidateMnemonic onValidate;
-  final HDWallet? wallet;
+  final MainWallet? wallet;
 
   @override
   Widget build(BuildContext context) {

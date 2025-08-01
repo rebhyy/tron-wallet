@@ -10,8 +10,8 @@ class BitcoinWalletTransaction extends ChainTransaction {
   final String scriptHash;
   BitcoinWalletTransaction(
       {required super.txId,
-      required super.time,
-      required super.outputs,
+      super.time,
+      super.outputs,
       super.web3Client,
       required super.totalOutput,
       required WalletBitcoinNetwork network,

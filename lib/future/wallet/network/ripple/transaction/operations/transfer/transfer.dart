@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/controllers/controller.dart';
@@ -202,6 +203,7 @@ class RippleTransactionPaymentOperation
     return Payment(
         destination: recipient.value!.view,
         destinationTag: recipient.value?.networkAddress.tag,
+        memos: RippleUtils.toXrplMemos(memos),
         invoiceId: invoiceId.value == null
             ? null
             : QuickBytesUtils.ensureIsHex(invoiceId.value!),

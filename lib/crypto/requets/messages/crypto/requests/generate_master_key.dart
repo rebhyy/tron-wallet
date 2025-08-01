@@ -47,7 +47,7 @@ class CryptoRequestGenerateMasterKey extends CryptoRequest<
   factory CryptoRequestGenerateMasterKey.fromStorageWithStringKey(
       {required String storageData,
       required String key,
-      required String checksum,
+      required List<int> checksum,
       List<int>? newKey}) {
     try {
       final dataBytes = List<int>.unmodifiable(
@@ -59,7 +59,7 @@ class CryptoRequestGenerateMasterKey extends CryptoRequest<
           walletData: values.elementAt(1),
           newKey: newKey,
           keyString: StringUtils.encode(key),
-          keyChecksum: BytesUtils.fromHexString(checksum));
+          keyChecksum: checksum);
     } catch (e) {
       throw WalletExceptionConst.incorrectWalletData;
     }

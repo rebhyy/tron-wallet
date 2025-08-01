@@ -2,7 +2,7 @@ import 'package:on_chain/ada/src/models/metadata/general_transaction_metadata/ge
 import 'package:on_chain/ada/src/models/metadata/types/text.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 
 mixin ADATransactionMemoController on BaseADATransactionController {
   final LiveFormFields<ADATransactionMemo> memos =

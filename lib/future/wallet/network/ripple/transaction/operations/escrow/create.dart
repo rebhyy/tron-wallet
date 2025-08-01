@@ -4,8 +4,8 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/widgets/escrow/create.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/form.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 

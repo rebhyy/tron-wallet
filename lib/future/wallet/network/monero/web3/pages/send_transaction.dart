@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/transaction/widgets/select_utxos.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/web3/operations/send_transaction.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/page.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
@@ -45,6 +45,8 @@ class Web3MoneroSignTransactionStateView extends StatelessWidget {
         },
       ),
       WidgetConstant.height20,
+      Text("recipients".tr, style: context.onPrimaryTextTheme.titleMedium),
+      WidgetConstant.height8,
       ...List.generate(transactionData.destinations.length, (index) {
         final re = transactionData.destinations[index];
         return ContainerWithBorder(

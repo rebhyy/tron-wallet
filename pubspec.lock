@@ -212,10 +212,10 @@ packages:
     dependency: transitive
     description:
       name: get_it
-      sha256: d85128a5dae4ea777324730dc65edd9c9f43155c109d5cc0a69cab74139fbac1
+      sha256: e87cd1d108e472a0580348a543a0c49ed3d70c8a5c809c6d418583e595d0a389
       url: "https://pub.dev"
     source: hosted
-    version: "7.7.0"
+    version: "8.1.0"
   glob:
     dependency: transitive
     description:
@@ -364,10 +364,10 @@ packages:
     dependency: "direct dev"
     description:
       name: msix
-      sha256: edde648a8133bf301883c869d19d127049683037c65ff64173ba526ac7a8af2f
+      sha256: bbb9b3ff4a9f8e7e7507b2a22dc0517fd1fe3db44e72de7ab052cb6b362406ee
       url: "https://pub.dev"
     source: hosted
-    version: "3.16.9"
+    version: "3.16.10"
   node_preamble:
     dependency: transitive
     description:
@@ -389,10 +389,10 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: ad3d8b9d9c3893371f81f8374dceb7f5aec567e8
+      resolved-ref: "0339175c98b1f9de2a8095c1530870a746e03c42"
       url: "https://github.com/mrtnetwork/onchain_bridge.git"
     source: git
-    version: "0.0.1"
+    version: "0.0.2"
   on_chain_swap:
     dependency: "direct main"
     description:
@@ -674,11 +674,10 @@ packages:
   xrpl_dart:
     dependency: "direct main"
     description:
-      path: "."
-      ref: main
-      resolved-ref: "3982f0de82b5c957b6b1bfbfed3901fafd1e4ca6"
-      url: "https://github.com/mrtnetwork/xrpl_dart.git"
-    source: git
+      name: xrpl_dart
+      sha256: b7b064d1e3d3bc911b0b6d077b2a42d91301d69647c8931e802c1034fd21fd2c
+      url: "https://pub.dev"
+    source: hosted
     version: "7.0.0"
   yaml:
     dependency: transitive

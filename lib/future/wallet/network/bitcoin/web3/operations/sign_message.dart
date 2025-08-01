@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/messages.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/page.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
@@ -52,7 +52,8 @@ class Web3BitcoinSignMessageStateController extends Web3BitcoinStateController<
         controller: this,
         message: message,
         content: content,
-        prefix: isPersonalMessage ? messagePrefix : null);
+        isPersonalSign: isPersonalMessage,
+        prefix: messagePrefix);
   }
 
   @override

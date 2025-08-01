@@ -40,7 +40,8 @@ class BitcoinTransactionSelectUtxos extends StatelessWidget {
                 SliverToBoxAdapter(
                     child: AlertTextContainer(
                         message:
-                            "update_utxo_durning_build_transaction_desc".tr)),
+                            "update_utxo_durning_build_transaction_desc".tr,
+                        enableTap: false)),
                 APPStreamBuilder(
                   value: form.accountUtxos,
                   builder: (context, addresses) {
@@ -56,10 +57,7 @@ class BitcoinTransactionSelectUtxos extends StatelessWidget {
                                     APPExpansionListTile(
                                       trailing: switch (addressUtxos.status) {
                                         BitcoinAccountUtxosStatus.pending =>
-                                          APPCircularProgressIndicator(
-                                            color: context
-                                                .colors.onPrimaryContainer,
-                                          ),
+                                          WidgetConstant.sizedBox,
                                         BitcoinAccountUtxosStatus.failed =>
                                           IconButton(
                                               onPressed: () {

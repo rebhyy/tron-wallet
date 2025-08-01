@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'package:on_chain_bridge/models/events/models/wallet_event.dart';
-import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
 import 'js_crypto_utils.dart';

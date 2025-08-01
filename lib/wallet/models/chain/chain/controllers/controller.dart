@@ -476,6 +476,11 @@ base mixin BaseChainController<
               transactions: pendingTxes, account: i);
           unCofirmTxes.add(txes);
         }
+        appLogger.debug(
+            when: () => unCofirmTxes.isNotEmpty,
+            runtime: runtimeType,
+            functionName: "_trackTxes ${network.networkName}",
+            msg: "${unCofirmTxes.length} pending txes founds.");
         if (unCofirmTxes.isEmpty) {
           return;
         }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
+import 'package:on_chain_wallet/future/future.dart';
+import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 
 Widget get initializeProgressWidget =>
     ProgressWithTextView(text: "initializing_requirements".tr);
@@ -193,227 +194,259 @@ class _ProgressWithTextView extends StatelessWidget {
 class SuccessTransactionTextView extends StatelessWidget {
   const SuccessTransactionTextView(
       {super.key,
-      required this.txIds,
-      required this.network,
+      required this.txId,
+      required this.account,
+      this.transaction,
       this.additionalWidget,
-      this.error});
-  final List<String> txIds;
-  final WalletNetwork network;
+      this.warning});
+  final String txId;
   final WidgetContext? additionalWidget;
-  final String? error;
+  final String? warning;
+  final Chain account;
+  final ChainTransaction? transaction;
 
   @override
   Widget build(BuildContext context) {
-    final Widget successTrText = Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        CircleTokenImageView(network.coinParam.token,
-            radius: APPConst.double80),
-        Text(network.coinParam.token.name, style: context.textTheme.labelLarge),
-        WidgetConstant.height20,
-        ListView.separated(
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              final id = txIds[index];
-              final txUrl = network.getTransactionExplorer(id);
-              return ContainerWithBorder(
-                  child: Row(
-                children: [
-                  Expanded(
-                    child: CopyableTextWidget(
-                        isSensitive: false,
-                        text: txIds[index],
-                        color: context.onPrimaryContainer),
-                  ),
-                  if (txUrl != null)
-                    IconButton(
-                        onPressed: () {
-                          UriUtils.lunch(txUrl);
-                        },
-                        icon: Icon(Icons.open_in_new,
-                            color: context.colors.onPrimaryContainer))
-                ],
-              ));
-            },
-            separatorBuilder: (context, index) => WidgetConstant.divider,
-            itemCount: txIds.length),
-        WidgetConstant.height20,
-        if (additionalWidget != null) additionalWidget!(context),
-        ErrorTextContainer(error: error),
-      ],
-    );
-
-    return _ProgressWithTextView(
-        text: successTrText, icon: WidgetConstant.sizedBox);
+    final txUrl = account.network.getTransactionExplorer(txId);
+    final status = transaction?.status;
+    return ChainStreamBuilder(
+        builder: (context, account, _) => _ProgressWithTextView(
+            text: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CircleTokenImageView(account.network.coinParam.token,
+                    radius: APPConst.double80),
+                Text(account.network.coinParam.token.name,
+                    style: context.textTheme.labelLarge),
+                WidgetConstant.height20,
+                ContainerWithBorder(
+                  enableTap: false,
+                  onRemove: () {},
+                  onRemoveWidget:
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                    ConditionalWidget(
+                        enable: txUrl != null,
+                        onActive: (context) => IconButton(
+                              icon: Icon(Icons.open_in_new,
+                                  color: context.colors.onPrimaryContainer),
+                              color: context.colors.onPrimaryContainer,
+                              onPressed: () {
+                                final url = txUrl;
+                                if (url != null) {
+                                  UriUtils.lunch(url);
+                                }
+                              },
+                            )),
+                    ConditionalWidgets<
+                        WalletTransactionStatus>(enable: status, widgets: {
+                      null: (context) => Icon(Icons.check_circle),
+                      WalletTransactionStatus.block: (context) =>
+                          TappedTooltipView(
+                              tooltipWidget: ToolTipView(
+                                  message: "transaction_confirmed_in_block".tr,
+                                  child: Icon(Icons.check_circle,
+                                      color: context.onPrimaryContainer))),
+                      WalletTransactionStatus.failed: (context) =>
+                          TappedTooltipView(
+                              tooltipWidget: ToolTipView(
+                                  message: "transaction_submission_failed".tr,
+                                  child: Icon(Icons.error,
+                                      color: context.onPrimaryContainer))),
+                      WalletTransactionStatus.unknown: (context) =>
+                          TappedTooltipView(
+                              tooltipWidget: ToolTipView(
+                                  message: "unable_to_confirm_transaction".tr,
+                                  child: Icon(Icons.warning,
+                                      color: context.onPrimaryContainer))),
+                      WalletTransactionStatus.pending: (context) =>
+                          TappedTooltipView(
+                              tooltipWidget: ToolTipView(
+                                  message:
+                                      "transaction_pending_confirmation_desc"
+                                          .tr,
+                                  child: APPCircularProgressIndicator(
+                                      color: context.onPrimaryContainer))),
+                    })
+                  ]),
+                  child: CopyableTextWidget(
+                      text: txId, color: context.onPrimaryContainer),
+                ),
+                WidgetConstant.height20,
+                if (additionalWidget != null) additionalWidget!(context),
+                AlertTextContainer(message: warning),
+              ],
+            ),
+            icon: WidgetConstant.sizedBox),
+        account: account);
   }
 }
 
 enum ProgressMultipleTextViewStatus { error, success }
 
-class ProgressMultipleTextViewObject {
+abstract class ProgressTxStatusView {
   final ProgressMultipleTextViewStatus status;
-  final String text;
+  final String message;
+  const ProgressTxStatusView({required this.status, required this.message});
+  bool get isSuccess => status == ProgressMultipleTextViewStatus.success;
+}
+
+class ProgressTxStatusSuccessView extends ProgressTxStatusView {
+  final String? warning;
   final bool enableCopy;
   final String? openUrl;
-  bool get isSuccess => status == ProgressMultipleTextViewStatus.success;
-  const ProgressMultipleTextViewObject(
-      {required this.status,
-      required this.text,
+  final ChainTransaction? transaction;
+
+  const ProgressTxStatusSuccessView._(
+      {required super.status,
+      required super.message,
       required this.enableCopy,
+      required this.transaction,
+      this.warning,
       this.openUrl});
-  factory ProgressMultipleTextViewObject.success({
-    required String message,
+  factory ProgressTxStatusSuccessView({
+    required String txId,
+    required ChainTransaction? transaction,
+    String? warning,
     String? openUrl,
     bool enableCopy = true,
   }) {
-    return ProgressMultipleTextViewObject(
+    return ProgressTxStatusSuccessView._(
         status: ProgressMultipleTextViewStatus.success,
-        text: message,
+        transaction: transaction,
+        message: txId,
         enableCopy: enableCopy,
+        warning: warning,
         openUrl: openUrl);
   }
-  factory ProgressMultipleTextViewObject.error(
-      {required String message, bool enableCopy = false}) {
-    return ProgressMultipleTextViewObject(
-        status: ProgressMultipleTextViewStatus.error,
-        text: message,
-        enableCopy: enableCopy);
-  }
+}
+
+class ProgressTxStatusErrorView extends ProgressTxStatusView {
+  const ProgressTxStatusErrorView({
+    required super.message,
+  }) : super(status: ProgressMultipleTextViewStatus.error);
 }
 
 class ProgressMultipleTextView extends StatelessWidget {
   const ProgressMultipleTextView(
-      {super.key, required this.texts, required this.logo, this.title});
-  final List<ProgressMultipleTextViewObject> texts;
+      {super.key,
+      required this.texts,
+      required this.account,
+      required this.logo,
+      this.title});
+  final List<ProgressTxStatusView> texts;
   final APPImage? logo;
   final String? title;
+  final Chain account;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: ConstraintsBoxView(
-          padding: WidgetConstant.paddingHorizontal20,
-          child: Column(
-            children: [
-              CircleAPPImageView(logo, radius: APPConst.double80),
-              if (title != null)
-                Text(title!, style: context.textTheme.labelLarge),
-              WidgetConstant.height20,
-              ListView.separated(
-                  physics: WidgetConstant.noScrollPhysics,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    final txt = texts[index];
-                    return ContainerWithBorder(
-                        enableTap: false,
-                        onRemove: () {},
-                        onRemoveIcon: txt.isSuccess
-                            ? IconButton(
-                                icon: txt.openUrl != null
-                                    ? Icon(Icons.open_in_new,
-                                        color:
-                                            context.colors.onPrimaryContainer)
-                                    : Icon(Icons.check_circle,
-                                        color:
-                                            context.colors.onPrimaryContainer),
-                                color: context.colors.onPrimaryContainer,
-                                onPressed: () {
-                                  if (txt.openUrl != null) {
-                                    UriUtils.lunch(txt.openUrl);
-                                  }
-                                },
-                              )
-                            : Icon(Icons.error, color: context.colors.error),
-                        child: txt.enableCopy
-                            ? CopyTextIcon(
-                                isSensitive: false,
-                                dataToCopy: txt.text,
-                                widget: Text(
-                                  txt.text,
-                                  maxLines: 2,
-                                  style: context.onPrimaryTextTheme.bodyMedium,
-                                ))
-                            : Text(
-                                txt.text,
-                                maxLines: 2,
-                                style: context.onPrimaryTextTheme.bodyMedium,
-                              ));
-                  },
-                  separatorBuilder: (context, index) => WidgetConstant.divider,
-                  itemCount: texts.length),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class Web3SuccessTransactionTextView extends StatelessWidget {
-  const Web3SuccessTransactionTextView(
-      {super.key,
-      required this.txIds,
-      required this.network,
-      this.additionalWidget,
-      this.error});
-  final List<String> txIds;
-  final WalletNetwork network;
-  final WidgetContext? additionalWidget;
-  final String? error;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: ConstraintsBoxView(
-          padding: WidgetConstant.paddingHorizontal20,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              CircleTokenImageView(network.coinParam.token,
-                  radius: APPConst.double80),
-              Text(network.coinParam.token.name,
-                  style: context.textTheme.labelLarge),
-              WidgetConstant.height20,
-              ListView.separated(
-                  shrinkWrap: true,
-                  physics: WidgetConstant.noScrollPhysics,
-                  itemBuilder: (context, index) {
-                    final id = txIds[index];
-                    final txUrl = network.getTransactionExplorer(id);
-                    return ContainerWithBorder(
-                        child: Row(
-                      children: [
-                        Expanded(
+    return ChainStreamBuilder(
+      account: account,
+      allowNotify: [ChainNotify.transaction],
+      builder: (context, account, notify) => Center(
+        child: SingleChildScrollView(
+          child: ConstraintsBoxView(
+            padding: WidgetConstant.paddingHorizontal20,
+            child: Column(
+              children: [
+                CircleAPPImageView(logo, radius: APPConst.double80),
+                if (title != null)
+                  Text(title!, style: context.textTheme.labelLarge),
+                WidgetConstant.height20,
+                ListView.separated(
+                    physics: WidgetConstant.noScrollPhysics,
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      final tx = texts[index];
+                      if (tx.isSuccess) {
+                        final sucessTx = tx as ProgressTxStatusSuccessView;
+                        final status = sucessTx.transaction?.status;
+                        return ContainerWithBorder(
+                          enableTap: false,
+                          onRemove: () {},
+                          onRemoveWidget:
+                              Row(mainAxisSize: MainAxisSize.min, children: [
+                            ConditionalWidget(
+                                enable: tx.openUrl != null,
+                                onActive: (context) => IconButton(
+                                      icon: Icon(Icons.open_in_new,
+                                          color: context
+                                              .colors.onPrimaryContainer),
+                                      color: context.colors.onPrimaryContainer,
+                                      onPressed: () {
+                                        final url = tx.openUrl;
+                                        if (url != null) {
+                                          UriUtils.lunch(url);
+                                        }
+                                      },
+                                    )),
+                            ConditionalWidgets<WalletTransactionStatus>(
+                                enable: status,
+                                widgets: {
+                                  null: (context) => Icon(Icons.check_circle),
+                                  WalletTransactionStatus.block: (context) =>
+                                      TappedTooltipView(
+                                          tooltipWidget: ToolTipView(
+                                              message:
+                                                  "transaction_confirmed_in_block"
+                                                      .tr,
+                                              child: Icon(Icons.check_circle,
+                                                  color: context
+                                                      .onPrimaryContainer))),
+                                  WalletTransactionStatus.failed: (context) =>
+                                      TappedTooltipView(
+                                          tooltipWidget: ToolTipView(
+                                              message:
+                                                  "transaction_submission_failed"
+                                                      .tr,
+                                              child: Icon(Icons.error,
+                                                  color: context
+                                                      .onPrimaryContainer))),
+                                  WalletTransactionStatus.unknown: (context) =>
+                                      TappedTooltipView(
+                                          tooltipWidget: ToolTipView(
+                                              message:
+                                                  "unable_to_confirm_transaction"
+                                                      .tr,
+                                              child: Icon(Icons.warning,
+                                                  color: context
+                                                      .onPrimaryContainer))),
+                                  WalletTransactionStatus.pending: (context) =>
+                                      TappedTooltipView(
+                                          tooltipWidget: ToolTipView(
+                                              message:
+                                                  "transaction_pending_confirmation_desc"
+                                                      .tr,
+                                              child:
+                                                  APPCircularProgressIndicator(
+                                                      color: context
+                                                          .onPrimaryContainer))),
+                                })
+                          ]),
                           child: CopyableTextWidget(
-                              isSensitive: false,
-                              text: txIds[index],
+                              text: tx.message,
                               color: context.onPrimaryContainer),
-                        ),
-                        if (txUrl != null)
-                          IconButton(
-                              onPressed: () {
-                                UriUtils.lunch(txUrl);
-                              },
-                              icon: Icon(Icons.open_in_new,
-                                  color: context.colors.onPrimaryContainer))
-                      ],
-                    ));
-                  },
-                  separatorBuilder: (context, index) => WidgetConstant.divider,
-                  itemCount: txIds.length),
-              WidgetConstant.height20,
-              if (additionalWidget != null) additionalWidget!(context),
-              ErrorTextContainer(error: error),
-            ],
+                        );
+                      }
+                      return ContainerWithBorder(
+                        enableTap: false,
+                        backgroundColor: context.colors.errorContainer,
+                        onRemove: () {},
+                        child: LargeTextContainer(
+                            color: context.colors.onErrorContainer,
+                            text: tx.message,
+                            copyable: true),
+                      );
+                    },
+                    separatorBuilder: (context, index) =>
+                        WidgetConstant.divider,
+                    itemCount: texts.length),
+              ],
+            ),
           ),
         ),
       ),
     );
-
-    // return _ProgressWithTextView(
-    //     text: successTrText, icon: WidgetConstant.sizedBox);
   }
 }
 

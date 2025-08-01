@@ -72,7 +72,8 @@ class EthereumTransactionTransferTokenOperation
   }
 
   @override
-  Map<String, dynamic> buildEstimateTx() {
+  Map<String, dynamic>? buildEstimateTx() {
+    if (!receipt.hasValue || !amount.hasValue) return null;
     final fee = txFee.fee;
     final estimate = ETHTransaction(
             type: fee.ethereumFeeMode.isEIP1559

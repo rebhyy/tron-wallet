@@ -8,7 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/tron/web3/operations/send_
 import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/page.dart';
+import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain/tron/src/models/contract/base_contract/transaction_type.dart';

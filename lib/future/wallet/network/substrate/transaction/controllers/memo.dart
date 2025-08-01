@@ -1,6 +1,6 @@
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 
 mixin SubstrateTransactionMemoController on BaseSubstrateTransactionController {
   final LiveFormFields<String> memos =

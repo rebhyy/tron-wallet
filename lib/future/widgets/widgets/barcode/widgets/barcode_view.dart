@@ -85,7 +85,7 @@ class _BarcodeImageViewState extends State<BarcodeImageView>
               borderRadius: WidgetConstant.border8,
               child: Center(
                 child: SizedBox(
-                  width: APPConst.qrCodeWidth,
+                  width: 500,
                   child: Stack(
                     children: [
                       AnimatedOpacity(
@@ -97,11 +97,11 @@ class _BarcodeImageViewState extends State<BarcodeImageView>
                           errorStateBuilder: (context, error) =>
                               WidgetConstant.errorIcon,
                           eyeStyle: QrEyeStyle(
-                            eyeShape: QrEyeShape.square,
+                            eyeShape: QrEyeShape.circle,
                             color: context.theme.colorScheme.surface,
                           ),
                           dataModuleStyle: QrDataModuleStyle(
-                            dataModuleShape: QrDataModuleShape.square,
+                            dataModuleShape: QrDataModuleShape.circle,
                             color: context.theme.colorScheme.surface,
                           ),
                         ),
@@ -153,7 +153,7 @@ class BarcodeImageIconView extends StatelessWidget {
                 isSensitive: isSensitive,
                 shareTitle: shareTitle,
                 title: title),
-            maxWidth: APPConst.qrCodeWidth,
+            maxWidth: 500,
           );
         },
         icon: Icon(Icons.qr_code_2));

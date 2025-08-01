@@ -35,12 +35,6 @@ final class CosmosNewAddressParams extends NewAccountParams<ICosmosAddress> {
         algorithm: CosmosKeysAlgs.fromName(values.elementAs(2)));
   }
 
-  // CosmosBaseAddress toAddress(
-  //     {required List<int> publicKey, required String hrp}) {
-  //   return CosmosBaseAddress.fromPublicKey(
-  //       pubkeyBytes: publicKey, algorithm: algorithm, hrp: hrp);
-  // }
-
   CosmosPublicKey toPublicKey(List<int> publicKey) {
     return CosmosPublicKey.fromBytes(keyBytes: publicKey, algorithm: algorithm);
   }

@@ -9,7 +9,7 @@ class SuiWalletTransaction extends ChainTransaction {
   SuiWalletTransaction(
       {required super.txId,
       DateTime? time,
-      required super.outputs,
+      super.outputs,
       super.web3Client,
       super.totalOutput,
       required WalletSuiNetwork network,

@@ -57,8 +57,9 @@ class SwapTransactionStateController extends StateController {
       progressKey.success(
           backToIdle: false,
           progressWidget: SuccessTransactionTextView(
-              txIds: [transactionHash ?? ''],
-              network: route.sourceChain.network));
+            txId: transactionHash ?? '',
+            account: route.sourceChain,
+          ));
     }
     notify();
   }

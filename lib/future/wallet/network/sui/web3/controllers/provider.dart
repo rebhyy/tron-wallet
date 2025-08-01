@@ -2,7 +2,6 @@ import 'package:blockchain_utils/helper/helper.dart';
 import 'package:blockchain_utils/utils/numbers/utils/bigint_utils.dart';
 import 'package:on_chain/bcs/move/types/types.dart';
 import 'package:on_chain/sui/sui.dart';
-import 'package:on_chain_wallet/app/dev/logging.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';

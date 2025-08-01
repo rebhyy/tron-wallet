@@ -3,7 +3,7 @@ import 'package:on_chain_wallet/app/dev/logger.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/operations/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/operations/sign_message.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/client/client.dart';
@@ -56,7 +56,8 @@ abstract class Web3SuiStateController<RESPONSE, CLIENT extends SuiClient?,
         Web3SuiChain,
         T,
         Web3SuiRequest<RESPONSE, T>,
-        Web3RequestResponseData<RESPONSE>> {
+        Web3RequestResponseData<RESPONSE>,
+        SuiWalletTransaction> {
   Web3SuiStateController(
       {required super.walletProvider, required super.request});
 

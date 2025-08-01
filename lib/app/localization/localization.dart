@@ -1143,6 +1143,7 @@ class Localization {
           "network_updated_successfully":
               "The network has been successfully updated.",
           "invalid_network_information": "Invalid network information.",
+          "to_many_networks_imported": "Too many networks have been imported.",
           "import_network": "Import network",
           "backup_multi_sig_address_desc":
               "Are you certain that the address information has been securely saved?",
@@ -3325,6 +3326,16 @@ class Localization {
               "Insufficient balance: the KeepAlive method requires your account to keep at least ___1__ after fees and transfer.",
           "account_will_be_deactivated_after_transaction":
               "Your account will be deactivated after this transaction.",
+          "wallet_data_verification_failed":
+              "Wallet data is invalid or corrupted. Verification failed.",
+          "transaction_confirmed_in_block": "Transaction confirmed in block",
+          "unable_to_confirm_transaction":
+              "Unable to confirm transaction status – please check again later",
+          "transaction_submission_failed": "Transaction submission failed",
+          "transaction_pending_confirmation_desc":
+              "Transaction is waiting for confirmation. You can close this page and continue tracking it in the Explorer or the Activity section",
+          "database_initialization_failed_desc":
+              "Database initialization failed. unsupported format or missing files."
         }
       };
 }

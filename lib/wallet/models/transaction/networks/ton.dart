@@ -10,7 +10,7 @@ class TonWalletTransaction extends ChainTransaction {
   TonWalletTransaction(
       {required super.txId,
       DateTime? time,
-      required super.outputs,
+      super.outputs,
       super.web3Client,
       super.totalOutput,
       required WalletTonNetwork network,

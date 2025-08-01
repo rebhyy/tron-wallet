@@ -10,8 +10,8 @@ import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/core/observer.dart';
 import 'package:on_chain_wallet/future/wallet/web3/controller/web3_request_controller.dart';
 import 'package:on_chain_wallet/future/wallet/webview/controller/controller/tab_controller.dart';
+import 'package:on_chain_wallet/future/wallet/webview/repository/webview_repository.dart';
 import 'package:on_chain_wallet/future/wallet/webview/view/native_view.dart';
-import 'package:on_chain_wallet/repository/models/models/webview_repository.dart';
 import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 
@@ -21,6 +21,7 @@ class WebViewStateControllerConst {
   static const String interfaceName = "onChain";
   static const String debug = "http://10.0.2.2:3000/";
   static const String google = "https://google.com/";
+  static const int maxTabLength = 4;
 }
 
 enum WebViewTabPage {
@@ -30,6 +31,8 @@ enum WebViewTabPage {
   history,
   bookmarks,
   hide;
+
+  bool get inBrowser => this == browser;
 }
 
 // class LastWeb3ActiveClient {
@@ -305,8 +308,8 @@ mixin WebViewTabImpl on CryptoWokerImpl, WebViewListener {
 
   Future<void> newTab(IntVoid reachedLimit) async {
     await _tabLocker.synchronized(() async {
-      if (tabsAuthenticated.length > WebViewStorageType.tab.maxStorageLength) {
-        reachedLimit(WebViewStorageType.tab.maxStorageLength);
+      if (tabsAuthenticated.length > WebViewStateControllerConst.maxTabLength) {
+        reachedLimit(WebViewStateControllerConst.maxTabLength);
         return;
       }
       final newController = await _buildController();
@@ -387,7 +390,9 @@ mixin WebViewTabImpl on CryptoWokerImpl, WebViewListener {
     if (isHide) return;
     final name = route.settings.name;
     final current = previousRoute?.settings.name;
-    if (name == PageRouter.settingMenu || name == PageRouter.webviewMenu) {
+    if (name == PageRouter.settingMenu ||
+        name == PageRouter.webviewMenu ||
+        name == PageRouter.webviewRemoveHistory) {
       return;
     }
     if (current == '/') {

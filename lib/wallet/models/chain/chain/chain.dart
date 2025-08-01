@@ -4,6 +4,8 @@ import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/isolate/types/types.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/stream/requests/monero_block_tracking.dart';
+import 'package:on_chain_wallet/repository/core/repository.dart';
+import 'package:on_chain_wallet/repository/repository.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
 import 'package:on_chain_wallet/wallet/constant/chain/const.dart';
 import 'package:on_chain_wallet/wallet/models/backup/backup.dart';
@@ -25,7 +27,7 @@ import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/token/token.dart';
 import 'package:on_chain_wallet/crypto/worker.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/transaction.dart';
-
+import 'package:on_chain_bridge/database/database.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:on_chain/solidity/address/core.dart';
 import 'package:on_chain_wallet/wallet/models/wallet/hd_wallet.dart';

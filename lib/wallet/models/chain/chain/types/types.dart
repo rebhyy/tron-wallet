@@ -37,11 +37,28 @@ abstract class ChainStorageKey {
   bool get isSharedStorage;
 }
 
+/// maximum value 9999
+enum AccountChainStorageKey implements ChainStorageKey {
+  account(1000);
+
+  /// account
+
+  @override
+  final int storageId;
+  const AccountChainStorageKey(this.storageId);
+
+  @override
+  bool get isSharedStorage => false;
+}
+
+/// maximum value 999
 enum DefaultChainStorageKey implements ChainStorageKey {
   contacts(0),
   transaction(1),
   token(2),
   nft(3);
+
+  /// account
 
   @override
   final int storageId;

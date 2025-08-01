@@ -1,79 +1,152 @@
 part of 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 
 mixin WalletsStoragesManger {
-  Future<String?> _read({required String key}) async {
-    return await AppNativeMethods.platform.readSecure(key);
+  Future<List<int>?> _queryStorage(
+      {int storage = APPDatabaseConst.hdWalletStorage,
+      int storageId = APPDatabaseConst.defaultStorageId,
+      String? key,
+      String? keyA,
+      String tableName = APPDatabaseConst.mainTableName}) async {
+    final params = ITableReadStructA(
+        storage: storage,
+        storageId: storageId,
+        tableName: tableName,
+        key: key,
+        keyA: keyA);
+    final read = await AppNativeMethods.platform.readDb(params);
+    return read?.data;
   }
 
-  Future<void> _write({required String key, required String value}) async {
-    await AppNativeMethods.platform.writeSecure(key, value);
+  Future<List<List<int>>> _queriesStorage(
+      {int? storage = APPDatabaseConst.hdWalletStorage,
+      int? storageId = APPDatabaseConst.defaultStorageId,
+      String? key,
+      String? keyA,
+      String tableName = APPDatabaseConst.mainTableName}) async {
+    final params = ITableReadStructA(
+        storage: storage,
+        storageId: storageId,
+        tableName: tableName,
+        key: key,
+        keyA: keyA);
+    final data = await AppNativeMethods.platform.readAllDb(params);
+    return data.map((e) => e.data).toList();
+  }
+
+  Future<void> _insertStorage(
+      {required CborSerializable value,
+      int storage = APPDatabaseConst.hdWalletStorage,
+      int storageId = APPDatabaseConst.defaultStorageId,
+      String? key,
+      String? keyA,
+      String tableName = APPDatabaseConst.mainTableName}) async {
+    final params = ITableInsertOrUpdateStructA(
+        storage: storage,
+        storageId: storageId,
+        data: value.toCbor().encode(),
+        tableName: tableName,
+        key: key ?? '',
+        keyA: keyA ?? '');
+    await AppNativeMethods.platform.writeDb(params);
+  }
+
+  Future<void> _removeStorage(
+      {int storage = APPDatabaseConst.hdWalletStorage,
+      int storageId = APPDatabaseConst.defaultStorageId,
+      String? key,
+      String? keyA,
+      String tableName = APPDatabaseConst.mainTableName}) async {
+    final params = ITableRemoveStructA(
+        storage: storage,
+        storageId: storageId,
+        tableName: tableName,
+        key: key,
+        keyA: keyA);
+    await AppNativeMethods.platform.removeDb(params);
   }
 
   Future<HDWallets> _readWallet() async {
-    final wallet = await _read(key: StorageConst.hdWallets);
-    if (wallet == null) {
+    final data = await _queryStorage(
+        storageId: APPDatabaseConst.defaultStorageId,
+        storage: APPDatabaseConst.hdWalletStorage);
+    if (data == null) {
       return HDWallets.init();
     }
-    return HDWallets.deserialize(hex: wallet);
+    return HDWallets.deserialize(bytes: data);
   }
 
   Future<void> _writeHdWallet(HDWallets wallet) async {
-    await _write(
-        key: StorageConst.hdWallets, value: wallet.toCbor().toCborHex());
+    await _insertStorage(
+      storageId: APPDatabaseConst.defaultStorageId,
+      storage: APPDatabaseConst.hdWalletStorage,
+      value: wallet,
+    );
   }
 
-  Future<void> _removeWalletStorage(HDWallet wallet) async {
+  Future<void> _removeWalletStorage(MainWallet wallet) async {
+    final params = ITableDropStructA(tableName: wallet.key);
+
     await Future.wait([
-      AppNativeMethods.platform.removeAllSecure(prefix: wallet.storageKey),
-      AppNativeMethods.platform.removeAllSecure(prefix: wallet.chainStorageKey),
-      AppNativeMethods.platform
-          .removeAllSecure(prefix: wallet.sharedStorageKey),
-      AppNativeMethods.platform.removeAllSecure(prefix: wallet.web3StorageKey),
-      AppNativeMethods.platform.removeAllSecure(prefix: wallet.wcStorageKey),
+      AppNativeMethods.platform.dropDb(params),
     ]);
   }
 
   Future<void> _setupWalletBackupAccounts(
-      {required HDWallet wallet, required WalletRestoreV2 backup}) async {
+      {required MainWallet wallet, required WalletRestoreV2 backup}) async {
     for (final i in backup.chains) {
       final account = i.chain;
       await account.restoreAccount(i.repositories);
-      assert(account.id == wallet.checksum, "invalid account wallet id.");
+      assert(account.id == wallet.key, "invalid account wallet id.");
     }
     for (final i in backup.dapps) {
       await _savePermission(wallet: wallet, permission: i);
     }
   }
 
-  Future<void> _removeAccount(Chain account) async {
-    await AppNativeMethods.platform.removeAllSecure(prefix: account.storageId);
+  Future<List<List<int>>> _readAccounts(MainWallet wallet) async {
+    final data = await _queriesStorage(
+        storage: null,
+        tableName: wallet.key,
+        storageId: APPDatabaseConst.accountStorageId);
+    return data;
   }
 
-  Future<List<String>> _readAccounts(HDWallet wallet) async {
-    final keys = await _readAll(prefix: wallet.storageKey);
-    return keys.values.toList();
-  }
-
-  Future<String?> _readWeb3Permission(
-      {required HDWallet wallet, required String key}) async {
-    return await _read(key: wallet.web3ClientStorageKey(key));
+  Future<List<int>?> _readWeb3Permission(
+      {required MainWallet wallet, required String identifier}) async {
+    return await _queryStorage(
+        storage: APPDatabaseConst.web3AuthStorage,
+        storageId: APPDatabaseConst.defaultStorageId,
+        tableName: wallet.key,
+        key: identifier);
   }
 
   Future<void> _savePermission(
-      {required HDWallet wallet,
+      {required MainWallet wallet,
       required Web3APPAuthentication permission}) async {
-    await _write(
-        key: wallet.web3ClientStorageKey(permission.applicationKey),
-        value: permission.toCbor().toCborHex());
+    await _insertStorage(
+        storage: APPDatabaseConst.web3AuthStorage,
+        storageId: APPDatabaseConst.defaultStorageId,
+        value: permission,
+        tableName: wallet.key,
+        key: permission.applicationKey);
   }
 
   Future<void> _removeWeb3Permission(
-      {required HDWallet wallet,
+      {required MainWallet wallet,
       required Web3APPAuthentication permission}) async {
-    await AppNativeMethods.platform.removeSecure(permission.applicationKey);
+    await _removeStorage(
+      storage: APPDatabaseConst.web3AuthStorage,
+      storageId: APPDatabaseConst.defaultStorageId,
+      tableName: wallet.key,
+      key: permission.applicationKey,
+    );
   }
 
-  Future<Map<String, String>> _readAll({String? prefix}) async {
-    return await AppNativeMethods.platform.readAllSecure(prefix: prefix);
+  Future<List<List<int>>> _readAllPermission(MainWallet wallet) async {
+    return await _queriesStorage(
+      storage: APPDatabaseConst.web3AuthStorage,
+      storageId: APPDatabaseConst.defaultStorageId,
+      tableName: wallet.key,
+    );
   }
 }

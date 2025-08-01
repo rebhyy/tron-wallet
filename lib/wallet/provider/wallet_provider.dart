@@ -2,6 +2,7 @@ library;
 
 import 'dart:async';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:on_chain_bridge/database/database.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/isolate/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';

@@ -69,7 +69,7 @@ class _DrawerViewState extends State<DrawerView> with SafeState<DrawerView> {
 
   Future<void> switchOrCreateWallet() async {
     context
-        .openSliverDialog<HDWallet>(
+        .openSliverDialog<MainWallet>(
             widget: (c) => SwitchWalletView(
                   wallets: wallet.wallet.wallets,
                   selectedWallet: wallet.wallet.wallet,
@@ -319,8 +319,8 @@ class _DrawerViewState extends State<DrawerView> with SafeState<DrawerView> {
 class SwitchWalletView extends StatelessWidget {
   const SwitchWalletView(
       {super.key, required this.wallets, required this.selectedWallet});
-  final List<HDWallet> wallets;
-  final HDWallet selectedWallet;
+  final List<MainWallet> wallets;
+  final MainWallet selectedWallet;
 
   @override
   Widget build(BuildContext context) {

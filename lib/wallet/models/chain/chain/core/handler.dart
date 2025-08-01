@@ -1,8 +1,8 @@
 part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
 class ChainsHandler {
-  HDWallet _wallet;
-  HDWallet get wallet => _wallet;
+  MainWallet _wallet;
+  MainWallet get wallet => _wallet;
 
   StreamSubscription<bool>? _networkStream;
   StreamSubscription<dynamic>? _ping;
@@ -10,15 +10,15 @@ class ChainsHandler {
   ChainsHandler._(
       {required Map<int, Chain> networks,
       required int network,
-      required HDWallet wallet})
+      required MainWallet wallet})
       : _network = network,
         _networks = networks,
         _wallet = wallet;
 
   static Future<ChainsHandler> setup(
-      {required List<Chain> chains, required HDWallet wallet}) async {
+      {required List<Chain> chains, required MainWallet wallet}) async {
     for (final i in chains) {
-      if (i.id != wallet.checksum) {
+      if (i.id != wallet.key) {
         throw WalletExceptionConst.invalidData(
             messsage: "Invalid chain data. different wallet ids detected.");
       }
@@ -30,7 +30,7 @@ class ChainsHandler {
         continue;
       }
       final network = ChainConst.defaultCoins[i]!;
-      final chain = Chain.setup(network: network, id: wallet.checksum);
+      final chain = Chain.setup(network: network, id: wallet.key);
       newChains.add(chain);
       toMap.addAll({chain.network.value: chain});
     }
@@ -44,7 +44,7 @@ class ChainsHandler {
   }
 
   final Map<int, Chain> _networks;
-  String get id => _wallet.checksum;
+  String get id => _wallet.key;
   int _network;
 
   bool get hasChain => _networks.isNotEmpty;
@@ -55,8 +55,8 @@ class ChainsHandler {
   List<WalletNetwork> networks() =>
       _networks.values.map((e) => e.network).toList();
 
-  void updateWalletData(HDWallet wallet) {
-    if (_wallet.checksum != wallet.checksum) {
+  void updateWalletData(MainWallet wallet) {
+    if (_wallet.key != wallet.key) {
       throw WalletExceptionConst.walletDoesNotExists;
     }
     _wallet = wallet;
@@ -110,6 +110,9 @@ class ChainsHandler {
       final ids = _networks.values.map((e) => e.network.value).toList();
       networkId = StrUtils.findFirstMissingNumber(ids,
           start: ChainConst.importedNetworkStartId);
+      if (networkId > ChainConst.maxNetworkId) {
+        throw const WalletException("to_many_networks_imported");
+      }
       network = network.copyWith(value: networkId);
       if (network.value != networkId) {
         throw const WalletException("invalid_network_information");
@@ -210,29 +213,29 @@ class ChainsHandler {
     }
   }
 
-  // void _onConnectionStatus(bool isOnline) {
-  //   final event = ChainWalletConnectionEvent(isOnline);
-  //   for (final i in _networks.entries) {
-  //     i.value._onWalletEvent(event);
-  //   }
-  // }
+  void _onConnectionStatus(bool isOnline) {
+    final event = ChainWalletConnectionEvent(isOnline);
+    for (final i in _networks.entries) {
+      i.value._onWalletEvent(event);
+    }
+  }
 
-  // Future<void> _onPing(var _) async {
-  //   final event = ChainWalletPingEvent();
-  //   final aciveNetworks = _networks.values.where((e) => e.haveAddress);
-  //   for (final i in aciveNetworks) {
-  //     await i._onWalletEvent(event);
-  //   }
-  // }
+  Future<void> _onPing(var _) async {
+    final event = ChainWalletPingEvent();
+    final aciveNetworks = _networks.values.where((e) => e.haveAddress);
+    for (final i in aciveNetworks) {
+      await i._onWalletEvent(event);
+    }
+  }
 
   Future<void> init() async {
     await chain.init();
     assert(_networkStream == null && _ping == null);
-    // _networkStream =
-    //     PlatformInterface.instance.onNetworkStatus.listen(_onConnectionStatus);
-    // _ping = Stream.periodic(const Duration(minutes: 10)).listen(_onPing);
-    // final emit = ChainWalletChainChangeEvent(prv: null, current: chain);
-    // _emitChainChanged(emit);
+    _networkStream =
+        AppNativeMethods.platform.onNetworkStatus.listen(_onConnectionStatus);
+    _ping = Stream.periodic(const Duration(minutes: 10)).listen(_onPing);
+    final emit = ChainWalletChainChangeEvent(prv: null, current: chain);
+    _emitChainChanged(emit);
   }
 
   void dispose() {

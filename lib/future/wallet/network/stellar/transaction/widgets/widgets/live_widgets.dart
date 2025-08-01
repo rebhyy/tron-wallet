@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/types/operations.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/widgets/widgets/extensions.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/widgets/widgets/pick_asset.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/pages/live_form_widget.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';

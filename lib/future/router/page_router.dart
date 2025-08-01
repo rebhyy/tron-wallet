@@ -25,7 +25,6 @@ class PageRouter {
   static const String ethereumTransaction = "/ethereum/transfer";
 
   static const String stellarTransaction = "/stellar/transfer";
-  static const String stellarImportToken = "/stellar/import_token";
   static const String stellarSettingPage = "setting/stellar";
   static const String stellarKeyConversion = "setting/stellar/key_conversion";
   static const String contacts = "setting/contacts";
@@ -60,7 +59,6 @@ class PageRouter {
 
   /// aotos
   static const String aptosTransfer = "/aptos/transfer";
-  static const String importAptosToken = "Aptos/import_fats_tokens";
   static const String aptosMultisigAddress = "/aptos/setup_multisig_address";
   static const String aptosMultisigAccountInfo = "/aptos/multisig_account_info";
   static const String aptosSettingPage = "setting/aptos";
@@ -68,7 +66,6 @@ class PageRouter {
 
   /// sui
   static const String suiTransfer = "/sui/transfer";
-  static const String importSuiToken = "/sui/import_tokens";
   static const String suiMultisigAddress = "/sui/setup_multisig_address";
   static const String suiMultisigAccountInfo = "/sui/multisig_account_info";
   static const String suiSettingPage = "setting/sui";
@@ -123,8 +120,6 @@ class PageRouter {
   /// UpdateStellarProvider
   static const String importERC20Token = "ethereum/import_token";
   static const String importTronToken = "tron/import_trc10_token";
-  static const String importSPLTokens = "solana/import_spl_tokens";
-  static const String importCosmosTokens = "cosmos/import_spl_tokens";
 
   static const String tonSettings = "setting/ton";
   static const String tonMnemonic = "setting/ton/mnemonic";
@@ -164,6 +159,7 @@ class PageRouter {
 
   static const String webview = "web/";
   static const String webviewMenu = "web/menu";
+  static const String webviewRemoveHistory = "web/history";
   static const String webViewSearch = "webview/search";
   static const String settingMenu = "setting/menu";
 
@@ -205,8 +201,6 @@ class PageRouter {
         return const NetworkGenericAddressDerivationView();
       case rippleAddToken:
         return const MonitorRippleTokenView();
-      case stellarImportToken:
-        return const MonitorStellarTokenView();
       case rippleAddNfts:
         return const MonitorRippleNFTsView();
       case rippleMultisigAddress:
@@ -225,14 +219,6 @@ class PageRouter {
         return const UpdateCardanoProvider();
       case updateRippleProviders:
         return const UpdateRippleProviderView();
-      case importSPLTokens:
-        return const SolanaImportSPLTokensView();
-      case importAptosToken:
-        return const AptosImportFATTokensView();
-      case importSuiToken:
-        return const SuiImportTokensView();
-      case importCosmosTokens:
-        return const CosmosImportTokenView();
       case importCosmosNetwork:
         return const CosmosImportNetworkView();
       case updateSolanaProviders:

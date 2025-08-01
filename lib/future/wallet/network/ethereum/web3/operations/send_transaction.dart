@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/controllers/
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/client/ethereum.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
@@ -88,7 +88,8 @@ class Web3EthereumSendTransactionStateController
       buildWalletTransaction(
           {required IWeb3EthereumSignedTransaction<IWeb3EthereumTransactionData>
               signedTx,
-          required SubmitTransactionSuccess txId}) async {
+          required SubmitTransactionSuccess? txId}) async {
+    if (txId == null) return [];
     final EthWalletTransaction transaction = EthWalletTransaction(
         txId: txId.txId,
         outputs: [],

@@ -85,9 +85,11 @@ class CosmosTransactionTransferWidget extends StatelessWidget {
                           Icon(Icons.edit, color: context.primaryContainer),
                       backgroundColor: context.onPrimaryContainer,
                       child: CoinAndMarketPriceView(
-                          balance: value.amount,
-                          style: context.primaryTextTheme.titleMedium,
-                          symbolColor: context.primaryContainer)),
+                        balance: value.amount,
+                        style: context.primaryTextTheme.titleMedium,
+                        symbolColor: context.primaryContainer,
+                        showTokenImage: true,
+                      )),
                 ],
               ),
             );

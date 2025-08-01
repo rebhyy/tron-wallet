@@ -46,8 +46,8 @@ class SetupWalletController extends StateController {
   Mnemonic? _mnemonic;
   Mnemonic? get mnemonic => _mnemonic;
 
-  HDWallet? _wallet;
-  HDWallet? get wallet => _wallet;
+  MainWallet? _wallet;
+  MainWallet? get wallet => _wallet;
   WalletRestoreV2? _backup;
   int _mnemoicWord = 12;
   int get mnemonicWord => _mnemoicWord;

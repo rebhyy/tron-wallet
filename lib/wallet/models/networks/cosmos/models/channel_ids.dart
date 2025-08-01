@@ -42,7 +42,7 @@ class CosmosAccountIBCChannelIds with CborSerializable {
         tags: CborTagsConst.cosmosAccountChannelId);
     return CosmosAccountIBCChannelIds(
         channelIds: values
-            .elementAsListOf<CborTagValue>(0)
+            .castValue<CborTagValue>()
             .map((e) => CosmosIBCChannelId.deserialize(object: e))
             .toList());
   }

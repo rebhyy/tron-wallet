@@ -1,13 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
-import 'types.dart';
 
 class Web3RequestTransactionResponseData<RESPONSE,
         SUCCESS extends SubmitTransactionSuccess>
@@ -57,11 +58,13 @@ abstract class Web3TransactionStateController<
         WEB3CHAIN,
         PARAMS,
         WEB3REQUEST,
-        Web3RequestTransactionResponseData<RESPONSE, SUCCESS>> {
+        Web3RequestTransactionResponseData<RESPONSE, SUCCESS>,
+        T> {
   Web3TransactionStateController(
       {required super.walletProvider, required super.request});
 
-  // TransactionFeeData get txFee;
+  List<StreamSubscription<IntegerBalance>> _listeners = [];
+
   Future<TRANSACTIONDATA> buildTransactionData({bool simulate = false});
   Future<TRANSACTION> buildTransaction({bool simulate = false});
   Future<SIGNEDTX> signTransaction(TRANSACTION transaction,
@@ -69,7 +72,7 @@ abstract class Web3TransactionStateController<
   Future<SubmitTransactionResult> submitTransaction(
       {required SIGNEDTX signedTransaction});
   Future<List<IWalletTransaction<T, ACCOUNT>>> buildWalletTransaction(
-      {required SIGNEDTX signedTx, required SUCCESS txId});
+      {required SIGNEDTX signedTx, required SUCCESS? txId});
 
   WalletWeb3ClientTransaction web3ClientInfo() {
     return WalletWeb3ClientTransaction(
@@ -93,6 +96,19 @@ abstract class Web3TransactionStateController<
     return txId.cast<SUCCESS>();
   }
 
+  void onAccountUpdated(ACCOUNT e) {}
+
+  // Future<void> initForm() {}
+  @override
+  Future<void> initForm(OUTCLIENT client) async {
+    for (final i in accounts) {
+      final sub = i.address.balance.stream.listen((e) => onAccountUpdated(i));
+      _listeners.add(sub);
+    }
+    await super.initForm(client);
+    account.updateAccountBalance(addresses: accounts);
+  }
+
   @override
   Future<void> acceptRequest({BuildContext? context}) async {
     try {
@@ -111,13 +127,21 @@ abstract class Web3TransactionStateController<
       request.completeResponse(response.response);
       final txIds = response.txIds;
       if (txIds != null) {
-        pageKey.responseTx(txIds: txIds, network: network);
-        // for (final i in txIds) {
-        //   if (i.status.isFailed) continue;
-        //   final successResult = i.cast<SUCCESS>();
-        //   final walletTxes = await buildWalletTransaction(
-        //       signedTx: successResult.signedTransaction, txId: successResult);
-        // }
+        for (final i in txIds) {
+          if (i.status.isFailed) continue;
+          final successResult = i.cast<SUCCESS>();
+          final walletTxes = await buildWalletTransaction(
+              signedTx: successResult.signedTransaction, txId: successResult);
+          for (final i in walletTxes) {
+            await account.saveTransaction(
+                address: i.account, transaction: i.transaction);
+          }
+          appLogger.debug(
+              runtime: runtimeType,
+              functionName: "submit transaction",
+              msg: successResult.txId);
+        }
+        pageKey.responseTx(txIds: txIds, account: account);
       } else {
         pageKey.response(text: response.message);
       }
@@ -160,5 +184,14 @@ abstract class Web3TransactionStateController<
       pageKey.errorResponse(error: exception);
       request.error(e);
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    for (final i in [..._listeners]) {
+      i.cancel();
+    }
+    _listeners = [];
   }
 }

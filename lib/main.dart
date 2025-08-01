@@ -39,10 +39,10 @@ Future<void> _configDesktop(APPSetting setting) async {
 }
 
 Future<APPSetting> _readSetting() async {
-  final config = await PlatformInterface.instance.getConfig();
-  final setting = await PlatformInterface.instance
-      .readSecure(StorageConst.fullAppSettingStorageId);
-  return APPSetting.deserialize(config, hex: setting);
+  final config = await PlatformInterface.instance.init();
+  final query =
+      await PlatformInterface.instance.readDb(APPDatabaseConst.appSettingQuery);
+  return APPSetting.deserialize(config, bytes: query?.data);
 }
 
 Future<void> _runApplication() async {
@@ -78,9 +78,6 @@ class MyBTC extends StatelessWidget {
               if (PlatformInterface.appPlatform.isDesktop) {
                 maxWidth = APPConst.desktopAppWidth;
               }
-              // else if (PlatformInterface.isWeb) {
-              //   maxWidth = APPConst.maxViewWidth;
-              // }
               ThemeController.updatePrimary(context.theme);
               return MediaQuery(
                   data: context.mediaQuery
@@ -92,7 +89,7 @@ class MyBTC extends StatelessWidget {
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate
             ],
             theme: ThemeController.appTheme,
             darkTheme: ThemeController.appTheme,

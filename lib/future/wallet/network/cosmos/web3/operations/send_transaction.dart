@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/controllers/co
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/types/fee.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/cosmos/cosmos.dart';
 import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
@@ -263,8 +263,9 @@ class WebCosmosSignTransactionStateController
           {required IWeb3CosmosSignedTransaction<IWeb3CosmosTransactionRawData>
               signedTx,
           required SubmitTransactionSuccess<
-                  IWeb3CosmosSignedTransaction<IWeb3CosmosTransactionRawData>>
+                  IWeb3CosmosSignedTransaction<IWeb3CosmosTransactionRawData>>?
               txId}) async {
+    if (txId == null) return [];
     return [
       IWalletTransaction(
           transaction: CosmosWalletTransaction(

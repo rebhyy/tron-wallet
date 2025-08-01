@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:on_chain_bridge/database/database.dart';
 import 'package:on_chain_bridge/models/events/models/wallet_event.dart';
 import 'package:on_chain_bridge/web/web.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -10,32 +11,109 @@ import 'package:on_chain_wallet/wallet/web3/web3.dart';
 import 'js_crypto_utils.dart';
 import 'js_wallet/constant/constant.dart';
 
+typedef ONDBOPENED<T> = Future<T> Function(IDatabseInterfaceJS db);
+
 class _JSBackgroundHandler {
+  final storage = IDatabseInterfaceJS(upgradable: false);
   final lock = SynchronizedLock();
   _JSBackgroundHandler._();
-  static Future<_JSBackgroundHandler> init() async {
-    await AppNativeMethods.platform.getConfig();
-    return _JSBackgroundHandler._();
+  Future<T> getDatabase<T>(ONDBOPENED<T> onDbOpened) async {
+    final status = await storage.openDatabase();
+    if (!status.isReady) {
+      throw Web3RequestExceptionConst.internalError;
+    }
+    final result = await onDbOpened(storage);
+    return result;
   }
 
-  Future<String?> _read({required String key}) async {
-    return await AppNativeMethods.platform.readSecure(key);
+  Future<List<List<int>>> _queriesStorage(
+      {int? storage = APPDatabaseConst.hdWalletStorage,
+      int? storageId = APPDatabaseConst.defaultStorageId,
+      String? key,
+      String? keyA,
+      String tableName = APPDatabaseConst.mainTableName}) async {
+    final params = ITableReadStructA(
+        storage: storage,
+        storageId: storageId,
+        tableName: tableName,
+        key: key,
+        keyA: keyA);
+    return getDatabase((db) async {
+      final data = await db.readAllDb(params);
+      return data.map((e) => e.data).toList();
+    });
   }
 
-  Future<Map<String, String>> _readAll({String? prefix}) async {
-    return await AppNativeMethods.platform.readAllSecure(prefix: prefix);
+  Future<List<int>?> _queryStorage(
+      {int storage = APPDatabaseConst.hdWalletStorage,
+      int storageId = APPDatabaseConst.defaultStorageId,
+      String? key,
+      String? keyA,
+      String tableName = APPDatabaseConst.mainTableName}) async {
+    final params = ITableReadStructA(
+        storage: storage,
+        storageId: storageId,
+        tableName: tableName,
+        key: key,
+        keyA: keyA);
+    return getDatabase((db) async {
+      final data = await db.readDb(params);
+      return data?.data;
+    });
   }
 
-  Future<void> _write({required String key, required String data}) async {
-    await AppNativeMethods.platform.writeSecure(key, data);
+  Future<List<List<int>>> _readAccounts(MainWallet wallet) async {
+    final data = await _queriesStorage(
+        storage: null,
+        tableName: wallet.key,
+        storageId: APPDatabaseConst.accountStorageId);
+    return data;
   }
 
-  Future<List<Web3ChainNetworkData>> _readNetworks(HDWallet wallet) async {
+  Future<List<int>?> _readWeb3Permission(
+      {required MainWallet wallet, required String identifier}) async {
+    return await _queryStorage(
+        storage: APPDatabaseConst.web3AuthStorage,
+        storageId: APPDatabaseConst.defaultStorageId,
+        tableName: wallet.key,
+        key: identifier);
+  }
+
+  Future<void> _insertStorage(
+      {required CborSerializable value,
+      int storage = APPDatabaseConst.hdWalletStorage,
+      int storageId = APPDatabaseConst.defaultStorageId,
+      String? key,
+      String? keyA,
+      String tableName = APPDatabaseConst.mainTableName}) async {
+    final params = ITableInsertOrUpdateStructA(
+        storage: storage,
+        storageId: storageId,
+        data: value.toCbor().encode(),
+        tableName: tableName,
+        key: key ?? '',
+        keyA: keyA ?? '');
+    await getDatabase((db) async {
+      final data = await db.writeDb(params);
+      return data;
+    });
+  }
+
+  Future<void> _savePermission(
+      {required MainWallet wallet,
+      required Web3APPAuthentication permission}) async {
+    await _insertStorage(
+        storage: APPDatabaseConst.web3AuthStorage,
+        storageId: APPDatabaseConst.defaultStorageId,
+        value: permission,
+        tableName: wallet.key,
+        key: permission.applicationKey);
+  }
+
+  Future<List<Web3ChainNetworkData>> _readNetworks(MainWallet wallet) async {
     final List<Web3ChainNetworkData> web3Chains = [];
-    final keys = await _readAll(prefix: wallet.storageKey);
-    final data = keys.keys.map((e) => (e, keys[e]!)).toList();
-    final keyBytes = data.map((e) => BytesUtils.fromHexString(e.$2)).toList();
-    for (final i in keyBytes) {
+    final keys = await _readAccounts(wallet);
+    for (final i in keys) {
       try {
         final obj = CborObject.fromCbor(i);
         final CborListValue values = CborSerializable.cborTagValue(
@@ -57,6 +135,12 @@ class _JSBackgroundHandler {
               network: network.toNetwork(),
               serviceIdentifier: serviceIdentifier),
           NetworkType.tron => Web3ChainNetworkData<WalletTronNetwork>(
+              network: network.toNetwork(),
+              serviceIdentifier: serviceIdentifier),
+          NetworkType.monero => Web3ChainNetworkData<WalletMoneroNetwork>(
+              network: network.toNetwork(),
+              serviceIdentifier: serviceIdentifier),
+          NetworkType.xrpl => Web3ChainNetworkData<WalletXRPNetwork>(
               network: network.toNetwork(),
               serviceIdentifier: serviceIdentifier),
           NetworkType.solana => Web3ChainNetworkData<WalletSolanaNetwork>(
@@ -93,12 +177,14 @@ class _JSBackgroundHandler {
     return web3Chains;
   }
 
-  Future<HDWallet?> _readWallet() async {
-    final wallet = await _read(key: StorageConst.hdWallets);
-    if (wallet == null) {
+  Future<MainWallet?> _readWallet() async {
+    final data = await _queryStorage(
+        storageId: APPDatabaseConst.defaultStorageId,
+        storage: APPDatabaseConst.hdWalletStorage);
+    if (data == null) {
       return null;
     }
-    return HDWallets.deserialize(hex: wallet).getInitializeWallet();
+    return HDWallets.deserialize(bytes: data).getInitializeWallet();
   }
 
   Web3APPAuthenticationKey generateKey() {
@@ -109,23 +195,19 @@ class _JSBackgroundHandler {
 
   Future<Web3APPAuthentication> getPermission({
     required Web3ClientInfo info,
-    required HDWallet wallet,
+    required MainWallet wallet,
   }) async {
-    final applicationKey =
-        BytesUtils.toHexString(MD4.hash(info.identifier.codeUnits));
     final permission =
-        await _read(key: wallet.web3ClientStorageKey(applicationKey));
+        await _readWeb3Permission(wallet: wallet, identifier: info.identifier);
     Web3APPAuthentication? toPermission = MethodUtils.nullOnException(() {
       if (permission == null) return null;
-      return Web3APPAuthentication.deserialize(hex: permission);
+      return Web3APPAuthentication.deserialize(bytes: permission);
     });
     if (toPermission == null) {
       final token = generateKey();
       final permission =
-          info.toAuhenticated(token: token, applicationKey: applicationKey);
-      await _write(
-          key: wallet.web3ClientStorageKey(permission.applicationKey),
-          data: permission.toCbor().toCborHex());
+          info.toAuhenticated(token: token, applicationKey: info.identifier);
+      await _savePermission(wallet: wallet, permission: permission);
       toPermission = permission;
     }
     return toPermission;
@@ -141,7 +223,7 @@ class _JSBackgroundHandler {
 
   Future<WalletEvent> _getOrCreateAppAuthenticated(
       {required Web3ClientInfo info,
-      required HDWallet wallet,
+      required MainWallet wallet,
       required WalletEvent event,
       required int tabId}) async {
     final List<int> peerKey = BytesUtils.fromHexString(event.clientId);
@@ -228,7 +310,7 @@ class _JSBackgroundHandler {
     }
   }
 
-  Future<HDWallet> getWallet() async {
+  Future<MainWallet> getWallet() async {
     final wallet = await _readWallet();
     if (wallet == null) throw Web3RequestExceptionConst.walletNotInitialized;
     return wallet;
@@ -286,9 +368,7 @@ class _JSBackgroundHandler {
       final appAuthenticated =
           await getPermission(info: client, wallet: wallet);
       appAuthenticated.disconnectChain(type);
-      await _write(
-          key: wallet.web3ClientStorageKey(appAuthenticated.applicationKey),
-          data: appAuthenticated.toCbor().toCborHex());
+      await _savePermission(wallet: wallet, permission: appAuthenticated);
       final networks = await _readNetworks(wallet);
       final auth = appAuthenticated.createAuth(networks, web3Networks: [type]);
       final response = Web3GlobalResponseMessage(authenticated: auth);
@@ -331,6 +411,7 @@ class _JSBackgroundHandler {
           info: client, wallet: wallet, event: event, tabId: tab.id!);
       return authenticated;
     } on Web3RequestException catch (e) {
+      Logg.error("error $e");
       return WalletEvent(
           clientId: event.clientId,
           data: e.toResponseMessage().toCbor().encode(),
@@ -338,6 +419,7 @@ class _JSBackgroundHandler {
           type: WalletEventTypes.exception,
           target: WalletEventTarget.background);
     } catch (e) {
+      Logg.error("error $e");
       return WalletEvent(
           clientId: event.clientId,
           data: Web3RequestExceptionConst.internalError
@@ -358,7 +440,7 @@ external set _onContentListener(JSFunction? f);
 external JSFunction get _onContentListener;
 
 void main() async {
-  final handler = await _JSBackgroundHandler.init();
+  final handler = _JSBackgroundHandler._();
   extension.runtime.onInstalled
       .addListener((OnInstalledDetails details) {}.toJS);
   extension.runtime.onMessage.addListener(

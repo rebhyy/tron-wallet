@@ -512,9 +512,10 @@ class ADARemainTransferDetails
     _protocolParams = params;
   }
 
-  TransactionOutput toOutput() {
+  TransactionOutput? toOutput() {
     final assets =
         _tokens.fold<MultiAsset>(MultiAsset.empty, (p, c) => p + c.toAsset());
+    if (assets == MultiAsset.empty && amount.isZero) return null;
     return TransactionOutput(
         address: recipient.networkAddress,
         amount: Value(
@@ -524,8 +525,9 @@ class ADARemainTransferDetails
   BigInt get minValue {
     final out = toOutput();
     return out
-        .copyWith(amount: out.amount.copyWith(coin: maxU64))
-        .minAda(_protocolParams?.coinsPerUtxoSize ?? 0);
+            ?.copyWith(amount: out.amount.copyWith(coin: maxU64))
+            .minAda(_protocolParams?.coinsPerUtxoSize ?? 0) ??
+        BigInt.zero;
   }
 
   @override
@@ -557,12 +559,6 @@ class IADATransactionData extends ITransactionData {
         certificates = certificates.immutable,
         refundDeposits = refundDeposits.immutable;
 }
-
-// class IADATransactionDataTransfer {
-//   final ADAAddress recipient;
-//   final BigInt amount;
-//   IADATransactionDataTransfer({required this.recipient, required this.amount});
-// }
 
 class IADATransaction
     extends ITransaction<IADATransactionData, ICardanoAddress> {

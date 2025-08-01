@@ -3,7 +3,11 @@ import 'dart:async';
 enum WorkerMode {
   main,
   sync1,
-  sync2;
+  sync2,
+  sync3,
+  sync4,
+  sync5,
+  sync6;
 
   bool get isMainIsolate => this == main;
 }

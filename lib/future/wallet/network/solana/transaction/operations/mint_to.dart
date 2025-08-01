@@ -5,9 +5,9 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/widgets/mint_to.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/fields.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/form.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
 
 class SolanaTransactionMintToOperation

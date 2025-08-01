@@ -199,7 +199,8 @@ mixin WalletProviderTabController on StateController {
   final Cancelable _cancelable = Cancelable();
 
   bool get allowRefresh =>
-      (walletPage.inWallet && wallet.isOpen) || walletPage.inWebview;
+      (walletPage.inWallet && wallet.isOpen) ||
+      (walletPage.inWebview && (webviewContoller?.page.inBrowser ?? false));
 
   Future<void> _onRefresh() async {
     _cancelable.dispose();

@@ -64,6 +64,9 @@ class BrowserCryptoWorker extends IsolateCryptoWoker {
     connector?.getResult(
         args: message, timeout: timeout, encryptPart: encryptPart);
   }
+
+  @override
+  int get maxSyncThread => 2;
 }
 
 typedef _OnIsolateError = Function(MessageEvent error, WorkerMode id);
@@ -153,6 +156,8 @@ class _WorkerConnection {
       case WorkerMode.sync2:
         file = await loadFileBinary(_wasmStreamCryptoPath);
         break;
+      default:
+        throw UnimplementedError("to many workers on web");
     }
     return file;
   }
@@ -179,6 +184,8 @@ class _WorkerConnection {
       case WorkerMode.sync2:
         if (isJs) return _jsStreamScriptPath;
         return _wasmStreamScriptPath;
+      default:
+        throw UnimplementedError("to many workers on web");
     }
   }
 
@@ -216,13 +223,15 @@ class _WorkerConnection {
               onStreamRespone: onStreamRespone,
               mode: mode));
           break;
-        default:
+        case WorkerMode.main:
           completer.complete(_SyncWorkerConnection(
               key: keyBytes,
               worker: worker,
               onStreamRespone: onStreamRespone,
               mode: mode));
           break;
+        default:
+          throw UnimplementedError("to many worker on web");
       }
     }
 

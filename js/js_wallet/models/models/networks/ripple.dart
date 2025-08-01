@@ -12,9 +12,9 @@ class RippleJSConst {
   static JSArray<JSString> rippleDefaultAccountFeatures(
           {bool allowSignMessage = true}) =>
       [
-        "ripple:signAndSendTransaction".toJS,
-        "ripple:signTransaction".toJS,
-        if (allowSignMessage) "ripple:signMessage".toJS,
+        "xrpl:signAndSendTransaction".toJS,
+        "xrpl:signTransaction".toJS,
+        if (allowSignMessage) "xrpl:signMessage".toJS,
       ].toJS;
 }
 

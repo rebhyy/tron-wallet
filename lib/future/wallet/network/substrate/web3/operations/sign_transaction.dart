@@ -7,7 +7,7 @@ import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/cont
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/controllers/controllers.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/pages/sign_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/substrate/client/substrate.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
@@ -97,8 +97,10 @@ class WebSubstrateSignTransactionStateController
               IWeb3SubstrateTransactionRawData>
           signedTx,
       required SubmitTransactionSuccess<
-              IWeb3SubstrateSignedTransaction<IWeb3SubstrateTransactionRawData>>
+              IWeb3SubstrateSignedTransaction<
+                  IWeb3SubstrateTransactionRawData>>?
           txId}) async {
+    if (txId == null) return [];
     return [];
   }
 

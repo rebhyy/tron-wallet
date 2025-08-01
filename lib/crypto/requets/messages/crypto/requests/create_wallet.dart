@@ -6,10 +6,6 @@ import 'package:on_chain_wallet/crypto/requets/messages/core/message.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/create_wallet.dart';
 import 'package:on_chain_wallet/crypto/utils/crypto/utils.dart';
 
-class CreateHDWalletConst {
-  static const int checksumLength = 4;
-}
-
 class CryptoRequestCreateHDWallet
     extends CryptoRequest<CryptoCreateWalletResponse, MessageArgsThreeBytes> {
   final String mnemonic;

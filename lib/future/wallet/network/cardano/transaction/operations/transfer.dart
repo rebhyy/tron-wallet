@@ -217,7 +217,7 @@ class ADATransactionTransferOperation extends ADATransactionStateController {
 
   BigInt getMaxInput(ADATransferDetails recipient) {
     final total = recipients.value.map<BigInt>((c) => c.amount.balance).sum;
-    final max = address.address.currencyBalance -
+    final max = totalUtxos.value.balance -
         total +
         recipient.amount.balance -
         txFee.fee.fee.balance;
@@ -268,12 +268,13 @@ class ADATransactionTransferOperation extends ADATransactionStateController {
   @override
   Future<IADATransactionData> buildTransactionData(
       {bool simulate = false}) async {
+    final remain = remainingAmount.value.toOutput();
     return IADATransactionData(
         fee: txFee.fee,
         utxos: _utxos,
         outputs: [
           ...recipients.value.map((e) => e.toOutput()),
-          remainingAmount.value.toOutput()
+          if (remain != null) remain
         ],
         metadata: buildTransactionMemo(),
         certificates: certificateBuilders,

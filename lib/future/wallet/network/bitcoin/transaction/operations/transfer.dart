@@ -343,7 +343,7 @@ class BitcoinTransactionTransferOperation
           time: DateTime.now(),
           totalOutput: WalletTransactionIntegerAmount(
               amount: totalInputs, network: network),
-          scriptHash: address.networkAddress.pubKeyHash(),
+          scriptHash: i.networkAddress.pubKeyHash(),
           outputs: [],
           network: network);
       transactions.add(IWalletTransaction(transaction: tx, account: i));

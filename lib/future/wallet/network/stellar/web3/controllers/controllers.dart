@@ -7,7 +7,7 @@ import 'dart:async';
 import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 
 abstract class Web3StellarTransactionStateController<
         RESPONSE,

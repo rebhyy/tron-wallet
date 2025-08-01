@@ -5,23 +5,18 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/barcode/qr_code/qr_view.dart';
 
 class QrUtils {
-  static Future<(String, String)?> qrCodeToFile(
+  static Future<List<int>?> qrCodeTobytes(
       {required String data,
       required String uderImage,
       required material.ColorScheme color}) async {
     try {
-      final fileName = "${StrUtils.toFileName(DateTime.now())}.png";
       final ui.Image image = await QrPainter(
         data: data,
         version: QrVersions.auto,
-        eyeStyle: QrEyeStyle(
-          eyeShape: QrEyeShape.square,
-          color: color.onSurface,
-        ),
+        eyeStyle:
+            QrEyeStyle(eyeShape: QrEyeShape.square, color: color.onSurface),
         dataModuleStyle: QrDataModuleStyle(
-          dataModuleShape: QrDataModuleShape.square,
-          color: color.onSurface,
-        ),
+            dataModuleShape: QrDataModuleShape.square, color: color.onSurface),
       ).toImage(500);
       final ByteData? bufferBytes = await _QrCodeMarkerPainter(
               qrImage: image,
@@ -31,8 +26,23 @@ class QrUtils {
               textColor: color.onSurface,
               backgroundColor: color.surface)
           .toImageData();
+      if (bufferBytes == null) return null;
 
-      final List<int> bufferData = bufferBytes!.buffer.asUint8List();
+      return bufferBytes.buffer.asUint8List();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<(String, String)?> qrCodeToFile(
+      {required String data,
+      required String uderImage,
+      required material.ColorScheme color}) async {
+    try {
+      final fileName = "${StrUtils.toFileName(DateTime.now())}.png";
+      final List<int>? bufferData =
+          await qrCodeTobytes(data: data, uderImage: uderImage, color: color);
+      if (bufferData == null) return null;
       final write = await PlatformMethods.writeBytes(
           bytes: bufferData, fileName: fileName, validate: false);
       return (write, fileName);

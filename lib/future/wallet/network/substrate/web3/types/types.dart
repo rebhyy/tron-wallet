@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/operations/import_network.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/operations/sign_message.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/operations/sign_transaction.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/client/client.dart';
@@ -32,7 +32,8 @@ abstract class Web3SubstrateStateController<
         Web3SubstrateChain,
         T,
         Web3SubstrateRequest<RESPONSE, T>,
-        Web3RequestResponseData<RESPONSE>> {
+        Web3RequestResponseData<RESPONSE>,
+        SubstrateWalletTransaction> {
   Web3SubstrateStateController(
       {required super.walletProvider, required super.request});
 

@@ -15,57 +15,53 @@ class Web3PermissionAppbarActionView extends StatelessWidget {
   Widget build(BuildContext context) {
     return TappedTooltipView(
       tooltipWidget: ToolTipView(
-        padding: EdgeInsets.zero,
-        tooltipWidget: (c) => IgnorePointer(
-          child: Container(
-            padding: WidgetConstant.padding10,
-            constraints: const BoxConstraints(
-                maxWidth: APPConst.tooltipConstrainedWidth),
-            decoration: BoxDecoration(
-                borderRadius: WidgetConstant.border8,
-                color: context.colors.surface),
-            child: Column(
-              children: [
-                ContainerWithBorder(
-                  child: Row(
+          padding: EdgeInsets.zero,
+          tooltipWidget: (c) => IgnorePointer(
+                child: ToolTipConstrainedBox(
+                  // padding: WidgetConstant.padding10,
+                  // constraints: const BoxConstraints(
+                  //     maxWidth: APPConst.tooltipConstrainedWidth),
+                  // decoration: BoxDecoration(
+                  //     borderRadius: WidgetConstant.border8,
+                  //     color: context.colors.surface),
+                  child: Column(
                     children: [
-                      CircleTokenImageView(network.coinParam.token,
-                          radius: APPConst.circleRadius25),
-                      WidgetConstant.width8,
-                      Expanded(
-                          child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          OneLineTextWidget(
-                            network.token.name,
-                            style: context.onPrimaryTextTheme.bodyMedium,
-                          ),
-                          CoinAndMarketPriceView(
-                            balance: chain.totalBalance.value,
-                            style: context.onPrimaryTextTheme.labelLarge,
-                            symbolColor: context.onPrimaryContainer,
-                          )
-                        ],
-                      )),
+                      ContainerWithBorder(
+                        child: Row(
+                          children: [
+                            CircleTokenImageView(network.coinParam.token,
+                                radius: APPConst.circleRadius25),
+                            WidgetConstant.width8,
+                            Expanded(
+                                child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                OneLineTextWidget(
+                                  network.token.name,
+                                  style: context.onPrimaryTextTheme.bodyMedium,
+                                ),
+                                CoinAndMarketPriceView(
+                                  balance: chain.totalBalance.value,
+                                  style: context.onPrimaryTextTheme.labelLarge,
+                                  symbolColor: context.onPrimaryContainer,
+                                )
+                              ],
+                            )),
+                          ],
+                        ),
+                      ),
+                      WidgetConstant.height20,
+                      Web3ApplicationView(
+                        permission: request.authenticated,
+                        info: request.info,
+                        color: context.colors.onInverseSurface,
+                      ),
                     ],
                   ),
                 ),
-                WidgetConstant.height20,
-                Web3ApplicationView(
-                    permission: request.authenticated, info: request.info),
-              ],
-            ),
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CircleTokenImageView(network.token, radius: 15),
-            Text(network.token.nameView, style: context.textTheme.labelMedium)
-          ],
-        ),
-      ),
+              ),
+          child: CircleTokenImageView(network.token,
+              radius: APPConst.circleRadius12)),
     );
   }
 }

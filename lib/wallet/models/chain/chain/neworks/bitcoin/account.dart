@@ -61,7 +61,7 @@ final class BitcoinChain extends Chain<
     if (networkId != network.value) {
       throw WalletExceptionConst.incorrectNetwork;
     }
-    final String id = cbor.elementAt<String>(2);
+    final String id = cbor.elementAs<String>(2);
     final List<IBitcoinAddress> accounts = cbor
         .elementAsListOf<CborTagValue>(3)
         .map((e) => switch (network.type) {
@@ -110,7 +110,7 @@ final class BitcoinChain extends Chain<
           _updateAddressBalanceInternal(
               address: address,
               balance: balance.sumOfUtxosValue(),
-              saveAccount: false);
+              saveAccount: true);
           return balance;
         },
         onError: (err) => throw err);

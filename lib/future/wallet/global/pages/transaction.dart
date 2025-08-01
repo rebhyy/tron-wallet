@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:on_chain_wallet/app/constant/constant.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
@@ -46,7 +47,9 @@ class TransactionView extends StatelessWidget {
           WalletTransactionType.send: (context) =>
               Icon(Icons.upload, color: context.onPrimaryContainer),
           WalletTransactionType.web3: (context) =>
-              Icon(Icons.upload, color: context.onPrimaryContainer),
+              Icon(CustomIcons.web3, color: context.onPrimaryContainer),
+          WalletTransactionType.web3Tx: (context) =>
+              Icon(CustomIcons.web3, color: context.onPrimaryContainer),
         },
       ),
       child: Row(
@@ -60,8 +63,18 @@ class TransactionView extends StatelessWidget {
                 style: context.onPrimaryTextTheme.titleMedium,
                 symbolColor: context.onPrimaryContainer,
               ),
-              onDeactive: (context) => OneLineTextWidget(transaction.txId,
-                  style: context.onPrimaryTextTheme.bodyMedium),
+              onDeactive: (context) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  OneLineTextWidget(transaction.txId,
+                      style: context.onPrimaryTextTheme.bodyMedium),
+                  ConditionalWidget(
+                      enable: transaction.web3Client != null,
+                      onActive: (context) => OneLineTextWidget(
+                          transaction.web3Client!.name,
+                          style: context.onPrimaryTextTheme.bodySmall)),
+                ],
+              ),
             ),
           ),
           Column(
@@ -102,6 +115,34 @@ class TransactionModalView extends StatelessWidget {
           child: CopyableTextWidget(
               text: transaction.txId, color: context.onPrimaryContainer),
         ),
+        ConditionalWidget(
+            enable: transaction.web3Client != null,
+            onActive: (context) =>
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  WidgetConstant.height20,
+                  Text("client".tr,
+                      style: context.onPrimaryTextTheme.titleMedium),
+                  WidgetConstant.height8,
+                  ContainerWithBorder(
+                    onRemove: () {},
+                    enableTap: false,
+                    onRemoveIcon: Icon(CustomIcons.web3,
+                        color: context.onPrimaryContainer),
+                    child: Row(children: [
+                      CircleAPPImageView(transaction.web3Client!.image,
+                          radius: APPConst.circleRadius25),
+                      WidgetConstant.width8,
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(transaction.web3Client!.name,
+                                style: context.onPrimaryTextTheme.bodyMedium),
+                            Text(transaction.web3Client!.applicationId,
+                                style: context.onPrimaryTextTheme.bodySmall),
+                          ]),
+                    ]),
+                  ),
+                ])),
         WidgetConstant.height20,
         Text("status".tr, style: context.onPrimaryTextTheme.titleMedium),
         WidgetConstant.height8,

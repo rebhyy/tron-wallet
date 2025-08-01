@@ -76,7 +76,7 @@ abstract class EthereumTransactionStateController<
     if (address == null) return;
     receipt.setValue(address);
     onStateUpdated();
-    if (!amount.value.isZero) {
+    if (amount.value.largerThanZero) {
       estimateFee();
     }
   }
@@ -125,7 +125,7 @@ abstract class EthereumTransactionStateController<
     final serializedData = BytesUtils.toHexString(
         ethTransaction.signedSerialized(signature.result),
         prefix: "0x");
-    return IEthereumSignedTransaction(
+    return IEthereumSignedTransaction<T>(
         transaction: transaction,
         signatures: [signature.result.toBytes()],
         finalTransactionData: serializedData);
@@ -133,10 +133,10 @@ abstract class EthereumTransactionStateController<
 
   @override
   Future<SubmitTransactionResult> submitTransaction(
-      {required IEthereumSignedTransaction signedTransaction}) async {
+      {required IEthereumSignedTransaction<T> signedTransaction}) async {
     final txId =
         await client.sendRawTransaction(signedTransaction.finalTransactionData);
-    return SubmitTransactionSuccess(
+    return SubmitTransactionSuccess<IEthereumSignedTransaction<T>>(
         txId: txId, signedTransaction: signedTransaction);
   }
 

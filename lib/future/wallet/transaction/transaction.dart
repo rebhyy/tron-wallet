@@ -1,6 +1,6 @@
-export 'core/fields.dart';
-export 'core/form.dart';
-export 'core/types.dart';
+export 'fields/fields.dart';
+export 'core/controller.dart';
+export 'types/types.dart';
 
 export 'pages/transaction_state_builder.dart';
 export 'pages/live_form_widget.dart';

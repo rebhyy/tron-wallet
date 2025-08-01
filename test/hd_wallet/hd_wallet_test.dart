@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
@@ -23,7 +22,6 @@ class TestWallet extends WalletCore {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await PlatformInterface.instance.getConfig();
   const mnemonic =
       "kiss dad garment soft that place balance resist hat uncle submit recall";
   final wallet = TestWallet();

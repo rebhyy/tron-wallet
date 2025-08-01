@@ -20,7 +20,15 @@ class Logg {
     final stopWatch = Stopwatch()..start();
     final r = n();
     stopWatch.stop();
-    print("$text: ${stopWatch.elapsedMilliseconds}");
+    log("$text: ${stopWatch.elapsedMilliseconds}");
+    return r;
+  }
+
+  static Future<T> defAsync<T>(Future<T> Function() n, String text) async {
+    final stopWatch = Stopwatch()..start();
+    final r = await n();
+    stopWatch.stop();
+    log("$text: ${stopWatch.elapsedMilliseconds}");
     return r;
   }
 }

@@ -38,9 +38,6 @@ class ProxyMethodHandler<T> {
     if (prop?.isDefinedAndNotNull ?? false) {
       if (prop.isA<JSString>()) {
         final pr = prop.dartify() as String;
-        // if (debugKey != null) {
-        //   Logg.log("$debugKey: $pr");
-        // }
         if (pr.startsWith("is")) {
           final r = Reflect.get(object, prop, receiver);
           if (r.isDefinedAndNotNull) return r;

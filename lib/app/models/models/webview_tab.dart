@@ -83,5 +83,5 @@ class WebViewTab with CborSerializable, Equatable {
   }
 
   @override
-  List get variabels => [url];
+  List get variabels => [url, lastVisit];
 }

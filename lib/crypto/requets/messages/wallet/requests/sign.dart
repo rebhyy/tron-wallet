@@ -110,9 +110,9 @@ final class WalletRequestSign
         final btcSigner = BitcoinKeySigner.fromKeyBytes(key.privateKeyBytes());
         List<int> sig;
         if (bitcoinRequest.useBchSchnorr) {
-          sig = btcSigner.signSchnorr(digest);
+          sig = btcSigner.signSchnorrConst(digest);
         } else {
-          sig = btcSigner.signECDSADer(digest);
+          sig = btcSigner.signECDSADerConst(digest);
         }
         final sighash = bitcoinRequest.sighash;
         signature = [...sig, if (sighash != null) sighash];

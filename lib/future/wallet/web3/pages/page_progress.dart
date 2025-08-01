@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/web3/core/exception/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/request/web_request.dart';
 
@@ -165,6 +164,7 @@ class Web3PageProgressState extends State<Web3PageProgress>
     return APPAnimatedSwitcher<Web3ProgressStatus>(
       duration: APPConst.animationDuraion,
       enable: status,
+      width: double.infinity,
       widgets: {
         Web3ProgressStatus.idle: (c) => FutureBuilder(
               future: MethodUtils.after(() async => widget.child(c)),
@@ -254,12 +254,6 @@ extension QuickAccsessWeb3PageProgressState
 
   void response({String? text, Widget? widget}) {
     currentState?.response(text: text, widget: widget);
-  }
-
-  void responseTx({required String hash, required WalletNetwork network}) {
-    currentState?.response(
-        widget:
-            Web3SuccessTransactionTextView(txIds: [hash], network: network));
   }
 
   void process({String? text}) {

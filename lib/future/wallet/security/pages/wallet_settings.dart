@@ -14,7 +14,7 @@ class UpdateWalletSettingView extends StatelessWidget {
     return PasswordCheckerView(
         accsess: WalletAccsessType.verify,
         onAccsess: (crendential, password, network) {
-          return _ExportSeedView(password: password);
+          return _UpdateWalletSettingView(password: password);
         },
         title: "wallet_preferences".tr,
         subtitle: PageTitleSubtitle(
@@ -27,18 +27,20 @@ class UpdateWalletSettingView extends StatelessWidget {
   }
 }
 
-class _ExportSeedView extends StatefulWidget {
-  const _ExportSeedView({required this.password});
+class _UpdateWalletSettingView extends StatefulWidget {
+  const _UpdateWalletSettingView({required this.password});
 
   final String password;
 
   @override
-  State<_ExportSeedView> createState() => _ExportSeedViewState();
+  State<_UpdateWalletSettingView> createState() =>
+      _UpdateWalletSettingViewState();
 }
 
-class _ExportSeedViewState extends State<_ExportSeedView> with SafeState {
+class _UpdateWalletSettingViewState extends State<_UpdateWalletSettingView>
+    with SafeState {
   final GlobalKey<PageProgressState> progressKey = GlobalKey();
-  late final HDWallet hdWallet;
+  late final MainWallet hdWallet;
   late String name = hdWallet.name;
   late bool reqPassword = hdWallet.requiredPassword;
   late bool protectWallet = hdWallet.protectWallet;
@@ -95,14 +97,13 @@ class _ExportSeedViewState extends State<_ExportSeedView> with SafeState {
                 padding: WidgetConstant.paddingHorizontal20,
                 alignment: Alignment.center,
                 child: UpdateWalletInfosWidget(
-                  name: name,
-                  locktime: locktime,
-                  requrmentPassword: reqPassword,
-                  exitsIds: walletIds,
-                  setupButtonTitle: "update_settings".tr,
-                  onUpdate: (update) => setup(update),
-                  protectWallet: protectWallet,
-                ),
+                    name: name,
+                    locktime: locktime,
+                    requrmentPassword: reqPassword,
+                    exitsIds: walletIds,
+                    setupButtonTitle: "update_settings".tr,
+                    onUpdate: (update) => setup(update),
+                    protectWallet: protectWallet),
               ),
             ),
           ],

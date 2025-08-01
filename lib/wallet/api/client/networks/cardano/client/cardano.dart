@@ -1,3 +1,4 @@
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/cardano.dart';
@@ -24,7 +25,7 @@ class CardanoClient extends NetworkClient<ADAWalletTransaction,
       final result =
           await provider.request(BlockfrostRequestAddressUTXOs(address));
       return result.sumOflovelace;
-    } on BlockfrostError catch (e) {
+    } on ApiProviderException catch (e) {
       if (e.statusCode == BlockfrostStatusCode.resourceDoesNotExist) {
         return BigInt.zero;
       }
@@ -34,9 +35,18 @@ class CardanoClient extends NetworkClient<ADAWalletTransaction,
 
   Future<List<ADAAccountUTXOResponse>> getAccountUtxos(
       {required ADAAddress address}) async {
-    final utxos =
-        await provider.request(BlockfrostRequestAddressUTXOs(address));
-    return utxos;
+    try {
+      final utxos =
+          await provider.request(BlockfrostRequestAddressUTXOs(address));
+      return utxos;
+    } on ApiProviderException catch (e) {
+      if (e.statusCode == BlockfrostStatusCode.resourceDoesNotExist) {
+        return [];
+      }
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<ADAEpochParametersResponse> latestEpochProtocolParameters() async {

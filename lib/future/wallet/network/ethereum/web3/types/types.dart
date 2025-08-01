@@ -8,7 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/operations/i
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/operations/personal_sign.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/operations/send_transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/operations/typed_data.dart';
-import 'package:on_chain_wallet/future/wallet/transaction/core/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/client/client.dart';
@@ -196,7 +196,8 @@ abstract class Web3EthereumStateController<
         Web3EthereumChain,
         T,
         Web3EthereumRequest<RESPONSE, T>,
-        Web3RequestResponseData<RESPONSE>> {
+        Web3RequestResponseData<RESPONSE>,
+        EthWalletTransaction> {
   Web3EthereumStateController(
       {required super.walletProvider, required super.request});
 

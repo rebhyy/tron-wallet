@@ -1,8 +1,6 @@
 import 'package:on_chain_wallet/crypto/models/networks.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 
 class Web3GlobalRequestConnectStateController
@@ -25,28 +23,21 @@ class Web3GlobalRequestConnectStateController
   @override
   Future<void> initWeb3() async {
     final param = request.params.cast<Web3ConnectApplication>();
-    List<NetworkType> lockedNetworks = const [];
-    List<Chain> locakedChains = const [];
-    if (param.chain != null) {
-      lockedNetworks = [param.chain!];
+    final lockNetwork = param.chain;
+    if (lockNetwork != null) {
+      _authenticated = Web3UpdatePermissionRequest.network(
+          authentication: request.authenticated, client: request.info.client);
     } else if (param.networks != null) {
       final networkIds = param.networks!;
-      locakedChains = wallet.wallet
-          .getChains()
-          .where((e) => networkIds.contains(e.network.value))
-          .toList();
-      lockedNetworks = locakedChains
-          .map((e) => e.network.type.isBitcoin
-              ? NetworkType.bitcoinAndForked
-              : e.network.type)
-          .toSet()
-          .toList();
+      _authenticated = Web3UpdatePermissionRequest.chain(
+          authentication: request.authenticated,
+          client: request.info.client,
+          lockedChains: wallet.wallet
+              .getChains()
+              .where((e) => networkIds.contains(e.network.value))
+              .toList());
     }
-    _authenticated = Web3UpdatePermissionRequest(
-        authentication: request.authenticated,
-        lockedNetworks: lockedNetworks,
-        lockedChains: locakedChains,
-        client: request.info.client);
+
     progressKey.idle();
   }
 }

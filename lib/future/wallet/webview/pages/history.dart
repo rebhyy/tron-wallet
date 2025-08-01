@@ -1,6 +1,7 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/webview/controller/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
@@ -66,15 +67,16 @@ class _HistoriesPageState extends State<WebViewHistoriesView> with SafeState {
 
   Future<void> clearHistories() async {
     final accept = await context.openSliverDialog(
-        widget: (context) => DialogTextView(
-              text: widget.isHistory
-                  ? "remove_all_histories".tr
-                  : "remove_bookmarks".tr,
-              buttonWidget: DialogDoubleButtonView(),
-            ),
-        label: widget.isHistory
-            ? 'remove_histories'.tr
-            : 'remove_all_bookmarks'.tr);
+      routeName: PageRouter.webviewRemoveHistory,
+      widget: (context) => DialogTextView(
+        text: widget.isHistory
+            ? "remove_all_histories".tr
+            : "remove_bookmarks".tr,
+        buttonWidget: DialogDoubleButtonView(),
+      ),
+      label:
+          widget.isHistory ? 'remove_histories'.tr : 'remove_all_bookmarks'.tr,
+    );
     if (accept != true) return;
     if (widget.isHistory) {
       widget.model.clearHistory();

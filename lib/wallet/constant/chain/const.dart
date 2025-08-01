@@ -1174,6 +1174,8 @@ class _DefaultAppCoins {
 }
 
 class ChainConst {
+  static const int maxNetworkId = 10000 - 1;
+
   static const int importedNetworkStartId = 2000;
   static const int maxAccountTokens = 1000;
   static const int cfTestnetNetworkId = 466;

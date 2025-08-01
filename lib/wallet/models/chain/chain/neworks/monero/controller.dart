@@ -456,8 +456,8 @@ base mixin MoneroChainController
         await _callSynchronized(
           t: () async {
             if (_blockSubscribe != null) return;
-
             final stream = await defaultTracker.getHeightRequest(
+              totalThread: crypto.maxSyncThread,
               onTrackerUpdated: () async {
                 _saveDefaultTracker();
                 _updateChainStatus();
@@ -466,10 +466,9 @@ base mixin MoneroChainController
                 final MoneroAPIProvider provider = client.service.provider;
                 final mode = WorkerMode.values.elementAt(processId + 1);
                 final r = await crypto.streamRequest(
-                  StreamRequestMoneroBlockTracking(provider: provider),
-                  encryptedPart: account.toCbor().encode(),
-                  mode: mode,
-                );
+                    StreamRequestMoneroBlockTracking(provider: provider),
+                    encryptedPart: account.toCbor().encode(),
+                    mode: mode);
 
                 return r;
               },

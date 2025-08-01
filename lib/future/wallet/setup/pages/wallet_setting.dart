@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 class CreateWalletSettingsView extends StatefulWidget {
   const CreateWalletSettingsView(this.wallet, {super.key});
-  final HDWallet wallet;
+  final MainWallet wallet;
 
   @override
   State<CreateWalletSettingsView> createState() =>
