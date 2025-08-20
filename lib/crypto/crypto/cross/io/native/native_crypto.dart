@@ -17,6 +17,12 @@ class AppCryptoNative {
       if (Platform.isMacOS) {
         return AppCryptoNative(
             library: DynamicLibrary.open(AppCryptoConst.cryptoLibNameMacos));
+      } else if (Platform.isWindows) {
+        return AppCryptoNative(
+            library: DynamicLibrary.open(AppCryptoConst.cryptoLibNameWindows));
+      } else if (Platform.isAndroid) {
+        return AppCryptoNative(
+            library: DynamicLibrary.open(AppCryptoConst.cryptoLibNameAndroid));
       }
       return null;
     } catch (e, s) {

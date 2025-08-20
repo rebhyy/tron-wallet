@@ -41,3 +41,6 @@ add_dependencies(${BINARY_NAME} flutter_assemble)
 install(FILES "${CMAKE_SOURCE_DIR}/libsqlite3mc.dll"
   DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/libed25519.dll"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}"
+  COMPONENT Runtime)
