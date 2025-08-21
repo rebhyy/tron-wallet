@@ -44,7 +44,7 @@ final class RippleNewAddressParams extends NewAccountParams<IXRPAddress> {
     if (network is! WalletXRPNetwork) {
       throw WalletExceptionConst.invalidAccountDetails;
     }
-    final keyBytes = publicKey.keyBytes(immutable: true);
+    final keyBytes = publicKey.normalizedComprossedBytes.asImmutableBytes;
     final keyAlgorithm = XRPKeyAlgorithm.values.firstWhere(
         (e) => e.curveType == curve,
         orElse: () => throw WalletExceptionConst.invalidAccountDetails);

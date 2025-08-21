@@ -49,7 +49,7 @@ final class SubstrateNewAddressParams
     if (network is! WalletSubstrateNetwork) {
       throw WalletExceptionConst.invalidAccountDetails;
     }
-    final keyBytes = publicKey.keyBytes(immutable: true);
+    final keyBytes = publicKey.normalizedComprossedBytes.asImmutableBytes;
     final address = SubstrateUtils.toAddress(
         publicKey: keyBytes,
         ss58Format: network.coinParam.ss58Format,

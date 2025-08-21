@@ -48,7 +48,8 @@ final class CosmosNewAddressParams extends NewAccountParams<ICosmosAddress> {
     if (network is! WalletCosmosNetwork) {
       throw WalletExceptionConst.invalidAccountDetails;
     }
-    final publickKeyBytes = publicKey.keyBytes(immutable: true);
+    final publickKeyBytes =
+        publicKey.normalizedComprossedBytes.asImmutableBytes;
     final address = CosmosBaseAddress.fromPublicKey(
         pubkeyBytes: publickKeyBytes,
         algorithm: algorithm,

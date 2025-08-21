@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
@@ -629,6 +631,20 @@ mixin Web3PermissionState<
     WEB3ACCOUNT extends Web3InternalNetworkAccount,
     WEB3NETWORK extends Web3InternalNetwork<WEB3ACCOUNT>,
     WEB3 extends Web3InternalChain<WEB3NETWORK>> on SafeState<T> {
+  StreamSubscription<ChainEvent>? _accountListener;
+  void onAccountUpdated(ChainEvent event) {
+    if (event.type == DefaultChainNotify.address &&
+        event.status == ChainNotifyStatus.complete) {
+      updateState();
+    }
+  }
+
+  void listenOnAccount() {
+    _accountListener?.cancel();
+    _accountListener = null;
+    _accountListener = chain.stream.listen(onAccountUpdated);
+  }
+
   WEB3ACCOUNT? createWeb3Account(ADDRESS address);
   WEB3NETWORK createWeb3Network(
       List<WEB3ACCOUNT> address, WEB3ACCOUNT? defaultAccount, int networkId);
@@ -718,6 +734,7 @@ mixin Web3PermissionState<
             accounts.firstOrNull;
     updateActivities();
     if (notify) updateState();
+    listenOnAccount();
   }
 
   WEB3 updateApplication() {
@@ -757,7 +774,16 @@ mixin Web3PermissionState<
     defaultAddress =
         accounts.firstWhereOrNull((e) => e == permission.defaultAccount) ??
             accounts.firstOrNull;
+    _accountListener = chain.stream.listen(onAccountUpdated);
     updateActivities();
+    listenOnAccount();
+  }
+
+  @override
+  void safeDispose() {
+    super.safeDispose();
+    _accountListener?.cancel();
+    _accountListener = null;
   }
 }
 

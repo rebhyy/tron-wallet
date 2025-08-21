@@ -4,13 +4,13 @@ enum LoggerMode { dev, silent }
 
 enum LogType { debug, warning, error }
 
-const appLogger = _APPLogger(mode: LoggerMode.dev);
+const appLogger = _APPLogger(mode: LoggerMode.silent);
 
 typedef LOGWHEN = bool Function();
 
 class _APPLogger {
   final LoggerMode mode;
-  const _APPLogger({this.mode = LoggerMode.silent});
+  const _APPLogger({this.mode = LoggerMode.dev});
 
   void debug(
       {Object? runtime, Object? functionName, Object? msg, LOGWHEN? when}) {

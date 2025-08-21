@@ -381,37 +381,75 @@ class _AddressTypeOPtion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: APPConst.animationDuraion,
-      child: Column(
-          key: ValueKey<BitcoinAddressType>(select),
-          children: switch (select) {
-            P2pkhAddressType.p2pkh => List.generate(
-                p2pkhTypes.length,
-                (index) => AppRadioListTile<P2pkhAddressType>(
-                    title: Text(p2pkhTypes[index].value),
-                    value: p2pkhTypes[index],
-                    groupValue: selectP2pkhType,
-                    subtitle:
-                        Text(BTCUtils.getAddressDetails(p2pkhTypes[index])),
-                    onChanged: onChangeP2pkhAddress)),
-            SegwitAddressType.p2wsh => [
-                Text(
-                  "p2wsh_one_of_one_desc".tr,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            SegwitAddressType.p2tr || SegwitAddressType.p2wpkh => [],
-            _ => List.generate(p2shTypes.length, (index) {
-                return AppRadioListTile(
-                    title: Text(p2shTypes[index].value),
-                    value: p2shTypes[index],
-                    groupValue: selectedP2shType,
-                    subtitle:
-                        Text(BTCUtils.getAddressDetails(p2shTypes[index])),
-                    onChanged: onChangeP2shSegwit);
-              }),
-          }),
+    return APPAnimatedSwitcher<BitcoinAddressType>(
+      enable: select,
+      widgets: {
+        SegwitAddressType.p2wsh: (context) =>
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text("p2wsh_one_of_one_desc".tr, textAlign: TextAlign.center),
+            ]),
+        P2pkhAddressType.p2pkh: (context) =>
+            AppGroupRadioBuilder<P2pkhAddressType>(
+              groupValue: selectP2pkhType,
+              onChanged: onChangeP2pkhAddress,
+              builder: (context) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(
+                      p2pkhTypes.length,
+                      (index) => AppRadioListTile<P2pkhAddressType>(
+                          title: Text(p2pkhTypes[index].value),
+                          value: p2pkhTypes[index],
+                          subtitle: Text(
+                              BTCUtils.getAddressDetails(p2pkhTypes[index]))))),
+            ),
+        SegwitAddressType.p2tr: (context) => WidgetConstant.sizedBox,
+        SegwitAddressType.p2wpkh: (context) => WidgetConstant.sizedBox,
+      },
+      defaultBuilder: (context) => AppGroupRadioBuilder<P2shAddressType>(
+        groupValue: selectedP2shType,
+        onChanged: onChangeP2shSegwit,
+        builder: (context) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(p2shTypes.length, (index) {
+              return AppRadioListTile<P2shAddressType>(
+                title: Text(p2shTypes[index].value),
+                value: p2shTypes[index],
+                subtitle: Text(BTCUtils.getAddressDetails(p2shTypes[index])),
+              );
+            })),
+      ),
     );
+    // return AnimatedSwitcher(
+    //   duration: APPConst.animationDuraion,
+    //   child: Column(
+    //       key: ValueKey<BitcoinAddressType>(select),
+    //       children: switch (select) {
+    //         P2pkhAddressType.p2pkh => List.generate(
+    //             p2pkhTypes.length,
+    //             (index) => AppRadioListTile<P2pkhAddressType>(
+    //                 title: Text(p2pkhTypes[index].value),
+    //                 value: p2pkhTypes[index],
+    //                 groupValue: selectP2pkhType,
+    //                 subtitle:
+    //                     Text(BTCUtils.getAddressDetails(p2pkhTypes[index])),
+    //                 onChanged: onChangeP2pkhAddress)),
+    //         SegwitAddressType.p2wsh => [
+    //             Text(
+    //               "p2wsh_one_of_one_desc".tr,
+    //               textAlign: TextAlign.center,
+    //             ),
+    //           ],
+    //         SegwitAddressType.p2tr || SegwitAddressType.p2wpkh => [],
+    //         _ => List.generate(p2shTypes.length, (index) {
+    //             return AppRadioListTile(
+    //                 title: Text(p2shTypes[index].value),
+    //                 value: p2shTypes[index],
+    //                 groupValue: selectedP2shType,
+    //                 subtitle:
+    //                     Text(BTCUtils.getAddressDetails(p2shTypes[index])),
+    //                 onChanged: onChangeP2shSegwit);
+    //           }),
+    //       }),
+    // );
   }
 }

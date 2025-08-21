@@ -24,13 +24,19 @@ base mixin BaseChainController<
   bool get _isCurrentWalletChain => _currentWalletChainId == network.value;
   bool get isCurrentWalletChain => _isCurrentWalletChain;
   late final List<String> _services = ChainConst.services(network);
+  final CachedObject<void> _onUpdateAccountBalance =
+      CachedObject<void>(interval: const Duration(minutes: 10));
+
   @override
   List<String> get services => _services;
   Future<void> _onWalletPing() async {
     if (!haveAddress) return;
-    await init(client: false);
-    await updateAccountBalance();
-    _trackTxes();
+
+    await _onUpdateAccountBalance.get(onFetch: () async {
+      await init(client: false);
+      await updateAccountBalance();
+      _trackTxes();
+    });
   }
 
   Future<void> _onConnectionStatusChange(bool isOnline) async {

@@ -50,7 +50,7 @@ final class TonNewAddressParams extends NewAccountParams<ITonAddress> {
     if (network is! WalletTonNetwork) {
       throw WalletExceptionConst.invalidAccountDetails;
     }
-    final keyBytes = publicKey.keyBytes(immutable: true);
+    final keyBytes = publicKey.normalizedComprossedBytes.asImmutableBytes;
     final address =
         _toAddress(publicKey: keyBytes, chain: network.coinParam.chain);
     return ITonAddress._newAccount(

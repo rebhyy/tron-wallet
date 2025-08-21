@@ -64,7 +64,7 @@ final class SuiNewAddressParams extends NewAccountParams<ISuiAddress> {
     return ISuiAddress._newAccount(
         network: network,
         address: address,
-        publicKey: publicKey.keyBytes(immutable: true),
+        publicKey: publicKey.normalizedComprossedBytes.asImmutableBytes,
         coin: coin,
         identifier: NewAccountParams.toIdentifier(address.address),
         keyIndex: deriveIndex,

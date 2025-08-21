@@ -56,7 +56,7 @@ void main(List<String> args) async {
       final wallet = JSWebviewWallet.initialize(
           request: walletEvent,
           clientId: walletEvent.clientId,
-          isWorker: false,
+          isWorker: true,
           keyPair: key,
           target: JSWebviewTraget.fromName(walletEvent.platform)!);
       workerCompleter.complete((wallet, target));

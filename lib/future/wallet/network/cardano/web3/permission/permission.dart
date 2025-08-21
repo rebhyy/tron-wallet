@@ -83,6 +83,18 @@ class _CardanoWeb3PermissionViewState extends State<CardanoWeb3PermissionView>
   }
 
   @override
+  void onAccountUpdated(ChainEvent event) {
+    if (event.type == DefaultChainNotify.address &&
+        event.status == ChainNotifyStatus.complete) {
+      addresses = chain.addresses.where((e) => !e.isRewardAddress).toList();
+      rewardAddresses = chain.addresses
+          .where((e) => e.isRewardAddress || e.isBaseAddress)
+          .toList();
+      updateState();
+    }
+  }
+
+  @override
   void onInitOnce() {
     super.onInitOnce();
     rewardAccounts = permission.accounts.where((e) => e.type.isReward).toList();

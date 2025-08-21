@@ -231,63 +231,51 @@ class SelectWeb3PermissionAccountView<
 
   @override
   Widget build(BuildContext context) {
-    return ChainStreamBuilder(
-        allowNotify: [DefaultChainNotify.account, DefaultChainNotify.address],
-        builder: (context, chain, lastNotify) {
-          return APPSliverAnimatedSwitcher(
-              enable: addresses.isNotEmpty,
-              widgets: {
-                true: (context) => SliverList.builder(
-                    addAutomaticKeepAlives: false,
-                    itemBuilder: (c, index) {
-                      final addr = addresses[index];
-                      final hasPermission = this.hasPermission(addr);
-                      return ContainerWithBorder(
-                        enableTap: false,
-                        onRemove: () {
-                          addAccount(addr);
-                        },
-                        onRemoveWidget: Column(
-                          children: [
-                            IconButton(
-                              onPressed: () => addAccount(addr),
+    return APPSliverAnimatedSwitcher(enable: addresses.isNotEmpty, widgets: {
+      true: (context) => SliverList.builder(
+          addAutomaticKeepAlives: false,
+          itemBuilder: (c, index) {
+            final addr = addresses[index];
+            final hasPermission = this.hasPermission(addr);
+            return ContainerWithBorder(
+              enableTap: false,
+              onRemove: () {
+                addAccount(addr);
+              },
+              onRemoveWidget: Column(
+                children: [
+                  IconButton(
+                    onPressed: () => addAccount(addr),
+                    icon: IgnorePointer(
+                      child: Checkbox(value: hasPermission, onChanged: (e) {}),
+                    ),
+                  ),
+                  ConditionalWidget(
+                      enable: onChangeDefaultAccount != null &&
+                          isDefaultAddress != null,
+                      onActive: (context) => APPAnimatedSize(
+                          isActive: hasPermission,
+                          onActive: (context) => IconButton(
+                              tooltip: "default_address".tr,
+                              onPressed: () => onChangeDefaultAccount!(addr),
                               icon: IgnorePointer(
-                                child: Checkbox(
-                                    value: hasPermission, onChanged: (e) {}),
-                              ),
-                            ),
-                            ConditionalWidget(
-                                enable: onChangeDefaultAccount != null &&
-                                    isDefaultAddress != null,
-                                onActive: (context) => APPAnimatedSize(
-                                    isActive: hasPermission,
-                                    onActive: (context) => IconButton(
-                                        tooltip: "default_address".tr,
-                                        onPressed: () =>
-                                            onChangeDefaultAccount!(addr),
-                                        icon: IgnorePointer(
-                                          child: RadioGroup(
-                                            groupValue: true,
-                                            onChanged: (e) {},
-                                            child: Radio<bool>(
-                                              toggleable: true,
-                                              value: isDefaultAddress!(addr),
-                                            ),
-                                          ),
-                                        )),
-                                    onDeactive: (context) =>
-                                        WidgetConstant.sizedBox))
-                          ],
-                        ),
-                        child: addressWidget(context, addr),
-                      );
-                    },
-                    itemCount: addresses.length),
-                false: (context) => SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: NoAccountFoundInChainWidget(chain))
-              });
-        },
-        account: chain);
+                                child: RadioGroup(
+                                  groupValue: true,
+                                  onChanged: (e) {},
+                                  child: Radio<bool>(
+                                      toggleable: true,
+                                      value: isDefaultAddress!(addr)),
+                                ),
+                              )),
+                          onDeactive: (context) => WidgetConstant.sizedBox))
+                ],
+              ),
+              child: addressWidget(context, addr),
+            );
+          },
+          itemCount: addresses.length),
+      false: (context) => SliverFillRemaining(
+          hasScrollBody: false, child: NoAccountFoundInChainWidget(chain))
+    });
   }
 }

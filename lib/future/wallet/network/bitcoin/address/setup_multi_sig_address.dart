@@ -342,21 +342,27 @@ class _SetupBitcoinMultiSigAddressViewState
                                 Text("type_of_address".tr,
                                     style: context.textTheme.titleMedium),
                                 WidgetConstant.height8,
-                                ...List.generate(supportedMultisigTypes.length,
-                                    (index) {
-                                  final supportTypes =
-                                      supportedMultisigTypes.keys.toList();
-                                  return RadioGroup(
+                                RadioGroup<BitcoinAddressType>(
                                     groupValue: multiSigAddressTye,
                                     onChanged: onChangeAddressType,
-                                    child: RadioListTile(
-                                        title: Text(supportTypes[index].value),
-                                        subtitle: Text(
-                                            BTCUtils.getAddressDetails(
-                                                supportTypes[index])),
-                                        value: supportTypes[index]),
-                                  );
-                                }),
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: List.generate(
+                                            supportedMultisigTypes.length,
+                                            (index) {
+                                          final supportTypes =
+                                              supportedMultisigTypes.keys
+                                                  .toList();
+                                          return RadioListTile<
+                                                  BitcoinAddressType>(
+                                              title: Text(
+                                                  supportTypes[index].value),
+                                              subtitle: Text(
+                                                  BTCUtils.getAddressDetails(
+                                                      supportTypes[index])),
+                                              value: supportTypes[index]);
+                                        }))),
                                 AnimatedSwitcher(
                                   duration: APPConst.animationDuraion,
                                   child: Column(

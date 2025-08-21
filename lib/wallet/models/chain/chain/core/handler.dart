@@ -2,7 +2,7 @@ part of 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
 
 enum ChainsHandlerInstance { main, background }
 
-const instances = ChainsHandlerInstance.background;
+const instances = ChainsHandlerInstance.main;
 
 class ChainsHandler {
   MainWallet _wallet;
@@ -314,7 +314,7 @@ class ChainsHandler {
     final event = ChainWalletPingEvent();
     for (final i in _networks.entries) {
       for (final n in i.value._networks.values) {
-        n._onWalletEvent(event);
+        await n._onWalletEvent(event);
       }
     }
   }

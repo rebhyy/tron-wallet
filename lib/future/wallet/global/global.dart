@@ -14,7 +14,6 @@ export 'pages/select_account.dart';
 export 'pages/select_account_or_contact.dart';
 export 'pages/select_provider.dart';
 export 'pages/setup_amount.dart';
-export 'pages/setup_transaction_fee.dart';
 export 'pages/switch_network.dart';
 export 'pages/token_details.dart';
 export 'pages/token_details_view.dart';

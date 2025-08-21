@@ -66,7 +66,7 @@ final class AptosNewAddressParams implements NewAccountParams<IAptosAddress> {
         address: address,
         identifier: NewAccountParams.toIdentifier(address.address),
         network: network.toNetwork(),
-        publicKey: publicKey.keyBytes());
+        publicKey: publicKey.normalizedComprossedBytes);
   }
 
   @override

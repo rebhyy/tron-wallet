@@ -38,7 +38,7 @@ final class SolanaNewAddressParams extends NewAccountParams<ISolanaAddress> {
     if (network is! WalletSolanaNetwork) {
       throw WalletExceptionConst.invalidAccountDetails;
     }
-    final keyBytes = publicKey.keyBytes(immutable: true);
+    final keyBytes = publicKey.normalizedComprossedBytes.asImmutableBytes;
     final address = SolAddress.fromPublicKey(keyBytes);
 
     return ISolanaAddress._newAccount(

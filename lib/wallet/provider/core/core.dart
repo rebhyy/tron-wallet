@@ -504,8 +504,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
           if (address.multiSigAccount) {
             final multiSigAccount =
                 address.toAccountParams().toAccount(network, null);
-            final isValid =
-                true || address.identifier == multiSigAccount.identifier;
+            final isValid = address.identifier == multiSigAccount.identifier;
             if (isValid) {
               addresses.add(multiSigAccount);
             } else {
@@ -519,7 +518,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
               encryptedMasterKey: resotreKey.encryptedKey.masterKey,
               key: key);
           final account = addr.accountParams.toAccount(network, addr.publicKey);
-          final isValid = true || address.identifier == account.identifier;
+          final isValid = address.identifier == account.identifier;
           if (isValid) {
             addresses.add(account);
           } else {

@@ -310,32 +310,35 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
                             ),
                             Text("generate_from_hd_wallet".tr),
                             WidgetConstant.height8,
-                            RadioGroup(
+                            RadioGroup<EncryptedCustomKey?>(
                               groupValue: selectedCustomKey,
                               onChanged: onChangeCustomKey,
-                              child: RadioListTile<EncryptedCustomKey?>(
-                                  value: null,
-                                  title: Text("hd_wallet".tr),
-                                  subtitle: Text("generate_from_hd_wallet".tr)),
-                            ),
-                            Column(
-                              children:
-                                  List.generate(customKeys.length, (index) {
-                                final key = customKeys[index];
+                              child: Column(
+                                children: [
+                                  RadioListTile<EncryptedCustomKey?>(
+                                      value: null,
+                                      title: Text("hd_wallet".tr),
+                                      subtitle:
+                                          Text("generate_from_hd_wallet".tr)),
+                                  ...List.generate(customKeys.length, (index) {
+                                    final key = customKeys[index];
 
-                                return RadioGroup(
-                                  groupValue: selectedCustomKey,
-                                  onChanged: onChangeCustomKey,
-                                  child: RadioListTile(
-                                    value: key,
-                                    title: OneLineTextWidget(
-                                        key.name ?? key.publicKey),
-                                    subtitle: Text("imported_at"
-                                        .tr
-                                        .replaceOne(key.created.toString())),
-                                  ),
-                                );
-                              }),
+                                    return RadioGroup<EncryptedCustomKey?>(
+                                      groupValue: selectedCustomKey,
+                                      onChanged: onChangeCustomKey,
+                                      child: RadioListTile(
+                                        value: key,
+                                        title: OneLineTextWidget(
+                                            key.name ?? key.publicKey),
+                                        subtitle: Text("imported_at"
+                                            .tr
+                                            .replaceOne(
+                                                key.created.toString())),
+                                      ),
+                                    );
+                                  })
+                                ],
+                              ),
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,

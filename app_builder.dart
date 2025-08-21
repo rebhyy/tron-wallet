@@ -346,6 +346,7 @@ class _ExtensionAndWebScriptsBuilder {
     final bool http = !commands.contains("--no-http");
     final bool scripts = !commands.contains("--no-scripts");
     final bool extension = chrome | firefox | opera | ie;
+    bool compileApp = !commands.contains("--no-app");
     final String baseHref = "--base-href=/onchain_wallet/";
 
     if (clean) {
@@ -438,6 +439,7 @@ class _ExtensionAndWebScriptsBuilder {
         file.copySync("web/manifest.json");
       }
     }
+    if (!compileApp) return;
     const String command = 'flutter';
     final List<String> args = [
       'build',
@@ -589,7 +591,7 @@ class _FlutterCommands {
     await stdout.addStream(process.stdout);
     await stderr.addStream(process.stderr);
     final result = await process.exitCode;
-
+    // print(process.s)
     _log("${[command, ...args].join(" ")} done with exit code $result");
     if (result != 0) {
       _error("process failed with exit code $result");
@@ -684,12 +686,13 @@ Future<void> _buildMacos(
     _error('This build targets macOS and must be run on a macOS device.');
     return;
   }
+  final bool webview = !commands.contains("--no-webview");
   if (Directory("assets/wasm/").existsSync()) {
     Directory("assets/wasm/").deleteSync(recursive: true);
   }
   Directory("assets/wasm/").createSync();
   final bool minify = !commands.contains("--debug");
-  final bool webview = !commands.contains("--no-webview");
+
   final bool useWorker = !commands.contains("--no-webview-worker");
   File file = File("$_webviewDir/tron_web.js");
   file.copySync("assets/webview/tron_web.js");

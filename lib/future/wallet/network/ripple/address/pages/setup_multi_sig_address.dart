@@ -281,38 +281,45 @@ class _SetupRippleMutlisigAddressViewState
                                                 style: context
                                                     .textTheme.titleMedium),
                                             WidgetConstant.height8,
-                                            RadioGroup(
-                                              groupValue: addressType,
-                                              onChanged: regularKey == null
-                                                  ? (v) {}
-                                                  : onChangeType,
-                                              child:
-                                                  RadioListTile<_MultiSigType>(
-                                                title: Text("regular_key".tr),
-                                                value: _MultiSigType.regularKey,
-                                                subtitle: regularKey == null
-                                                    ? Text(
-                                                        "account_does_not_support_feature"
-                                                            .tr)
-                                                    : null,
-                                              ),
-                                            ),
-                                            RadioGroup(
-                                              groupValue: addressType,
-                                              onChanged: signerList == null
-                                                  ? (v) {}
-                                                  : onChangeType,
-                                              child:
-                                                  RadioListTile<_MultiSigType>(
-                                                value: _MultiSigType.signerList,
-                                                title: Text("signer_list".tr),
-                                                subtitle: signerList == null
-                                                    ? Text(
-                                                        "account_does_not_support_feature"
-                                                            .tr)
-                                                    : null,
-                                              ),
-                                            ),
+                                            RadioGroup<_MultiSigType>(
+                                                groupValue: addressType,
+                                                onChanged: onChangeType,
+                                                child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      IgnorePointer(
+                                                        ignoring:
+                                                            regularKey == null,
+                                                        child: RadioListTile<
+                                                            _MultiSigType>(
+                                                          title: Text(
+                                                              "regular_key".tr),
+                                                          value: _MultiSigType
+                                                              .regularKey,
+                                                          subtitle: regularKey ==
+                                                                  null
+                                                              ? Text(
+                                                                  "account_does_not_support_feature"
+                                                                      .tr)
+                                                              : null,
+                                                        ),
+                                                      ),
+                                                      RadioListTile<
+                                                          _MultiSigType>(
+                                                        value: _MultiSigType
+                                                            .signerList,
+                                                        title: Text(
+                                                            "signer_list".tr),
+                                                        subtitle: signerList ==
+                                                                null
+                                                            ? Text(
+                                                                "account_does_not_support_feature"
+                                                                    .tr)
+                                                            : null,
+                                                      )
+                                                    ])),
                                             AnimatedSwitcher(
                                               duration:
                                                   APPConst.animationDuraion,

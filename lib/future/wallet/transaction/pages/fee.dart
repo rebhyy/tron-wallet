@@ -169,62 +169,68 @@ class _Fees extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectableFees = fee.fees.where((e) => !e.isManual).toList();
     final manual = fee.fees.firstWhereOrNull((e) => e.isManual);
-    return Column(children: [
-      ...selectableFees.map((e) => AppRadioListTile(
-            groupValue: fee.fee,
-            value: e,
-            onChanged: (v) {
-              fee.setFee(e);
-            },
-            secondary: e.error == null
-                ? null
-                : TappedTooltipView(
-                    triggerOnHover: true,
-                    tooltipWidget: ToolTipView(
-                      message: e.error,
-                      child: Icon(Icons.error),
-                    )),
-            title: Text(e.type.value.tr,
-                style: context.onPrimaryTextTheme.labelLarge),
-            subtitle: CoinAndMarketPriceView(
-                balance: e.fee,
-                style: context.onPrimaryTextTheme.titleMedium,
-                symbolColor: context.onPrimaryContainer),
-          )),
-      InkWell(
-        onTap: () {
-          final onTapManual = this.onTapManual;
-          if (onTapManual != null) {
-            onTapManual();
-            return;
-          }
-          final max = getMaxFeeInput();
-          context
-              .setupAmount(
-                  token: fee.feeToken,
-                  title: "setup_transaction_fee".tr,
-                  max: max)
-              .then((value) {
-            if (value == null) return;
-            fee.setupManualFee(value);
-          });
-        },
-        child: IgnorePointer(
-          child: AppRadioListTile(
-            groupValue: fee.fee,
-            value: manual,
-            onChanged: (v) {},
-            subtitle: manual == null
-                ? null
-                : CoinAndMarketPriceView(
-                    balance: manual.fee,
-                    style: context.onPrimaryTextTheme.titleMedium,
-                    symbolColor: context.onPrimaryContainer),
-            title: Text(TxFeeTypes.manually.value.tr,
-                style: context.onPrimaryTextTheme.labelLarge),
+    return AppGroupRadioBuilder<TransactionFee?>(
+      groupValue: fee.fee,
+      onChanged: (v) {
+        if (v == null) return;
+        fee.setFee(v);
+      },
+      builder: (context) =>
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        ...selectableFees.map((e) => AppRadioListTile<TransactionFee?>(
+              // groupValue: fee.fee,
+              value: e,
+              // onChanged: (v) {
+              //   fee.setFee(e);
+              // },
+              secondary: e.error == null
+                  ? null
+                  : TappedTooltipView(
+                      triggerOnHover: true,
+                      tooltipWidget: ToolTipView(
+                        message: e.error,
+                        child: Icon(Icons.error),
+                      )),
+              title: Text(e.type.value.tr,
+                  style: context.onPrimaryTextTheme.labelLarge),
+              subtitle: CoinAndMarketPriceView(
+                  balance: e.fee,
+                  style: context.onPrimaryTextTheme.titleMedium,
+                  symbolColor: context.onPrimaryContainer),
+            )),
+        InkWell(
+          onTap: () {
+            final onTapManual = this.onTapManual;
+            if (onTapManual != null) {
+              onTapManual();
+              return;
+            }
+            final max = getMaxFeeInput();
+            context
+                .setupAmount(
+                    token: fee.feeToken,
+                    title: "setup_transaction_fee".tr,
+                    max: max)
+                .then((value) {
+              if (value == null) return;
+              fee.setupManualFee(value);
+            });
+          },
+          child: IgnorePointer(
+            child: AppRadioListTile<TransactionFee?>(
+              value: manual,
+              subtitle: manual == null
+                  ? null
+                  : CoinAndMarketPriceView(
+                      balance: manual.fee,
+                      style: context.onPrimaryTextTheme.titleMedium,
+                      symbolColor: context.onPrimaryContainer),
+              title: Text(TxFeeTypes.manually.value.tr,
+                  style: context.onPrimaryTextTheme.labelLarge),
+            ),
           ),
-        ),
-      )
-    ]);
+        )
+      ]),
+    );
   }
 }

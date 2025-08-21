@@ -93,45 +93,96 @@ class AppCheckListTile extends StatelessWidget {
   }
 }
 
+typedef APPGROUPRADIOWIDGET<T> = Widget Function(BuildContext context);
+
+class AppGroupRadioBuilder<T extends Object?> extends StatelessWidget {
+  const AppGroupRadioBuilder({
+    super.key,
+    required this.groupValue,
+    required this.onChanged,
+    required this.builder,
+  });
+  final void Function(T? value) onChanged;
+  final APPGROUPRADIOWIDGET<T> builder;
+  final T groupValue;
+  @override
+  Widget build(BuildContext context) {
+    return RadioGroup<T>(
+        onChanged: onChanged, groupValue: groupValue, child: builder(context));
+  }
+}
+
 class AppRadioListTile<T> extends StatelessWidget {
   const AppRadioListTile(
       {super.key,
-      required this.groupValue,
-      required this.onChanged,
       required this.value,
       this.title,
       this.subtitle,
       this.secondary});
-  final void Function(T? value) onChanged;
   final T value;
   final Widget? title;
   final Widget? secondary;
   final Widget? subtitle;
-  final T? groupValue;
   @override
   Widget build(BuildContext context) {
-    return RadioGroup<T>(
-      onChanged: onChanged,
-      groupValue: groupValue,
-      child: RadioListTile<T>(
-        value: value,
-        secondary: secondary,
-        title: title == null
-            ? null
-            : DefaultTextStyle(
-                style: context.textTheme.labelLarge!, child: title!),
-        subtitle: subtitle == null
-            ? null
-            : DefaultTextStyle(
-                style: context.textTheme.bodyMedium!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                child: subtitle!,
-              ),
-      ),
+    return RadioListTile<T>(
+      value: value,
+      secondary: secondary,
+      title: title == null
+          ? null
+          : DefaultTextStyle(
+              style: context.textTheme.labelLarge!, child: title!),
+      subtitle: subtitle == null
+          ? null
+          : DefaultTextStyle(
+              style: context.textTheme.bodyMedium!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              child: subtitle!,
+            ),
     );
   }
 }
+
+// class AppRadioListTile<T> extends StatelessWidget {
+//   const AppRadioListTile(
+//       {super.key,
+//       required this.groupValue,
+//       required this.onChanged,
+//       required this.value,
+//       this.title,
+//       this.subtitle,
+//       this.secondary});
+//   final void Function(T? value) onChanged;
+//   final T value;
+//   final Widget? title;
+//   final Widget? secondary;
+//   final Widget? subtitle;
+//   final T? groupValue;
+//   @override
+//   Widget build(BuildContext context) {
+//     return RadioGroup<T>(
+//       onChanged: onChanged,
+//       groupValue: groupValue,
+//       child: RadioListTile<T>(
+//         value: value,
+//         secondary: secondary,
+//         title: title == null
+//             ? null
+//             : DefaultTextStyle(
+//                 style: context.textTheme.labelLarge!, child: title!),
+//         subtitle: subtitle == null
+//             ? null
+//             : DefaultTextStyle(
+//                 style: context.textTheme.bodyMedium!,
+//                 maxLines: 2,
+//                 overflow: TextOverflow.ellipsis,
+//                 child: subtitle!,
+//               ),
+//       ),
+//     );
+//   }
+// }
 
 class AppSwitchListTile extends StatelessWidget {
   const AppSwitchListTile(

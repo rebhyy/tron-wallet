@@ -442,16 +442,18 @@ class _TonMnemonicChooseOptionPage extends StatelessWidget {
               style: context.textTheme.titleMedium),
           Text("choose_an_action".tr),
           WidgetConstant.height8,
-          ...List.generate(
-            _MnemonicOption.values.length,
-            (index) => RadioGroup(
-              groupValue: state.option,
-              onChanged: state.onChangeOption,
-              child: RadioListTile(
-                value: _MnemonicOption.values[index],
-                title: Text(_MnemonicOption.values[index].name.tr),
-              ),
-            ),
+          RadioGroup<_MnemonicOption>(
+            groupValue: state.option,
+            onChanged: state.onChangeOption,
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List.generate(
+                  _MnemonicOption.values.length,
+                  (index) => RadioListTile<_MnemonicOption>(
+                    value: _MnemonicOption.values[index],
+                    title: Text(_MnemonicOption.values[index].name.tr),
+                  ),
+                )),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

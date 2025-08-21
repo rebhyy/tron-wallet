@@ -14,7 +14,7 @@ val localProperties = Properties().apply {
 
 android {
     namespace = "com.mrtnetwork.on_chain_wallet"
-    compileSdk = 34
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -24,6 +24,11 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
+    }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 
     defaultConfig {

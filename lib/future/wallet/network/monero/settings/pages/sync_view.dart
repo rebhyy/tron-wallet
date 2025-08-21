@@ -191,7 +191,6 @@ class _MoneroAccountSyncViewState
     List<_SyncRequest> requests = [];
     final tracker = account.defaultTracker;
 
-    // tracker.
     requests.add(createViewRequest(
         startHeight: tracker.startHeight,
         endHeight: currentHeight ?? tracker.endHeight,

@@ -463,17 +463,20 @@ class _SelectEra extends StatelessWidget {
                 Text("recommended_address_type".tr)
               ],
             )),
-        AppRadioListTile(
+        AppGroupRadioBuilder<_AdaEra>(
           groupValue: era,
-          title: Text("shelly".tr),
-          value: _AdaEra.shelly,
           onChanged: onChangeEra,
-        ),
-        AppRadioListTile(
-          groupValue: era,
-          value: _AdaEra.byron,
-          title: Text("byron".tr),
-          onChanged: onChangeEra,
+          builder: (context) =>
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            AppRadioListTile<_AdaEra>(
+              title: Text("shelly".tr),
+              value: _AdaEra.shelly,
+            ),
+            AppRadioListTile<_AdaEra>(
+              value: _AdaEra.byron,
+              title: Text("byron".tr),
+            ),
+          ]),
         ),
         WidgetConstant.height20,
         Row(
@@ -521,25 +524,25 @@ class _SelectMasterKeyGeneration extends StatelessWidget {
                 Text("choose_master_key_gen".tr)
               ],
             )),
-        AppRadioListTile(
+        AppGroupRadioBuilder<_CardanoMasterKeyGenerationType>(
           groupValue: keyGenerationType,
-          title: Text("ledger".tr),
-          value: _CardanoMasterKeyGenerationType.ledger,
           onChanged: onChangeKeyGeneration,
+          builder: (context) =>
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            AppRadioListTile<_CardanoMasterKeyGenerationType>(
+              title: Text("ledger".tr),
+              value: _CardanoMasterKeyGenerationType.ledger,
+            ),
+            AppRadioListTile<_CardanoMasterKeyGenerationType>(
+              value: _CardanoMasterKeyGenerationType.icarus,
+              title: Text("icarus".tr),
+            ),
+            if (showLegacy)
+              AppRadioListTile<_CardanoMasterKeyGenerationType>(
+                  value: _CardanoMasterKeyGenerationType.byronLegacy,
+                  title: Text("byron_legacy".tr)),
+          ]),
         ),
-        AppRadioListTile(
-          groupValue: keyGenerationType,
-          value: _CardanoMasterKeyGenerationType.icarus,
-          title: Text("icarus".tr),
-          onChanged: onChangeKeyGeneration,
-        ),
-        if (showLegacy)
-          AppRadioListTile(
-            groupValue: keyGenerationType,
-            value: _CardanoMasterKeyGenerationType.byronLegacy,
-            title: Text("byron_legacy".tr),
-            onChanged: onChangeKeyGeneration,
-          ),
         WidgetConstant.height20,
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -584,32 +587,25 @@ class _SelectSeedGenerationType extends StatelessWidget {
         WidgetConstant.height20,
         APPAnimatedSize(
             isActive: custom,
-            onActive: (p0) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("seed_generation".tr,
-                        style: context.textTheme.titleMedium),
-                    Text("seed_generation_type".tr),
-                    WidgetConstant.height8,
-                    AppRadioListTile(
-                      groupValue: seedGenerationType,
-                      value: SeedTypes.icarus,
-                      title: Text("icarus".tr),
-                      onChanged: onChageSeedGeneration,
-                    ),
-                    AppRadioListTile(
-                      groupValue: seedGenerationType,
-                      title: Text("byron_legacy_seed".tr),
-                      value: SeedTypes.byronLegacySeed,
-                      onChanged: onChageSeedGeneration,
-                    ),
-                    AppRadioListTile(
-                      groupValue: seedGenerationType,
-                      title: Text("bip39_seed".tr),
-                      value: SeedTypes.bip39,
-                      onChanged: onChageSeedGeneration,
-                    ),
-                  ],
+            onActive: (p0) => AppGroupRadioBuilder(
+                  onChanged: onChageSeedGeneration,
+                  groupValue: seedGenerationType,
+                  builder: (context) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("seed_generation".tr,
+                          style: context.textTheme.titleMedium),
+                      Text("seed_generation_type".tr),
+                      WidgetConstant.height8,
+                      AppRadioListTile(
+                          value: SeedTypes.icarus, title: Text("icarus".tr)),
+                      AppRadioListTile(
+                          title: Text("byron_legacy_seed".tr),
+                          value: SeedTypes.byronLegacySeed),
+                      AppRadioListTile(
+                          title: Text("bip39_seed".tr), value: SeedTypes.bip39),
+                    ],
+                  ),
                 ),
             onDeactive: (p0) => WidgetConstant.sizedBox),
         Row(
