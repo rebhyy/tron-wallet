@@ -9,3 +9,4 @@ export 'stellar/stellar.dart';
 export 'monero/monero.dart';
 export 'sui/sui.dart';
 export 'ethereum/ethereum.dart';
+export 'bitcoin/bitcoin.dart';

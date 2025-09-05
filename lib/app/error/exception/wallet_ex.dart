@@ -1,186 +1,209 @@
-import 'package:blockchain_utils/utils/utils.dart';
 import 'app_exception.dart';
 
 class WalletException implements AppException {
-  const WalletException.error(this.message) : _argruments = null;
+  const WalletException.error(this.message);
   @override
   final String message;
-  WalletException.invalidArgruments(List<String> this._argruments)
-      : assert(_argruments.length == 2),
-        message = "";
-  const WalletException(this.message) : _argruments = null;
-  final List<String>? _argruments;
+
+  const WalletException._(this.message);
   @override
   String toString() {
-    if (_argruments != null) {
-      return "invalid_request";
-    }
-    // if (_argruments != null) {
-    //   return "invalid data expected: ${_argruments[0]} got ${_argruments[1]}";
-    // }
     return message;
   }
 
   @override
   bool operator ==(other) {
     if (other is! WalletException) return false;
-    return other.message == message &&
-        CompareUtils.iterableIsEqual(_argruments, other._argruments);
+    return other.message == message;
   }
 
   @override
-  int get hashCode => Object.hash(message, _argruments);
+  int get hashCode => message.hashCode;
 }
 
 class WalletExceptionConst {
   static const WalletException pubkeyRequired =
-      WalletException("public_key_required_derive_address");
-  static const WalletException dataVerificationFailed =
-      WalletException("data_verification_failed");
-  static const WalletException importedKeyDerivationNotAllowed =
-      WalletException("imported_key_derivation_not_allowed");
-  static WalletException invalidData({String? messsage}) {
-    return const WalletException("data_verification_failed");
-  }
+      WalletException._("public_key_required_derive_address");
 
-  static WalletException castingFailed({String? messsage}) =>
-      const WalletException("data_casting_failed");
+  static const WalletException toManyNetworkImported =
+      WalletException._("to_many_networks_imported");
+
   static const WalletException invalidRequest =
-      WalletException("invalid_request");
-  static const WalletException invalidSerializationData =
-      WalletException("invalid_serialization_data");
-  static const WalletException invalidAccountDetails =
-      WalletException("invalid_account_details");
-  static WalletException invalidAccountDetails_({String? messsage}) =>
-      WalletException("invalid_account_details");
+      WalletException._("invalid_request");
+  static WalletException invalidAccountDeta(String where) =>
+      WalletException._("invalid_account_details");
+  static const WalletException networkAlreadyExist =
+      WalletException._("network_chain_id_already_exist");
   static const WalletException invalidBitcoinAddressType =
-      WalletException("invalid_bitcoin_address_type");
-  static const WalletException invalidMnemonicPassphrase =
-      WalletException("invalid_passphrase");
-  static const WalletException invalidMnemonic =
-      WalletException("invalid_mnemonic");
-  static const WalletException invalidBip39MnemonicWords =
-      WalletException("invalid_bip39_mnemonic_words");
+      WalletException._("invalid_bitcoin_address_type");
   static const WalletException invalidBackup =
-      WalletException("invalid_wallet_backup");
+      WalletException._("invalid_wallet_backup");
+  static const WalletException invalidBackupOptions =
+      WalletException._("invalid_backup_options");
   static const WalletException invalidBackupChecksum =
-      WalletException("invalid_wallet_backup_checksum");
-
-  ///
-  static const WalletException incorrectPassword =
-      WalletException("incorrect_password");
+      WalletException._("invalid_wallet_backup_checksum");
+  static const WalletException authFailed = WalletException._("auth_failed");
+  static const WalletException passwordTooWeak =
+      WalletException._("weak_password_validator");
   static const WalletException passwordUsedBefore =
-      WalletException("password_used_before");
+      WalletException._("password_used_before");
   static const WalletException incorrectWalletData =
-      WalletException("wallet_data_is_invalid");
+      WalletException._("wallet_data_is_invalid");
   static const WalletException tooManyAccounts =
-      WalletException("to_many_accounts");
+      WalletException._("to_many_accounts");
   static const WalletException incorrectNetwork =
-      WalletException("incorrect_network");
+      WalletException._("incorrect_network");
   static const WalletException invalidProviderInformation =
-      WalletException("invalid_provider_infomarion");
-  static const WalletException invalidBipKeyIndex =
-      WalletException("invalid_bip_key_index");
+      WalletException._("invalid_provider_infomarion");
   static const WalletException addressAlreadyExist =
-      WalletException("address_already_exist");
+      WalletException._("address_already_exist");
   static const WalletException keyAlreadyExist =
-      WalletException("key_already_exists");
+      WalletException._("key_already_exists");
   static const WalletException accountDoesNotFound =
-      WalletException("account_not_found");
+      WalletException._("account_not_found");
   static const WalletException notAuthorizedSigningAccount =
-      WalletException("signing_auth_validator");
+      WalletException._("signing_auth_validator");
   static const WalletException signerAccountNotFound =
-      WalletException("signer_account_does_not_exists");
+      WalletException._("signer_account_does_not_exists");
   static const WalletException noActiveProvider =
-      WalletException("no_acitve_provider");
+      WalletException._("no_acitve_provider");
 
   /// signer_account_does_not_exists
   static const WalletException incompleteWalletSetup =
-      WalletException("incomplete_wallet_setup");
+      WalletException._("incomplete_wallet_setup");
   static const WalletException walletDoesNotExists =
-      WalletException("wallet_does_not_exists");
-  static const WalletException privateKeyIsNotAvailable =
-      WalletException("private_key_is_not_available");
-  static const WalletException fileVerificationFiled =
-      WalletException("file_verification_fail");
+      WalletException._("wallet_does_not_exists");
+
   static const WalletException toManyRequests =
-      WalletException("to_many_request");
+      WalletException._("to_many_request");
   static const WalletException rejectSigning =
-      WalletException("user_rejected_signing_request");
+      WalletException._("user_rejected_signing_request");
   static const WalletException incorrectStatus =
-      WalletException("incorrect_wallet_status");
+      WalletException._("incorrect_wallet_status");
   static const WalletException invalidContactDetails =
-      WalletException("invalid_contact_details");
+      WalletException._("invalid_contact_details");
   static const WalletException contactExists =
-      WalletException("contact_already_exist");
+      WalletException._("contact_already_exist");
   static const WalletException invalidBalance =
-      WalletException("invalid_balance");
+      WalletException._("invalid_balance");
   static const WalletException unsuportedFeature =
-      WalletException("unsuported_feature");
+      WalletException._("unsuported_feature");
   static const WalletException unsuportedBackupVersion =
-      WalletException("unsuported_backup_version");
+      WalletException._("unsuported_backup_version");
   static const WalletException featureUnavailableForMultiSignature =
-      WalletException("feature__unavailable_for_multi_signature");
+      WalletException._("feature__unavailable_for_multi_signature");
   static const WalletException insufficientBalance =
-      WalletException("insufficient_balance");
+      WalletException._("insufficient_balance");
   static const WalletException decryptionFailed =
-      WalletException("decryption_failed");
+      WalletException._("decryption_failed");
+  static const WalletException invalidNetworkInformation =
+      WalletException._("invalid_network_information");
 
-  static const WalletException emptyThrow = WalletException("");
+  static const WalletException emptyThrow = WalletException._("");
   static const WalletException invalidChainState =
-      WalletException("invalid_chain_state");
-  static const WalletException invalidCoin = WalletException("invalid_coin");
-  static const WalletException coinNotFound = WalletException("coin_not_found");
+      WalletException._("invalid_chain_state");
+  static const WalletException invalidWeb3AccountData =
+      WalletException._("invalid_web3_account_data");
 
-  static const WalletException invalidPrivateKey =
-      WalletException("private_key_invalid");
-  static const WalletException invalidExtendedKey =
-      WalletException("extended_key_invalid");
-  static const WalletException invalidWifKey =
-      WalletException("wif_key_invalid");
   static const WalletException invalidRipplePrivateKeyAlgorithm =
-      WalletException("invalid_ripple_privatekey_algorithm");
-  static const WalletException multiSigDerivationNotSuported =
-      WalletException("not_support_multisig_derivation");
+      WalletException._("invalid_ripple_privatekey_algorithm");
+
   static const WalletException inaccessibleKeyAlgorithm =
-      WalletException("inaccessible_key_algorithm");
+      WalletException._("inaccessible_key_algorithm");
   static const WalletException invalidTokenInformation =
-      WalletException("invalid_token_information");
+      WalletException._("invalid_token_information");
   static const WalletException invalidNftInformation =
-      WalletException("invalid_nft_information");
-  static WalletException invalidArgruments(String expected, String got) {
-    return WalletException.invalidArgruments([expected, got]);
-  }
+      WalletException._("invalid_nft_information");
 
   static const WalletException walletIsLocked =
-      WalletException("wallet_is_locked");
+      WalletException._("wallet_is_locked");
   static const WalletException networkTokenUnsuported =
-      WalletException("network_support_token_error");
+      WalletException._("network_support_token_error");
   static const WalletException networkNFTsUnsuported =
-      WalletException("network_support_nft_error");
+      WalletException._("network_support_nft_error");
   static const WalletException tokenAlreadyExist =
-      WalletException("token_already_exists");
+      WalletException._("token_already_exists");
   static const WalletException nftsAlreadyExist =
-      WalletException("nfts_already_exists");
+      WalletException._("nfts_already_exists");
 
   static const WalletException walletAlreadyExists =
-      WalletException("wallet_already_exists");
+      WalletException._("wallet_already_exists");
   static const WalletException walletNameExists =
-      WalletException("wallet_name_exists");
-  static const WalletException pageClosed = WalletException("page_closed");
+      WalletException._("wallet_name_exists");
+  static const WalletException pageClosed = WalletException._("page_closed");
   static const WalletException walletIsNotavailable =
-      WalletException("wallet_is_not_available");
+      WalletException._("wallet_is_not_available");
 
   static const WalletException ethSubscribe =
-      WalletException("eth_subscribe_websocket_requirment");
+      WalletException._("eth_subscribe_websocket_requirment");
   static const WalletException networkDoesNotExist =
-      WalletException("network_does_not_exist");
-  static const WalletException invalidHexBytes =
-      WalletException("invalid_hex_bytes_string");
+      WalletException._("network_does_not_exist");
 
   static const WalletException verificationWalletDataFailed =
-      WalletException("wallet_data_verification_failed");
+      WalletException._("wallet_data_verification_failed");
 
   static const WalletException storageIsNotAvailable =
-      WalletException("storage_is_not_available");
+      WalletException._("storage_is_not_available");
+
+  static const WalletException invalidWalletTransactionData =
+      WalletException._("invalid_wallet_transaction_data");
+
+  static const WalletException invalidSwapInformation =
+      WalletException._("invalid_swap_information");
+
+  static const WalletException invalidAccountUtxo =
+      WalletException._("invalid_account_utxo");
+
+  static WalletException internalError(String where) {
+    return WalletException._("unexpected_error");
+  }
+}
+
+class AppCryptoExceptionConst {
+  static const AppCryptoException invalidCredential =
+      AppCryptoException("invalid_credential");
+  static const AppCryptoException invalidDerivationKey =
+      AppCryptoException("invalid_key_derivation");
+  static const AppCryptoException invalidKeyDerivationPath =
+      AppCryptoException("invalid_derivation_path");
+  static const AppCryptoException invalidMnemonicPassphrase =
+      AppCryptoException("invalid_passphrase");
+  static const AppCryptoException invalidMnemonic =
+      AppCryptoException("invalid_mnemonic");
+
+  static const AppCryptoException invalidPrivateKey =
+      AppCryptoException("private_key_invalid");
+  static const AppCryptoException invalidExtendedKey =
+      AppCryptoException("extended_key_invalid");
+  static const AppCryptoException invalidWifKey =
+      AppCryptoException("wif_key_invalid");
+  static const AppCryptoException invalidBip39MnemonicWords =
+      AppCryptoException("invalid_bip39_mnemonic_words");
+  static const AppCryptoException invalidCoin =
+      AppCryptoException("invalid_coin");
+  static const AppCryptoException importedKeyDerivationNotAllowed =
+      AppCryptoException("imported_key_derivation_not_allowed");
+  static const AppCryptoException multiSigDerivationNotSuported =
+      AppCryptoException("not_support_multisig_derivation");
+  static const AppCryptoException privateKeyIsNotAvailable =
+      AppCryptoException("private_key_is_not_available");
+  static const AppCryptoException invalidHexBytes =
+      AppCryptoException("invalid_hex_bytes_string");
+  static AppCryptoException internalError(String where) {
+    return AppCryptoException("unexpected_error");
+  }
+}
+
+class AppExceptionConst {
+  static AppException internalError(String where) {
+    return AppException("unexpected_error");
+  }
+
+  static const AppException requestCanceled = AppException("request_cancelled");
+  static const AppException fileVerificationFiled =
+      AppException("file_verification_fail");
+  static const AppException invalidPriceFormat =
+      AppException("invalid_price_format");
+  static const AppException fileDoesNotExists =
+      AppException("file_does_not_exist");
 }

@@ -1,8 +1,7 @@
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/types/types.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 mixin SolanaTransactionFeeController on BaseSolanaTransactionController {
   final Cancelable _cancelable = Cancelable();
@@ -23,13 +22,13 @@ mixin SolanaTransactionFeeController on BaseSolanaTransactionController {
     final simulate = await client.simulate(
         transaction: transaction.transaction, account: address.networkAddress);
     if (simulate.accounts?.length != 1) {
-      throw WalletException("transaction_simulation_failed");
+      throw AppException("transaction_simulation_failed");
     }
     if (simulate.err != null) {
       if (simulate.logs?.isNotEmpty ?? false) {
-        throw WalletException(simulate.logs!.join(", "));
+        throw AppException(simulate.logs!.join(", "));
       }
-      throw WalletException(simulate.err.toString());
+      throw AppException(simulate.err.toString());
     }
     final change = accountBalance - simulate.accounts![0]!.lamports;
     final fee = change - totalTxLamports;
@@ -48,7 +47,7 @@ mixin SolanaTransactionFeeController on BaseSolanaTransactionController {
         accountBalance: accountBalance, totalTxLamports: totalTxLamports));
     if (fee.isCancel) return;
     if (fee.hasError) {
-      setDefaultFee(error: fee.error!.tr);
+      setDefaultFee(error: fee.localizationError);
       return;
     }
     txFee.setFee(fee.result);

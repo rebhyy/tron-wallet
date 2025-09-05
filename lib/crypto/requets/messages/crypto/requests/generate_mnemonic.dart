@@ -25,10 +25,12 @@ class CryptoRequestGenerateBip39Mnemonic
     return CryptoRequestGenerateBip39Mnemonic(
       language: Bip39Languages.values.firstWhere(
           (e) => e.name == values.elementAs<String?>(0),
-          orElse: () => throw WalletExceptionConst.dataVerificationFailed),
+          orElse: () => throw AppSerializationException(
+              objectName: "CryptoRequestGenerateBip39Mnemonic.deserialize")),
       wordNums: Bip39WordsNum.values.firstWhere(
           (e) => e.value == values.elementAs<int?>(1),
-          orElse: () => throw WalletExceptionConst.dataVerificationFailed),
+          orElse: () => throw AppSerializationException(
+              objectName: "CryptoRequestGenerateBip39Mnemonic.deserialize")),
     );
   }
 

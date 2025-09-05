@@ -43,8 +43,10 @@ class _SetupStellarAddressViewState extends State<SetupStellarAddressView>
   }
 
   void generateAddress() async {
-    final keyIndex = await widget.controller
-        .getCoin(context: context, seedGeneration: SeedTypes.bip39);
+    final keyIndex = await widget.controller.getCoin(
+        context: context,
+        seedGeneration: SeedTypes.bip39,
+        selectedCoins: widget.controller.network.coins.first);
     if (keyIndex == null) return;
 
     final newAccount = StellarNewAddressParams(

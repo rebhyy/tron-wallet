@@ -12,12 +12,14 @@ enum WorkerMessageType {
   const WorkerMessageType(this.tag);
   static WorkerMessageType fromTag(List<int>? tag) {
     return values.firstWhere((e) => BytesUtils.bytesEqual(e.tag, tag),
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () =>
+            throw AppSerializationException(objectName: "WorkerMessageType"));
   }
 
   static WorkerMessageType fromName(String? name) {
     return values.firstWhere((e) => e.name == name,
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () =>
+            throw AppSerializationException(objectName: "WorkerMessageType"));
   }
 
   bool get isEncrypted => this == encrypted;
@@ -66,7 +68,7 @@ abstract final class WorkerMessage<MESSAGE, SERIALIZE> {
 
   T cast<T extends WorkerMessage>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", toString()]);
+      throw AppCryptoExceptionConst.internalError("WorkerMessage");
     }
     return this as T;
   }
@@ -180,50 +182,3 @@ final class WorkerEncryptedMessage extends WorkerMessage<List<int>, List<int>>
     return toCbor().encode();
   }
 }
-
-// class WorkerCborMessage extends WorkerMessage<MessageArgsCbor, List<int>>
-//     with CborSerializable {
-//   @override
-//   final MessageArgsCbor message;
-//   final WorkerEncryptedMessage? encryptedPart;
-//   // bool get isEncrypted =>
-//   //     args.type == CryptoArgsType.wallet || args.type == CryptoArgsType.crypto;
-//   WorkerCborMessage({
-//     required this.message,
-//     required super.id,
-//     super.currentPart,
-//     this.encryptedPart,
-//     super.totalPart,
-//   }) : super._(type: WorkerMessageType.cbor);
-//   factory WorkerCborMessage.deserialize(
-//       {List<int>? bytes, CborObject? object, String? hex}) {
-//     final CborListValue cbor = CborSerializable.cborTagValue(
-//         cborBytes: bytes,
-//         object: object,
-//         hex: hex,
-//         tags: WorkerMessageType.cbor.tag);
-//     return WorkerCborMessage(
-//         message: MessageArgsCbor.deserialize(object: cbor.elementAsCborTag(0)),
-//         id: cbor.elementAt(1),
-//         encryptedPart: cbor.elemetMybeAs<WorkerEncryptedMessage, CborObject>(
-//             2, (p0) => WorkerEncryptedMessage.deserialize(object: p0)));
-//   }
-
-//   @override
-//   CborTagValue toCbor() {
-//     return CborTagValue(
-//         CborSerializable.fromDynamic(
-//             [message.toCbor(), CborIntValue(id), encryptedPart?.toCbor()]),
-//         type.tag);
-//   }
-
-//   @override
-//   Map<String, dynamic> toJson() {
-//     return {...super.toJson()};
-//   }
-
-//   @override
-//   List<int> serialize() {
-//     return toCbor().encode();
-//   }
-// }

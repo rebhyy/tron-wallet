@@ -1,13 +1,13 @@
 import 'dart:io';
 
-import 'package:on_chain_bridge/models/path/path.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
+import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/app/native_impl/core/core.dart';
 
 mixin PathProvider {
   static AppPath? _path;
   static Future<AppPath> getPaths() async {
-    _path ??= await AppNativeMethods.platform.path();
+    _path ??= await AppNativeMethods.platform.path(APPConst.applicationId);
     return _path!;
   }
 
@@ -23,12 +23,5 @@ mixin PathProvider {
     final path = await getPaths();
     final dir = Directory(path.cache);
     return _join(dir.path, fileName);
-  }
-
-  static Future<String> toDocumentDir(String fileName) async {
-    final path = await getPaths();
-    final dir = Directory(path.document);
-
-    return "${dir.path}/$fileName";
   }
 }

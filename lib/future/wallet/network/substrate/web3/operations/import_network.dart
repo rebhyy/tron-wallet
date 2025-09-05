@@ -6,11 +6,10 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/pages/import_network.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/exception.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/substrate.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/network/params/substrate.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
@@ -140,7 +139,7 @@ class Web3SubstrateImportOrUpdateNetworkStateController
     }
     final rpcUrl = rpcKey.currentState?.getEndpoint();
     if (rpcUrl == null) {
-      throw Web3InternalError("invalid_provider_infomarion".tr);
+      throw AppException("invalid_provider_infomarion".tr);
     }
     final provider = SubstrateAPIProvider(
         uri: rpcUrl.url,
@@ -149,9 +148,9 @@ class Web3SubstrateImportOrUpdateNetworkStateController
     final client = APIUtils.buildsubstrateClient(provider: provider);
     final init = await MethodUtils.call(() async => client.loadApi());
     if (init.hasError) {
-      throw Web3InternalError(init.error!.tr);
+      throw AppException(init.localizationError);
     } else if (init.result == null) {
-      throw Web3InternalError("unsuported_network_metadata".tr);
+      throw AppException("unsuported_network_metadata".tr);
     } else {
       final chainInfo = init.result!;
       final coinParam = SubstrateNetworkParams(

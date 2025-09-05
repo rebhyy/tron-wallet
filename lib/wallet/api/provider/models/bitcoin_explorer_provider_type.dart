@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:bitcoin_base/bitcoin_base.dart' show APIType;
 
 enum BitcoinExplorerProviderType {
@@ -9,7 +9,8 @@ enum BitcoinExplorerProviderType {
   const BitcoinExplorerProviderType(this.url);
   static BitcoinExplorerProviderType fromName(String? name) {
     return values.firstWhere((element) => element.name == name,
-        orElse: () => throw WalletExceptionConst.invalidProviderInformation);
+        orElse: () => throw AppSerializationException(
+            objectName: "BitcoinExplorerProviderType"));
   }
 
   APIType get type {

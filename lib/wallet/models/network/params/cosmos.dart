@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/app/utils/list/extension.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 import 'package:on_chain_wallet/wallet/models/networks/networks.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/params/params.dart';
@@ -78,10 +78,10 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
       int? bip32CoinType,
       bool ibcEnabled = true}) {
     if (feeTokens.isEmpty) {
-      throw WalletException("at_least_one_fee_token_required");
+      throw WalletException.error("at_least_one_fee_token_required");
     }
     if (token.decimal > CosmosConst.maxTokenExponent) {
-      throw WalletException("invalid_token_exponent");
+      throw WalletException.error("invalid_token_exponent");
     }
     return CosmosNetworkParams._(
         token: token,
@@ -103,8 +103,8 @@ class CosmosNetworkParams extends NetworkCoinParams<CosmosAPIProvider> {
 
   factory CosmosNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.cosmosNetworkParams);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.cosmosNetworkParams);
 
     return CosmosNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),

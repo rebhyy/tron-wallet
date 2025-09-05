@@ -87,8 +87,10 @@ class BitcoinExplorerAPIProvider extends BaseBitcoinAPIProvider {
 
   factory BitcoinExplorerAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.bitcoinExplorerApiProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.bitcoinExplorerApiProvider);
     return BitcoinExplorerAPIProvider._(
       explorerType: BitcoinExplorerProviderType.fromName(values.elementAs(0)),
       auth: values.elemetMybeAs<ProviderAuthenticated, CborTagValue>(

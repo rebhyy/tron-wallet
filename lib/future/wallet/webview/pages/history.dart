@@ -85,8 +85,8 @@ class _HistoriesPageState extends State<WebViewHistoriesView> with SafeState {
     }
   }
 
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
 
   GlobalKey<APPRemovableListState> listKey = GlobalKey();
 
@@ -100,11 +100,16 @@ class _HistoriesPageState extends State<WebViewHistoriesView> with SafeState {
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      initialStatus: StreamWidgetStatus.progress,
-      child: (c) => CustomScrollView(
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (c) => CustomScrollView(
         slivers: [
           SliverAppBar(
               automaticallyImplyLeading: false,

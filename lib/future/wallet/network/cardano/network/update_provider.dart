@@ -30,7 +30,6 @@ class _UpdateCardanoProvider extends StatefulWidget {
 class _UpdateSolanaProviderState extends State<_UpdateCardanoProvider>
     with
         SafeState<_UpdateCardanoProvider>,
-        ProgressMixin<_UpdateCardanoProvider>,
         UpdateNetworkProviderState<
             _UpdateCardanoProvider,
             CardanoAPIProvider,
@@ -76,7 +75,7 @@ class _UpdateSolanaProviderState extends State<_UpdateCardanoProvider>
         provider: provider, network: network.toNetwork());
     final init = await client.onInit();
     if (!init) {
-      throw WalletException("cardano_network_magic_validator");
+      throw AppException("cardano_network_magic_validator");
     }
     return provider;
   }

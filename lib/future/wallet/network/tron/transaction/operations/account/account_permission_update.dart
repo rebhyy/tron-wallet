@@ -10,8 +10,7 @@ import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/typ
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/widgets/widgets/update_account_permission.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/tron/client/tron.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class TronTransactionAccountPermissionUpdateContractOperation
     extends TronTransactionStateController2<AccountPermissionUpdateContract> {

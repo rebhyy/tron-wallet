@@ -1,5 +1,4 @@
-import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/exception/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/models/models/chain.dart';
@@ -272,7 +271,7 @@ class Web3WalletConnectSessionHandler extends Web3WalletHandler<
     try {
       if (message == null) {
         if (params == null) {
-          throw WalletExceptionConst.invalidRequest;
+          throw Web3RequestExceptionConst.invalidRequest;
         }
         Web3GlobalRequestMethods? method =
             Web3GlobalRequestMethods.fromName(params.method);
@@ -284,7 +283,7 @@ class Web3WalletConnectSessionHandler extends Web3WalletHandler<
         } else {
           final handler = _networks[params.request?.network];
           if (handler == null) {
-            throw WalletExceptionConst.invalidRequest;
+            throw Web3RequestExceptionConst.invalidRequest;
           }
           message ??= await handler.request(params);
         }

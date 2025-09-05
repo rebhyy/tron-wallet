@@ -16,7 +16,7 @@ import 'package:on_chain_wallet/wallet/models/contact/networks/solana.dart';
 import 'package:on_chain_wallet/wallet/models/contact/networks/ton.dart';
 import 'package:on_chain_wallet/wallet/models/contact/networks/tron.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 abstract class ContactCore<T> with CborSerializable, Equatable {
   final T addressObject;
@@ -81,8 +81,7 @@ abstract class ContactCore<T> with CborSerializable, Equatable {
         throw WalletExceptionConst.networkDoesNotExist;
     }
     if (contact is! T) {
-      throw WalletExceptionConst.invalidArgruments(
-          "$T", contact.runtimeType.toString());
+      throw WalletExceptionConst.internalError("ContactCore");
     }
     return contact;
   }
@@ -125,8 +124,7 @@ abstract class ContactCore<T> with CborSerializable, Equatable {
         throw WalletExceptionConst.networkDoesNotExist;
     }
     if (contact is! T) {
-      throw WalletExceptionConst.invalidArgruments(
-          "$T", contact.runtimeType.toString());
+      throw WalletExceptionConst.internalError("ContactCore");
     }
     return contact;
   }

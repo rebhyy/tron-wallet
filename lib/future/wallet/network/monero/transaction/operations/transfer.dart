@@ -6,8 +6,7 @@ import 'package:on_chain_wallet/future/wallet/network/monero/transaction/control
 import 'package:on_chain_wallet/future/wallet/network/monero/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/transaction/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/monero.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class MoneroTransactionTransferOperation
     extends MoneroTransactionStateController {
@@ -186,7 +185,7 @@ class MoneroTransactionTransferOperation
       final remain = remainingAmount.value.amount.balance;
       BigInt amount = lockedMax.amount.balance;
       if (remain.isNegative) {
-        amount -= remain;
+        amount -= (remain).abs();
       } else {
         amount += remain;
       }

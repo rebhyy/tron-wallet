@@ -13,7 +13,8 @@ enum TonAccountContextType {
   const TonAccountContextType(this.tag);
   static TonAccountContextType fromTag(List<int>? tag) {
     return values.firstWhere((e) => BytesUtils.bytesEqual(e.tag, tag),
-        orElse: () => throw WalletExceptionConst.invalidAccountDetails);
+        orElse: () => throw AppSerializationException(
+            objectName: "TonAccountContextType"));
   }
 }
 
@@ -107,7 +108,7 @@ abstract class TonAccountContext with CborSerializable, Equatable {
       default:
         break;
     }
-    throw WalletExceptionConst.invalidAccountDetails;
+    throw WalletExceptionConst.invalidAccountDeta("TonAccountContext.merge");
   }
 }
 
@@ -117,7 +118,7 @@ class TonAccountLegacyContext extends TonAccountContext {
   factory TonAccountLegacyContext(
       {required WalletVersion version, required bool bouncable}) {
     if (version.version > 2) {
-      throw WalletExceptionConst.invalidAccountDetails;
+      throw WalletExceptionConst.invalidAccountDeta("TonAccountLegacyContext");
     }
     return TonAccountLegacyContext._(version: version, bouncable: bouncable);
   }
@@ -148,7 +149,8 @@ class TonAccountLegacyContext extends TonAccountContext {
           chain: chain, publicKey: publicKey, bounceableAddress: bouncable),
       WalletVersion.v2R2 => WalletV2R2.create(
           chain: chain, publicKey: publicKey, bounceableAddress: bouncable),
-      _ => throw WalletExceptionConst.invalidAccountDetails
+      _ => throw WalletExceptionConst.invalidAccountDeta(
+          "TonAccountLegacyContext.toWalletContract")
     };
   }
 
@@ -171,7 +173,8 @@ class TonAccountSubWalletContext extends TonAccountContext {
       required int subwalletId,
       required bool bouncable}) {
     if (version.version < 3 || version.version > 4) {
-      throw WalletExceptionConst.invalidAccountDetails;
+      throw WalletExceptionConst.invalidAccountDeta(
+          "TonAccountSubWalletContext");
     }
     return TonAccountSubWalletContext._(
         version: version, subwalletId: subwalletId, bouncable: bouncable);
@@ -204,7 +207,8 @@ class TonAccountSubWalletContext extends TonAccountContext {
           publicKey: publicKey,
           bounceableAddress: bouncable,
           subWalletId: subwalletId),
-      _ => throw WalletExceptionConst.invalidAccountDetails
+      _ => throw WalletExceptionConst.invalidAccountDeta(
+          "TonAccountSubWalletContext.toWalletContract")
     };
   }
 
@@ -226,7 +230,8 @@ class TonAccountV5CustomContext extends TonAccountContext {
       required int contextId,
       required bool bouncable}) {
     if (version != WalletVersion.v5R1) {
-      throw WalletExceptionConst.invalidAccountDetails;
+      throw WalletExceptionConst.invalidAccountDeta(
+          "TonAccountV5CustomContext");
     }
     return TonAccountV5CustomContext._(
         bouncable: bouncable, walletId: contextId);
@@ -300,7 +305,8 @@ class TonAccountV5SubWalletContext extends TonAccountContext {
       required int subwalletId,
       required bool bouncable}) {
     if (version != WalletVersion.v5R1) {
-      throw WalletExceptionConst.invalidAccountDetails;
+      throw WalletExceptionConst.invalidAccountDeta(
+          "TonAccountV5SubWalletContext");
     }
     return TonAccountV5SubWalletContext._(
         subwalletId: subwalletId, bouncable: bouncable);

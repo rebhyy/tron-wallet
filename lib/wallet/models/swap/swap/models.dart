@@ -1,7 +1,7 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/address/utils.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
 import 'package:on_chain_wallet/wallet/models/token/coingecko/coin.dart';
@@ -211,26 +211,26 @@ class APPSwapRoute {
     required APPSwapAssets sourceAsset,
     required APPSwapAssets destAsset,
   }) {
-    final err = WalletException("invalid_swap_information");
+    // final err = WalletException("invalid_swap_information");
     if (sourceAsset.asset != route.route.quote.sourceAsset) {
-      throw err;
+      throw WalletExceptionConst.invalidSwapInformation;
     }
     if (destAsset.asset != route.route.quote.destinationAsset) {
-      throw err;
+      throw WalletExceptionConst.invalidSwapInformation;
     }
     if (sourceChain.network != sourceAsset.network) {
-      throw err;
+      throw WalletExceptionConst.invalidSwapInformation;
     }
     if (destChain.network != destAsset.network) {
-      throw err;
+      throw WalletExceptionConst.invalidSwapInformation;
     }
     if (sources.isEmpty ||
         sources.any((e) => e.network != sourceChain.network.value)) {
-      throw err;
+      throw WalletExceptionConst.invalidSwapInformation;
     }
     if (!BlockchainAddressUtils.isValidNetworkAddress(
         destAddress.view, destChain.network)) {
-      throw err;
+      throw WalletExceptionConst.invalidSwapInformation;
     }
     if (transaction.operations.isEmpty ||
         transaction.route != route.route ||
@@ -239,7 +239,7 @@ class APPSwapRoute {
             (e) => e.address.address == transaction.params.sourceAddress) ||
         transaction.operations
             .any((e) => e.network != sourceAsset.asset.network)) {
-      throw err;
+      throw WalletExceptionConst.invalidSwapInformation;
     }
     return APPSwapRoute._(
         sourceChain: sourceChain,

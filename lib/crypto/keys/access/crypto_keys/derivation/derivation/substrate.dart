@@ -17,6 +17,7 @@ final class SubstrateAddressIndex extends AddressDerivationIndex {
 
   SubstrateAddressIndex._(
       {required this.currencyCoin,
+      this.subId,
       this.importedKeyId,
       this.keyName,
       required this.substratePath})
@@ -25,20 +26,21 @@ final class SubstrateAddressIndex extends AddressDerivationIndex {
 
   factory SubstrateAddressIndex.deserialize(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.cborTagValue(
+    final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: CryptoKeyConst.substrateKeyIndex);
     return SubstrateAddressIndex._(
-        currencyCoin: CustomCoins.getSerializationCoin(cbor.elementAs(0)),
-        substratePath: cbor.elementAs(1),
-        importedKeyId: cbor.elementAs(2),
-        keyName: cbor.elementAs(3));
+        currencyCoin: CustomCoins.getSerializationCoin(values.valueAs(0)),
+        substratePath: values.valueAs(1),
+        importedKeyId: values.valueAs(2),
+        keyName: values.valueAs(3),
+        subId: values.valueAs(4));
   }
   factory SubstrateAddressIndex(
       {required SubstrateCoins currencyCoin,
       String? substratePath,
       String? keyName}) {
     if (currencyCoin.proposal != SubstratePropoosal.substrate) {
-      throw WalletExceptionConst.invalidCoin;
+      throw AppCryptoExceptionConst.invalidCoin;
     }
     if (substratePath != null) {
       final path = SubstratePathParser.parse(substratePath);
@@ -48,7 +50,8 @@ final class SubstrateAddressIndex extends AddressDerivationIndex {
     return SubstrateAddressIndex._(
         currencyCoin: currencyCoin,
         keyName: keyName,
-        substratePath: substratePath);
+        substratePath: substratePath,
+        subId: null);
   }
 
   factory SubstrateAddressIndex.fromPath(
@@ -61,11 +64,15 @@ final class SubstrateAddressIndex extends AddressDerivationIndex {
 
   @override
   AddressDerivationIndex asImportedKey(String importKeyId) {
+    if (subId != null) {
+      throw AppCryptoExceptionConst.invalidDerivationKey;
+    }
     return SubstrateAddressIndex._(
         currencyCoin: currencyCoin,
         importedKeyId: importKeyId,
         keyName: keyName,
-        substratePath: substratePath);
+        substratePath: substratePath,
+        subId: subId);
   }
 
   @override
@@ -75,13 +82,15 @@ final class SubstrateAddressIndex extends AddressDerivationIndex {
           currencyCoin.toCbor(),
           hdPath ?? const CborNullValue(),
           importedKeyId,
-          keyName
+          keyName,
+          subId
         ]),
         CryptoKeyConst.substrateKeyIndex);
   }
 
   @override
-  List get variabels => [currencyCoin.conf.type, importedKeyId, substratePath];
+  List get variabels =>
+      [currencyCoin.conf.type, importedKeyId, substratePath, subId];
 
   @override
   String toString() {
@@ -107,5 +116,21 @@ final class SubstrateAddressIndex extends AddressDerivationIndex {
         coin: masterKey.coin,
         keyName: masterKey.keyName,
         key: derive.priveKey.privKey);
+  }
+
+  @override
+  final int? subId;
+
+  @override
+  SubstrateAddressIndex asSubWalletKey(int subId) {
+    if (importedKeyId != null) {
+      throw AppCryptoExceptionConst.invalidDerivationKey;
+    }
+    return SubstrateAddressIndex._(
+        currencyCoin: currencyCoin,
+        importedKeyId: importedKeyId,
+        keyName: keyName,
+        substratePath: substratePath,
+        subId: subId);
   }
 }

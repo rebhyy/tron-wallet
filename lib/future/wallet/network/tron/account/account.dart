@@ -53,16 +53,6 @@ class _Services extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppListTile(
-              title: Text("multi_sig_addr".tr),
-              subtitle: Text("establishing_multi_sig_addr".tr),
-              trailing: const Icon(Icons.arrow_forward),
-              onTap: () {
-                context.to(PageRouter.tronMultiSigAddress,
-                    argruments: chainAccount);
-              },
-            ),
-            WidgetConstant.divider,
-            AppListTile(
               title: Text("import_trc20_token".tr),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {

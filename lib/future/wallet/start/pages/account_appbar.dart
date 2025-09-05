@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/app/external/coingeko/coingeko.dart';
 import 'package:on_chain_wallet/app/utils/uri/utils.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/extension.dart';

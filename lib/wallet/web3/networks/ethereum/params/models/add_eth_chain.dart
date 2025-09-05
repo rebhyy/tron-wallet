@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/params/core/request.dart';

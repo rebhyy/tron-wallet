@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/string.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 
 import 'provider.dart';
@@ -112,7 +112,7 @@ mixin TronTransactionFeeController on TronTransactionApiController {
           cancelable: _cancelable);
       if (fee.isCancel) return;
       if (fee.hasError) {
-        // txFee.setError(fee.error!.tr);
+        // txFee.setError(fee.localizationError);
         return;
       }
       txFee.setFee(fee.result);

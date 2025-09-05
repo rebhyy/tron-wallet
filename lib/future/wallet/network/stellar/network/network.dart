@@ -31,7 +31,6 @@ class _UpdateStellarProvider extends StatefulWidget {
 class _UpdateSolanaProviderState extends State<_UpdateStellarProvider>
     with
         SafeState<_UpdateStellarProvider>,
-        ProgressMixin<_UpdateStellarProvider>,
         UpdateNetworkProviderState<
             _UpdateStellarProvider,
             StellarAPIProvider,
@@ -74,11 +73,5 @@ class _UpdateSolanaProviderState extends State<_UpdateStellarProvider>
   @override
   Future<StellarAPIProvider> validate(StellarAPIProvider provider) async {
     throw UnimplementedError();
-    // final client = APIUtils.buildSoalanaProvider(provider, network.toNetwork());
-    // final init = await client.validateNetworkGenesis();
-    // if (!init) {
-    //   throw WalletException("network_genesis_hash_validator");
-    // }
-    // return provider;
   }
 }

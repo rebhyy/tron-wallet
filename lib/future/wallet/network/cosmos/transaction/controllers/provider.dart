@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/t
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/types/fee.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/networks.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/cosmos/models/network_types.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
@@ -32,7 +32,7 @@ mixin CosmosTransactionApiController on DisposableMixin {
         return BigInt.from(networkConst.nativeTransactionFee);
       });
       assert(fee.hasResult,
-          "failed to fetch ${network.networkName} native trasaction fee: ${fee.error}");
+          "failed to fetch ${network.networkName} native trasaction fee: ${fee.localizationError}");
       if (fee.hasResult) {
         fixedFee = fee.result;
       } else {
@@ -45,7 +45,7 @@ mixin CosmosTransactionApiController on DisposableMixin {
         return client.getEthermintBaseFee();
       });
       assert(fee.hasResult,
-          "failed to fetch ${network.networkName} base gas fee: ${fee.error}");
+          "failed to fetch ${network.networkName} base gas fee: ${fee.localizationError}");
       if (fee.hasResult) {
         ethermintTxFee = fee.result;
       } else {

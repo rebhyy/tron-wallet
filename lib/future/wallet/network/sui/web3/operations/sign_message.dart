@@ -2,14 +2,14 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain/sui/src/keypair/types/types.dart';
 import 'package:on_chain/sui/src/keypair/utils/utils.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/messages.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/sui/params/models/sign_message.dart';
 
@@ -50,7 +50,7 @@ class Web3SuiSignMessageStateController extends Web3SuiStateController<
             }
           }
           if (weight < multisigAccount.multiSignatureAddress.threshold) {
-            throw WalletException("insufficient_signatures");
+            throw AppException("insufficient_signatures");
           }
           return signatures;
         } else {

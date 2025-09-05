@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/constant/constant.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/global/pages/receipt_address_view.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
+import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/transaction.dart';
 
 class TransactionView<CHAINACCOUNT extends ChainAccount,
@@ -254,6 +256,33 @@ class TransactionModalView<CHAINACCOUNT extends ChainAccount,
                         shrinkWrap: true,
                         physics: WidgetConstant.noScrollPhysics),
                   ],
+                )),
+        ConditionalWidget(
+            enable: transaction.inputs.isNotEmpty,
+            onActive: (context) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    WidgetConstant.height20,
+                    Text("sources".tr,
+                        style: context.onPrimaryTextTheme.titleMedium),
+                    WidgetConstant.height8,
+                    ListView.separated(
+                        itemBuilder: (context, index) {
+                          final input = transaction.inputs[index];
+                          return switch (input.type) {
+                            WalletTransactionInputType.operation =>
+                              TransactionOperationInputView(
+                                  input:
+                                      input as WalletTransactionOperationInput,
+                                  account: account),
+                          };
+                        },
+                        separatorBuilder: (context, index) =>
+                            WidgetConstant.divider,
+                        itemCount: transaction.inputs.length,
+                        shrinkWrap: true,
+                        physics: WidgetConstant.noScrollPhysics),
+                  ],
                 ))
       ],
     );
@@ -362,4 +391,51 @@ class _MoneroOutputView extends StatelessWidget {
   }
 }
 
-/// moneroGenerateProof
+class TransactionOperationInputView extends StatefulWidget {
+  const TransactionOperationInputView(
+      {required this.input, required this.account, super.key});
+  final WalletTransactionOperationInput input;
+  final Chain account;
+
+  @override
+  State<TransactionOperationInputView> createState() =>
+      _TransactionOperationInputViewState();
+}
+
+class _TransactionOperationInputViewState
+    extends State<TransactionOperationInputView>
+    with SafeState<TransactionOperationInputView> {
+  late ReceiptAddress address;
+
+  @override
+  void initState() {
+    super.initState();
+    address = widget.account.getReceiptAddress(widget.input.addressStr) ??
+        ReceiptAddress(
+            view: widget.input.addressStr,
+            networkAddress: widget.input.address);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ContainerWithBorder(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ContainerWithBorder(
+              backgroundColor: context.onPrimaryContainer,
+              child: Text(widget.input.operation,
+                  style: context.primaryTextTheme.bodyMedium)),
+          ContainerWithBorder(
+              backgroundColor: context.onPrimaryContainer,
+              child: CopyableTextWidget(
+                color: context.primaryContainer,
+                text: address.view,
+                widget: ReceiptAddressDetailsView(
+                    address: address, color: context.primaryContainer),
+              )),
+        ],
+      ),
+    );
+  }
+}

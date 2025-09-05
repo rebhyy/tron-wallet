@@ -44,6 +44,7 @@ class AppTextField extends StatefulWidget {
       this.enableInteractiveSelection = true,
       this.autofocus = false,
       this.canRequestFocus = true,
+      this.errorBuilder,
       this.onTap});
   final TextEditingController? controller;
   final bool autofocus;
@@ -54,6 +55,7 @@ class AppTextField extends StatefulWidget {
   final StringVoid? onChanged;
   final StringVoid? onSubmitField;
   final NullStringString? validator;
+  final FormFieldErrorBuilder? errorBuilder;
   final List<TextInputFormatter>? inputFormatters;
   final Widget? suffix;
   final String? helperText;
@@ -171,6 +173,7 @@ class AppTextFieldState extends State<AppTextField>
         autovalidateMode: AutovalidateMode.onUserInteraction,
         keyboardType: widget.keyboardType,
         focusNode: widget.focusNode,
+        errorBuilder: widget.errorBuilder,
         obscureText: obscureText,
         style: widget.style,
         readOnly: widget.readOnly,

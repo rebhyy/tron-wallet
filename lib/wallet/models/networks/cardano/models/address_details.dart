@@ -77,13 +77,16 @@ final class CardanoAddrDetails extends BaseCardanoAddressDetails {
       List<int>? stakePubkey}) {
     if (addressType == ADAAddressType.byron ||
         addressType == ADAAddressType.pointer) {
-      throw const WalletException("invalid_cardano_address_details");
+      throw WalletExceptionConst.invalidAccountDeta(
+          "CardanoAddrDetails.shelley");
     }
     if (addressType == ADAAddressType.base && stakePubkey == null) {
-      throw const WalletException("invalid_cardano_address_details");
+      throw WalletExceptionConst.invalidAccountDeta(
+          "CardanoAddrDetails.shelley");
     }
     if (addressType != ADAAddressType.base && stakePubkey != null) {
-      throw const WalletException("invalid_cardano_address_details");
+      throw WalletExceptionConst.invalidAccountDeta(
+          "CardanoAddrDetails.shelley");
     }
     return CardanoAddrDetails._(
         publicKey: publicKey,
@@ -98,7 +101,7 @@ final class CardanoAddrDetails extends BaseCardanoAddressDetails {
       String? hdPath}) {
     if (hdPath != null && hdPathKey == null ||
         hdPath == null && hdPathKey != null) {
-      throw const WalletException("invalid_cardano_address_details");
+      throw WalletExceptionConst.invalidAccountDeta("CardanoAddrDetails.byron");
     }
     return CardanoAddrDetails._(
         publicKey: publicKey,
@@ -130,7 +133,8 @@ final class CardanoAddrDetails extends BaseCardanoAddressDetails {
             hdPathKey: hdPathKey,
             network: network);
       default:
-        throw const WalletException("invalid_cardano_address_details");
+        throw WalletExceptionConst.invalidAccountDeta(
+            "CardanoAddrDetails.toAddress");
     }
   }
 
@@ -209,12 +213,18 @@ class ADAAddressUtxos with CborSerializable {
 
   List<TransactionUnspentOutput> get transactionUnspentOutputs =>
       _utxos.map((e) => e.transactionUnspentOutput).toList();
-  ADAAddressUtxos({List<ADAAddressUtxo> utxos = const []})
+  ADAAddressUtxos._({List<ADAAddressUtxo> utxos = const []})
       : _utxos = utxos.toImutableSet,
         _totalLovelace =
             utxos.fold<BigInt>(BigInt.zero, (p, c) => p + c.lovelace),
         _totalAssets =
             utxos.fold<MultiAsset>(MultiAsset.empty, (p, c) => p + c.asset);
+  factory ADAAddressUtxos({List<ADAAddressUtxo> utxos = const []}) {
+    final sort = utxos.clone()
+      ..sort((a, b) => "${a.input.txIdHex}_${a.input.index}"
+          .compareTo("${b.input.txIdHex}_${b.input.index}"));
+    return ADAAddressUtxos._(utxos: sort);
+  }
 
   void _updateTotal() {
     _totalLovelace = _utxos.fold<BigInt>(BigInt.zero, (p, c) => p + c.lovelace);
@@ -222,9 +232,16 @@ class ADAAddressUtxos with CborSerializable {
         _utxos.fold<MultiAsset>(MultiAsset.empty, (p, c) => p + c.asset);
   }
 
-  void updateUtxos(Iterable<ADAAddressUtxo> utxos) {
-    _utxos = utxos.toImutableSet;
+  bool updateUtxos(Iterable<ADAAddressUtxo> utxos) {
+    final sort = utxos.toList()
+      ..sort((a, b) => "${a.input.txIdHex}_${a.input.index}"
+          .compareTo("${b.input.txIdHex}_${b.input.index}"));
+    if (CompareUtils.iterableIsEqual(sort, _utxos)) {
+      return false;
+    }
+    _utxos = sort.toImutableSet;
     _updateTotal();
+    return true;
   }
 
   factory ADAAddressUtxos.deserialize({List<int>? bytes, CborObject? obj}) {

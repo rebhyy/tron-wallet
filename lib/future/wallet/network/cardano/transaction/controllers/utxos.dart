@@ -2,7 +2,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 
 import 'provider.dart';
@@ -107,8 +107,8 @@ mixin ADATransactionUtxosController on ADATransactionApiController {
     for (final i in accountUtxos.value) {
       i.dispose();
     }
-    accountUtxos.dispose();
     accountUtxos.value = [];
+    accountUtxos.dispose();
     totalUtxos.dispose();
   }
 }

@@ -19,8 +19,7 @@ enum SuiChainType {
   static SuiChainType fromValue(int? value) {
     return values.firstWhere(
       (e) => e.value == value,
-      orElse: () => throw WalletExceptionConst.invalidData(
-          messsage: "SuiChainType not found."),
+      orElse: () => throw AppSerializationException(objectName: "SuiChainType"),
     );
   }
 }
@@ -31,8 +30,8 @@ class SuiNetworkParams extends NetworkCoinParams<SuiAPIProvider> {
 
   factory SuiNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.suiNetworkParams);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.suiNetworkParams);
 
     return SuiNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(0)),

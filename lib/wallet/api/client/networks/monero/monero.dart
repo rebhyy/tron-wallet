@@ -2,12 +2,12 @@ import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/monero.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/monero.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/monero/monero.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/cached_object.dart';
@@ -52,7 +52,7 @@ class MoneroClient extends NetworkClient<MoneroWalletTransaction,
     final blocks =
         await provider.request(DaemonRequestGetBlocksByHeightBin(heights));
     if (blocks.blocks.length != heights.length) {
-      throw const WalletException("invalid_daemon_repsone");
+      throw ApiProviderExceptionConst.serverUnexpectedResponse;
     }
     return blocks;
   }
@@ -75,7 +75,7 @@ class MoneroClient extends NetworkClient<MoneroWalletTransaction,
     final r = await provider.request(
         DaemonRequestGetBlockHeaderByRange(startHeight: start, endHeight: end));
     if (validateResponse && r.headers.length != (end - start) + 1) {
-      throw const WalletException("invalid_daemon_repsone");
+      throw ApiProviderExceptionConst.serverUnexpectedResponse;
     }
     return r.headers;
   }
@@ -106,11 +106,11 @@ class MoneroClient extends NetworkClient<MoneroWalletTransaction,
       final result = await provider.request(rParams);
       if (validateResponse) {
         if (rParams.txHashes.length != result.length) {
-          throw const WalletException("some_transaction_missing");
+          throw ApiProviderExceptionConst.serverUnexpectedResponse;
         }
         for (int i = 0; i < rParams.txHashes.length; i++) {
           if (!StringUtils.hexEqual(rParams.txHashes[i], result[i].txHash)) {
-            throw const WalletException("some_transaction_missing");
+            throw ApiProviderExceptionConst.serverUnexpectedResponse;
           }
         }
       }
@@ -126,20 +126,42 @@ class MoneroClient extends NetworkClient<MoneroWalletTransaction,
     final rParams = DaemonRequestGetTransactions([txId],
         prune: false, decodeAsJson: false, split: false);
     final result = await provider.request(rParams);
-    if (rParams.txHashes.length != result.length) {
-      throw const WalletException("transaction_not_found");
+    if (result.length != 1) {
+      throw ApiProviderException.message("transaction_not_found");
     }
     return result[0].toTx();
   }
 
-  Future<DaemonIsKeyImageSpentResponse> keyImagesStatus(List<String> keyImages,
+  Future<List<DaemonKeyImageSpentStatus>> keyImagesStatus(
+      List<String> keyImages,
       {bool validateResponse = true}) async {
-    final result =
-        await provider.request(DaemonRequestIsKeyImageSpent(keyImages));
-    if (validateResponse && result.spentStatus.length != keyImages.length) {
-      throw const DartMoneroPluginException("invalid_daemon_repsone");
+    int offset = 0;
+    List<DaemonKeyImageSpentStatus> status = [];
+    while (offset < keyImages.length) {
+      int end = offset + _MoneroClientConst.maxTxRequestPerCall;
+      if (end >= keyImages.length) {
+        end = keyImages.length;
+      }
+
+      final rParams =
+          DaemonRequestIsKeyImageSpent(keyImages.sublist(offset, end));
+      final result = await provider.request(rParams);
+      if (validateResponse) {
+        if (rParams.keyImages.length != result.spentStatus.length) {
+          throw ApiProviderExceptionConst.serverUnexpectedResponse;
+        }
+      }
+      status.addAll(result.spentStatus);
+      offset += result.spentStatus.length;
     }
-    return result;
+    assert(status.length == keyImages.length);
+
+    // final result =
+    //     await provider.request(DaemonRequestIsKeyImageSpent(keyImages));
+    // if (validateResponse && result.spentStatus.length != keyImages.length) {
+    //   throw ApiProviderExceptionConst.serverUnexpectedResponse;
+    // }
+    return status;
   }
 
   Future<List<int>> getBinaryAbsoluteDistribution() async {

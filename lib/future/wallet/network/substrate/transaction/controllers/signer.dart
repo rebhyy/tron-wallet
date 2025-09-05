@@ -3,7 +3,7 @@ import 'package:on_chain_wallet/crypto/requets/messages/models/models/signing.da
 import 'package:on_chain_wallet/crypto/utils/substrate/substrate.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';
 

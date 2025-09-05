@@ -15,8 +15,8 @@ enum SuiSupportKeyScheme {
   const SuiSupportKeyScheme({required this.value, required this.name});
   static SuiSupportKeyScheme fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "SuiSupportKeyScheme not found $value"));
+        orElse: () =>
+            throw AppSerializationException(objectName: "SuiSupportKeyScheme"));
   }
 
   EllipticCurveTypes get curve {
@@ -40,8 +40,7 @@ enum SuiSupportKeyScheme {
       Bip44Coins.sui => SuiSupportKeyScheme.ed25519,
       Bip44Coins.suiSecp256k1 => SuiSupportKeyScheme.secp256k1,
       Bip44Coins.suiSecp256r1 => SuiSupportKeyScheme.secp256r1,
-      _ => throw WalletExceptionConst.invalidData(
-          messsage: "Invalid sui drivation coin")
+      _ => throw AppCryptoExceptionConst.invalidCoin
     };
   }
 }

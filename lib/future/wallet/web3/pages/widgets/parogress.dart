@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/web3/core/exception/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/request/web_request.dart';
@@ -146,25 +146,20 @@ class StreamWeb3PageProgressController extends StreamValue<Web3ProgressStatus> {
     }
     final key = showBackButton ? this : null;
 
-    if (error is WalletException) {
+    if (error is ApiProviderException) {
+      _error(
+          backToIdle: backToIdle,
+          widget: _Web3ErrorMessageView(error.message.tr, key),
+          status: status);
+    } else if (error is AppException) {
       _error(
           widget: _Web3ErrorMessageView(null, key, message: error.message.tr),
           backToIdle: backToIdle,
-          status: status);
-    } else if (error is Web3InternalError) {
-      _error(
-          backToIdle: backToIdle,
-          widget: _Web3ErrorMessageView(error.message, key),
           status: status);
     } else if (error is Web3RequestException) {
       _error(
           backToIdle: backToIdle,
           widget: _Web3ErrorMessageView(error.message, key),
-          status: status);
-    } else if (error is ApiProviderException) {
-      _error(
-          backToIdle: backToIdle,
-          widget: _Web3ErrorMessageView(error.message.toString().tr, key),
           status: status);
     } else if (error is BlockchainUtilsException) {
       _error(

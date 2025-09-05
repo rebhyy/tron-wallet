@@ -4,7 +4,6 @@ part of 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 mixin WalletsManager on _WalletCore {
   final _lock = SynchronizedLock();
   WalletController? _wallet;
-  StreamSubscription<ChainEvent>? _onChainEvent;
   WalletController get _controller {
     if (_wallet == null) {
       throw WalletExceptionConst.walletIsNotavailable;
@@ -13,8 +12,6 @@ mixin WalletsManager on _WalletCore {
   }
 
   StreamValue<WalletActionEvent> get status => _homePageStatus;
-  // bool _inProgress = false;
-  // bool get inProgress => _inProgress;
   final StreamValue<WalletActionEvent> _homePageStatus =
       StreamValue(WalletActionEvent.init());
   WalletActionEvent get latestEvent => _homePageStatus.value;
@@ -28,16 +25,16 @@ mixin WalletsManager on _WalletCore {
 
   HDWallets _wallets = HDWallets.init();
 
-  void _onCurrentChainListener(ChainEvent _) {
+  void onWalletIntraction() {
     if (homePageStatus.isUnlock) {
-      _timeout.init();
+      _timeout.start();
     }
   }
 
   WalletActionEvent _buildEvent(
       {required WalletActionEventType action,
       required WalletActionEventStatus status}) {
-    final wStatus = _wallet?.getStatus() ?? WStatus.setup;
+    final wStatus = _wallet?._status ?? WStatus.setup;
     return WalletActionEvent(
         walletStatus: wStatus, action: action, status: status);
   }
@@ -52,25 +49,7 @@ mixin WalletsManager on _WalletCore {
     if (homePageStatus.isLock) {
       _wallet?.walletConnectHandler.dispose();
     }
-    if (!homePageStatus.isUnlock) {
-      _timeout.dispose();
-    } else {
-      if (_timeout.disposed) {
-        _timeout.init();
-      }
-    }
-    if (!latestEvent.action.rebuild) return;
-    switch (latestEvent.action) {
-      case WalletActionEventType.lock:
-      case WalletActionEventType.updateAccount:
-      case WalletActionEventType.updateWallet:
-        return;
-      default:
-    }
-    _onChainEvent?.cancel();
-    _onChainEvent = null;
-    _onChainEvent =
-        _wallet?._appChains.chain.stream.listen(_onCurrentChainListener);
+    onWalletIntraction();
   }
 
   late final WalletTimeoutListener _timeout = WalletTimeoutListener(() {
@@ -87,11 +66,16 @@ mixin WalletsManager on _WalletCore {
     if (!homePageStatus.isSetup) {
       return;
     }
-    crypto.init(useIsolate);
-    _wallets = await _readWallet();
-    await _initPage();
-    if (initialPassword != null) {
-      await _controller._login(initialPassword);
+    try {
+      crypto.init(useIsolate);
+      _wallets = await _readWallet();
+      await _initPage();
+      if (initialPassword != null) {
+        await _controller._login(password: initialPassword);
+      }
+    } catch (e, s) {
+      Logg.error("here $e $s");
+      rethrow;
     }
   }
 
@@ -104,7 +88,7 @@ mixin WalletsManager on _WalletCore {
     Future<T> Function() t, {
     Duration? delay,
   }) async {
-    _timeout.init();
+    onWalletIntraction();
     return await MethodUtils.call(() async {
       return t();
     }, delay: delay);
@@ -160,29 +144,26 @@ mixin WalletsManager on _WalletCore {
       required String password,
       required WalletUpdateInfosData walletInfos,
       WalletRestoreV2? backup}) async {
-    if (!StrUtils.isStrongPassword(password)) {
-      throw WalletExceptionConst.incorrectPassword;
+    if (!PasswordUtils.canUseAsPassword(password)) {
+      throw WalletExceptionConst.passwordTooWeak;
     }
-    final updatedWallet = hdWallet.updateSettings(
-        newLockTime: walletInfos.lockTime,
-        reqPassword: walletInfos.requirmentPassword,
-        newName: walletInfos.name,
-        protectWallet: walletInfos.protectWallet,
-        network: 0);
-    final pw = await _toWalletPassword(password, updatedWallet.checkSumBytes);
+    final updatedWallet =
+        hdWallet.updateSettings(update: walletInfos, network: 0);
     await crypto.cryptoIsolateRequest(
         CryptoRequestGenerateMasterKey.fromStorage(
-            storageData: updatedWallet.data, key: pw));
+            storageData: updatedWallet.data,
+            key: password,
+            checksum: updatedWallet.checkSumBytes,
+            memoryKey: QuickCrypto.generateRandom()));
     await _wallets.setupNewWallet(updatedWallet);
     await _removeWalletStorage(updatedWallet);
-    await _initPage(slectedWallet: updatedWallet, backup: backup);
+    try {
+      await _initPage(slectedWallet: updatedWallet, backup: backup);
+    } catch (e) {
+      await _wallets.removeWallet(updatedWallet);
+      rethrow;
+    }
     await _writeHdWallet(_wallets);
-  }
-
-  Future<List<int>> _toWalletPassword(
-      String password, List<int> walletCheckSum) async {
-    return await crypto.cryptoIsolateRequest(CryptoRequestWalletKey.fromString(
-        key: password, checksum: walletCheckSum));
   }
 
   Future<bool> _switchWallet(MainWallet switchWallet) async {
@@ -192,9 +173,9 @@ mixin WalletsManager on _WalletCore {
     return true;
   }
 
-  Future<void> _eraseWallet(String password) async {
+  Future<void> _eraseWallet(WalletCredentialResponseVerify credential) async {
     final controller = _controller;
-    await controller._validatePassword(password);
+    controller._getCachedCredPassword(credential);
     await _wallets.removeWallet(controller._wallet);
     await _removeWalletStorage(controller._wallet);
     await _initPage();
@@ -202,13 +183,8 @@ mixin WalletsManager on _WalletCore {
   }
 
   Future<void> lock() async {
-    await _callSynchronized(
-      () async {
-        _controller._logout();
-      },
-      // conditionStatus: isOpen,
-      delay: null,
-      action: () => WalletActionEventType.lock,
-    );
+    await _callSynchronized(() async {
+      _controller._logout();
+    }, delay: null, action: () => WalletActionEventType.lock);
   }
 }

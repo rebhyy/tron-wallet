@@ -27,7 +27,7 @@ class _ImportEthereumNetworkState extends State<ImportEthereumNetwork>
       return await form.buildNetwork();
     });
     if (result.hasError) {
-      pageKey.errorText(result.error!.tr,
+      pageKey.errorText(result.localizationError,
           showBackButton: true, backToIdle: false);
       return;
     }
@@ -42,7 +42,7 @@ class _ImportEthereumNetworkState extends State<ImportEthereumNetwork>
       await context.wallet.wallet.updateImportNetwork(newNetwork);
     });
     if (import.hasError) {
-      pageKey.errorText(import.error!.tr,
+      pageKey.errorText(import.localizationError,
           showBackButton: true, backToIdle: false);
       return;
     }
@@ -96,10 +96,12 @@ class ImportEthereumNetworkFieldsView extends StatelessWidget {
     return APPStreamBuilder(
         value: form.notifier,
         builder: (context, _) {
-          return Form(
-            key: form.formKey,
-            child: MultiSliver(
+          return SliverToBoxAdapter(
               // crossAxisAlignment: CrossAxisAlignment.start,
+              child: Form(
+            key: form.formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("chain_id".tr, style: context.textTheme.titleMedium),
                 Text("chain_id_of_network".tr),
@@ -256,7 +258,7 @@ class ImportEthereumNetworkFieldsView extends StatelessWidget {
                         ))
               ],
             ),
-          );
+          ));
         });
   }
 }

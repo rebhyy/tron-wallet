@@ -3,42 +3,85 @@
 part of 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 
 mixin WalletManager on _WalletController {
+  WStatus _status = WStatus.lock;
   Future<List<Web3ApplicationAuthentication>> _getAllWeb3Authenticated();
+
+  final Map<String, WalletCredentialResponseVerify> _credentials = {};
+  void _getCachedCredPassword(WalletCredentialResponseVerify id) {
+    final cred = _credentials.remove(id.id);
+    if (cred == null || !identical(id, cred)) {
+      throw WalletExceptionConst.authFailed;
+    }
+  }
 
   /// emit unlocking walllet
   void _onUnlock() {}
 
-  WStatus getStatus() {
-    if (_walletKey != null) {
-      return WStatus.unlock;
-    }
-    if (_wallet.requiredPassword) {
-      return WStatus.lock;
-    } else {
-      return WStatus.readOnly;
-    }
-  }
-
   /// update wallet status
   void _setDefaultPageStatus() {
-    _massterKey = null;
-    _walletKey = null;
+    if (_wallet.requiredPassword) {
+      _status = WStatus.lock;
+    } else {
+      _status = WStatus.readOnly;
+    }
+    _credentials.clear();
   }
 
   void _logout() {
     _setDefaultPageStatus();
   }
 
-  /// unlock wallet
-  Future<void> _login(String password) async {
-    final storageKey = await crypto.cryptoIsolateRequest(
-        CryptoRequestGenerateMasterKey.fromStorageWithStringKey(
-            storageData: _wallet.data,
-            key: password,
-            checksum: _wallet.checkSumBytes));
-    _massterKey = storageKey.masterKey;
-    _walletKey = storageKey.walletKey;
-    _onUnlock();
+  Future<List<int>> _getMemoryKey({bool newKey = false}) async {
+    if (newKey) {
+      final key = QuickCrypto.generateRandom();
+      await _core._insertMainTableWalletStorage(value: key, key: _wallet.key);
+      return key;
+    }
+    final data = await _core._readMainTableWalletStorage(key: _wallet.key);
+    if (data == null) {
+      _walletKey = null;
+      _setDefaultPageStatus();
+      throw WalletExceptionConst.authFailed;
+    }
+    return data;
+  }
+
+  Future<void> _login({String? password, bool? platformCredential}) async {
+    if (platformCredential == true && _wallet.platformCredential == null) {
+      throw WalletExceptionConst.authFailed;
+    }
+    if (!hasWalletKey && password == null) {
+      throw WalletExceptionConst.authFailed;
+    }
+    if (password != null) {
+      final key = await _getMemoryKey(newKey: !hasWalletKey);
+      final request = CryptoRequestGenerateMasterKey.fromStorageWithStringKey(
+          storageData: _wallet.data,
+          key: password,
+          checksum: _wallet.checkSumBytes,
+          memoryKey: key);
+      final walletKey = await crypto.cryptoIsolateRequest(request);
+      if (!hasWalletKey) {
+        if (request.version != WalletMasterKeysConst.keyVersion) {
+          await _updateWallet(_wallet.updateData(walletKey.storageDataB64()));
+        }
+        _walletKey = walletKey;
+      }
+    } else {
+      final pCredential = _wallet.platformCredential;
+      if (platformCredential != true || pCredential == null) {
+        throw WalletExceptionConst.authFailed;
+      }
+      final auth = await PlatformCryptoMethods.authenticate(
+          credential: pCredential, reason: 'reason');
+      if (auth != BiometricResult.success) {
+        throw WalletExceptionConst.authFailed;
+      }
+    }
+    if (!_status.isUnlock) {
+      _status = WStatus.unlock;
+      _onUnlock();
+    }
   }
 
   /// dervie new address for chain
@@ -52,12 +95,18 @@ mixin WalletManager on _WalletController {
       account = await chain.addNewAddress(null, newAccountParams);
     } else {
       if (newAccountParams.deriveIndex.isMultiSig) {
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.invalidDerivationKey;
       }
-      final updateParams = await crypto.walletArgs(
-          message: WalletRequestDeriveAddress(addressParams: newAccountParams),
-          key: _walletKey!,
-          encryptedMasterKey: _massterKey!.masterKey);
+      final updateParams = await _callWalletInternal(
+        (WalletInMemoryData masterKey, List<int> memoryKey) async {
+          return WalletInternalCallResponse(
+              result: await crypto.walletArgs(
+                  message: WalletRequestDeriveAddress(
+                      addressParams: newAccountParams),
+                  masterKey: masterKey,
+                  memoryKey: memoryKey));
+        },
+      );
       account = await chain.addNewAddress(
           updateParams.publicKey, updateParams.accountParams);
     }
@@ -66,220 +115,284 @@ mixin WalletManager on _WalletController {
 
   /// import private key to current wallet
   /// -[newKey]: new private key for import to current wallet.
-  /// =[password]: wallet password
-  Future<void> _importNewKey(ImportedKeyStorage newKey, String password) async {
-    final keyBytes = await _validatePassword(password);
-    final encrypt = await crypto.walletArgs(
-        message: WalletRequestImportNewKey(newKey),
-        key: keyBytes,
-        encryptedMasterKey: _massterKey!.masterKey);
-    _massterKey = encrypt.masterKey;
-    _appChains.updateWalletData(_wallet.updateData(encrypt.storageData));
-    await _updateWallet();
+  Future<void> _importNewKey(ImportedKeyStorage newKey,
+      WalletCredentialResponseVerify credential) async {
+    _getCachedCredPassword(credential);
+    await _callWalletInternal(
+        (WalletInMemoryData masterKey, List<int> memoryKey) async {
+      final result = await crypto.walletArgs(
+          message: WalletRequestImportNewKey(newKey),
+          masterKey: masterKey,
+          memoryKey: memoryKey);
+      return WalletInternalCallResponse(result: null, key: result);
+    });
   }
 
   /// - [removeKey]: private key from current wallet
-  /// - [password]: wallet password
-  Future<void> _removeKey(EncryptedCustomKey removeKey, String password) async {
-    final keyBytes = await _validatePassword(password);
-    if (!_massterKey!.customKeys.contains(removeKey)) {
+  Future<void> _removeKey(EncryptedCustomKey removeKey,
+      WalletCredentialResponseVerify credential) async {
+    _getCachedCredPassword(credential);
+    if (!_walletKey!.customKeys.contains(removeKey)) {
       throw WalletExceptionConst.accountDoesNotFound;
     }
     await _cleanUpdateRemovedKeyAccounts(removeKey.id);
-    final encrypt = await crypto.walletArgs(
-        message: WalletRequestRemoveKey(removeKey.id),
-        key: keyBytes,
-        encryptedMasterKey: _massterKey!.masterKey);
-    _massterKey = encrypt.masterKey;
-    _appChains.updateWalletData(_wallet.updateData(encrypt.storageData));
-    await _updateWallet();
+    await _callWalletInternal(
+      (WalletInMemoryData masterKey, List<int> memoryKey) async {
+        final encrypt = await crypto.walletArgs(
+            message: WalletRequestRemoveKey(removeKey.id),
+            masterKey: masterKey,
+            memoryKey: memoryKey);
+        return WalletInternalCallResponse(result: null, key: encrypt);
+      },
+    );
   }
 
-  /// confirm the current wallet password
-  /// - [password]: current wallet password.
-  Future<List<int>> _validatePassword(String password) async {
-    if (_walletKey == null) {
-      throw WalletExceptionConst.walletIsLocked;
-    }
-
-    final keyBytes =
-        await _core._toWalletPassword(password, _wallet.checkSumBytes);
-    if (!BytesUtils.bytesEqual(keyBytes, _walletKey)) {
-      throw WalletExceptionConst.incorrectPassword;
-    }
-    return keyBytes;
+  void _expireCredential(WalletCredentialResponseVerify credential) {
+    _credentials.remove(credential.id);
   }
 
   /// change current wallet password.
-  /// - [password]: current password
   /// - [newPassword]: new wallet password.
-  Future<void> _changePassword(String password, String newPassword) async {
-    if (!StrUtils.isStrongPassword(newPassword)) {
-      throw WalletExceptionConst.incorrectPassword;
+  Future<void> _changePassword(
+      WalletCredentialResponseVerify credential, String newPassword) async {
+    if (!PasswordUtils.canUseAsPassword(newPassword)) {
+      throw WalletExceptionConst.passwordTooWeak;
     }
-    if (password == newPassword) {
-      throw WalletExceptionConst.passwordUsedBefore;
-    }
-    final keyBytes = await _validatePassword(password);
-    final newKey =
-        await _core._toWalletPassword(newPassword, _wallet.checkSumBytes);
-    final encrypt = await crypto.cryptoIsolateRequest(
-        CryptoRequestGenerateMasterKey.fromStorage(
-            storageData: _wallet.data, key: keyBytes, newKey: newKey));
-    _appChains.updateWalletData(_wallet.updateData(encrypt.storageData));
-    await _updateWallet();
-    _setDefaultPageStatus();
+    _getCachedCredPassword(credential);
+    await _callWalletInternal(
+        (WalletInMemoryData masterKey, List<int> memoryKey) async {
+      final encrypt = await crypto.walletArgs(
+          message: WalletRequestChangePassword(
+              newPassword: newPassword, checksum: _wallet.checkSumBytes),
+          masterKey: masterKey,
+          memoryKey: memoryKey);
+      return WalletInternalCallResponse(result: null, key: encrypt);
+    });
   }
 
   /// generate wallet backup
   /// - [type]: backup type (private keys, mnemonic or fully wallet backup)
-  /// - [password]: current wallet password
   Future<String> _generateWalletKeyBackup(
       {required String data,
       required WalletBackupTypes type,
-      required String password}) async {
+      required WalletCredentialResponseVerify credential}) async {
     if (type.isWalletBackup) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw WalletExceptionConst.invalidBackupOptions;
     }
-    final encrypt = await crypto.cryptoIsolateRequest(CryptoRequestEncodeBackup(
-        password: password,
-        backup: type.toEncryptionBytes(data),
-        encoding: type.encoding));
-    if (type == WalletBackupTypes.keystore) {
-      return encrypt;
-    }
-    final walletBackup = WalletKeyBackup(key: encrypt, type: type);
-    return walletBackup.toCbor().toCborHex();
+    _getCachedCredPassword(credential);
+    return _callWalletInternal(
+      (masterKey, memoryKey) async {
+        final encrypt = await crypto.walletArgs(
+            message: WalletRequestBackupKey(
+                backup: type.toEncryptionBytes(data), encoding: type.encoding),
+            masterKey: masterKey,
+            memoryKey: memoryKey);
+        if (type == WalletBackupTypes.keystore) {
+          return WalletInternalCallResponse(result: encrypt);
+        }
+        final walletBackup = WalletKeyBackup(key: encrypt, type: type);
+        return WalletInternalCallResponse(
+            result: walletBackup.toCbor().toCborHex());
+      },
+    );
   }
 
   /// generate fully wallet backup
-  /// -[password]: current wallet password
-  Future<String> _generateWalletBackup({
-    required String password,
-    required GenerateWalletBackupOptions options,
-  }) async {
-    final key = await _validatePassword(password);
-    final encrypt = await crypto.walletArgs(
-        message: WalletRequestBackupWallet(
-            key: password,
-            newPassword: options.newPassword,
-            passhrase: options.passphrase),
-        encryptedMasterKey: _massterKey!.masterKey,
-        key: key);
+  Future<String> _generateWalletBackup(
+      {required WalletCredentialResponseVerify credential,
+      required GenerateWalletBackupOptions options}) async {
+    _getCachedCredPassword(credential);
+    final checksum = QuickCrypto.generateRandom();
+    final encrypt = await _callWalletInternal(
+      (masterKey, memoryKey) async {
+        final result = await crypto.walletArgs(
+            memoryKey: memoryKey,
+            message: WalletRequestBackupWallet(
+              newPassword: options.newPassword,
+              passhrase: options.passphrase,
+              checksum: checksum,
+            ),
+            masterKey: masterKey);
+        return WalletInternalCallResponse(result: result);
+      },
+    );
     List<Web3ApplicationAuthentication> dapps = [];
     if (options.backupDapps) {
       dapps = await _getAllWeb3Authenticated();
     }
     final walletBackup = await _appChains.createBackup(
         masterKey: encrypt, options: options, web3Applications: dapps);
-    return walletBackup.toCbor().toCborHex();
+    return (await walletBackup.toCbor(checksum)).toCborHex();
   }
 
-  /// get access key
-  /// some operation required access key and need password like show private keys,
-  /// remove wallet, read mnemonic and ....
-  /// - [accsessType]: type of key to read.
-  /// - [account]: read account private key if provided.
-  /// - [keyId]: read imported private key if provided.
-  Future<List<CryptoKeyData>> _accsess(WalletAccsessType accsessType,
-      {ChainAccount? account, String? keyId}) async {
-    if (accsessType.isUnlock && _walletKey != null) {
-      return [FakeKeyData()];
-    }
-    if (accsessType.isAccsessKey && account == null && keyId == null) {
-      throw WalletException.invalidArgruments(["ChainAccount", "null"]);
-    }
-    if (accsessType.isAccsessKey) {
-      if (account != null) {
-        final indexes = account.accessKeysIndexes();
-        final accountKeys = await crypto.walletArgs(
-            message: WalletRequestReadPrivateKeys(
-                AccessCryptoPrivateKeysRequest(indexes
-                    .map((e) => AccessCryptoPrivateKeyRequest(index: e))
-                    .toList())),
-            key: _walletKey!,
-            encryptedMasterKey: _massterKey!.masterKey);
-        return accountKeys;
-      } else {
-        final importedKey = await crypto.walletArgs(
-            message: WalletRequestReadImportedKey(keyId!),
-            key: _walletKey!,
-            encryptedMasterKey: _massterKey!.masterKey);
-        return [importedKey];
+  Future<RESPONSE> _accsess<RESPONSE extends WalletCredentialResponse>(
+      WalletCredentialRequest<RESPONSE> request,
+      {String? password}) async {
+    return await _callWalletInternal(
+        (WalletInMemoryData masterKey, List<int> memoryKey) async {
+      if (request.credential.type == WalletCredentialType.login) {
+        return WalletInternalCallResponse(
+            result: WalletCredentialResponseLogin.instance as RESPONSE);
       }
-    } else if (accsessType.isAccessMnemonic) {
-      final mnemonic = await crypto.walletArgs(
-          message: WalletRequestReadMnemonic(),
-          key: _walletKey!,
-          encryptedMasterKey: _massterKey!.masterKey);
-      return [mnemonic];
-    } else {
-      return [FakeKeyData()];
-    }
+      Future<WalletCredentialResponseVerify> getVerifyCred() async {
+        final id = await crypto.generateHashString(
+            type: CryptoRequestHashingType.generateUuid);
+        return WalletCredentialResponseVerify(id);
+      }
+
+      final verify = await getVerifyCred();
+      WalletCredentialResponse? credential;
+      switch (request.credential.type) {
+        case WalletCredentialType.requirePassword:
+          if (password != null) {
+            credential = WalletCredentialResponseRequirePassword(id: verify);
+          }
+          break;
+        case WalletCredentialType.verify:
+          credential = verify;
+          break;
+        case WalletCredentialType.mnemonic:
+          if (password != null) {
+            final mnemonic = await crypto.walletArgs(
+                memoryKey: memoryKey,
+                message: WalletRequestReadMnemonic(),
+                masterKey: masterKey);
+            credential = WalletCredentialResponseMnemonic(
+                credential: mnemonic, id: verify);
+          }
+          break;
+        case WalletCredentialType.importedKey:
+          if (password != null) {
+            final keyRequest =
+                request.credential.cast<WalletCredentialImportedKey>();
+            final importedKey = await crypto.walletArgs(
+                memoryKey: memoryKey,
+                message: WalletRequestReadImportedKey(keyRequest.keyId),
+                masterKey: masterKey);
+            credential = WalletCredentialResponseImportedKey(
+                credential: importedKey, id: verify);
+          }
+          break;
+        case WalletCredentialType.accountKey:
+          if (password != null) {
+            final keyRequest =
+                request.credential.cast<WalletCredentialAccountKey>();
+            final indexes = keyRequest.account.accessKeysIndexes();
+            final accountKeys = await crypto.walletArgs(
+                memoryKey: memoryKey,
+                message: WalletRequestReadPrivateKeys(
+                    AccessCryptoPrivateKeysRequest(indexes
+                        .map((e) => AccessCryptoPrivateKeyRequest(index: e))
+                        .toList())),
+                masterKey: masterKey);
+            credential = WalletCredentialResponseAccountKey(
+                credentials: accountKeys, id: verify);
+          }
+          break;
+        default:
+          throw WalletExceptionConst.authFailed;
+      }
+      if (credential == null) {
+        throw WalletExceptionConst.authFailed;
+      }
+      _credentials[verify.id] = verify;
+      return WalletInternalCallResponse(result: credential as RESPONSE);
+    });
   }
 
   /// get address public key.
   /// does not work for multisig account.
   /// - [account]: account for retrive public key.
-  Future<List<CryptoPublicKeyData>> _getAccountPubKys(
+  Future<List<PublicKeyDerivationResult>> _getAccountPubKys(
       {required ChainAccount account}) async {
     final indexes = account.accessKeysIndexes();
-    final pubKeys = await crypto.walletArgs(
-        message: WalletRequestReadPublicKeys(AccessCryptoPrivateKeysRequest(
-            indexes
-                .map((e) => AccessCryptoPrivateKeyRequest(index: e))
-                .toList())),
-        key: _walletKey!,
-        encryptedMasterKey: _massterKey!.masterKey);
-    return pubKeys;
+    final pubKeys = await _callWalletInternal(
+      (WalletInMemoryData masterKey, List<int> memoryKey) async {
+        final result = await crypto.walletArgs(
+            memoryKey: memoryKey,
+            message: WalletRequestReadPublicKeys(AccessCryptoPrivateKeysRequest(
+                indexes
+                    .map((e) => AccessCryptoPrivateKeyRequest(index: e))
+                    .toList())),
+            masterKey: masterKey);
+        return WalletInternalCallResponse(result: result);
+      },
+    );
+    return List.generate(indexes.length, (i) {
+      final index = indexes[i];
+      final key = pubKeys[i];
+      String? walletName = _wallet.name;
+      if (index.subId != null) {
+        walletName = _wallet.getSubWallet(index.subId!)?.name;
+      }
+      return PublicKeyDerivationResult(
+          key: pubKeys[i],
+          index: index,
+          walletName: walletName,
+          viewKey: key.toViewKey);
+    });
   }
 
   /// get key index public key.
   Future<PublicKeyDerivationResult> _getKeyDerivationPublicKey(
       AddressDerivationIndex index) async {
-    // final indexes = account.accessKeysIndexes();
-    final pubKeys = await crypto.walletArgs(
-        message: WalletRequestReadPublicKeys(AccessCryptoPrivateKeysRequest(
-            [AccessCryptoPrivateKeyRequest(index: index)])),
-        key: _walletKey!,
-        encryptedMasterKey: _massterKey!.masterKey);
-    return PublicKeyDerivationResult(key: pubKeys.first, index: index);
+    final pubKeys = await _callWalletInternal(
+        (WalletInMemoryData masterKey, List<int> memoryKey) async {
+      final result = await crypto.walletArgs(
+          memoryKey: memoryKey,
+          message: WalletRequestReadPublicKeys(AccessCryptoPrivateKeysRequest(
+              [AccessCryptoPrivateKeyRequest(index: index)])),
+          masterKey: masterKey);
+      return WalletInternalCallResponse(result: result);
+    });
+    String? walletName = _wallet.name;
+    if (index.subId != null) {
+      walletName = _wallet.getSubWallet(index.subId!)?.name;
+    }
+    return PublicKeyDerivationResult(
+        key: pubKeys.first,
+        index: index,
+        walletName: walletName,
+        viewKey: pubKeys.first.toViewKey);
   }
 
   /// signing request
-  /// -[password]: required for protected wallet
   /// -[signers]: the key information for read.
   /// -[request]: callback method for provide message for signing
   Future<T> _signTransaction<T>(
-      {required String? password,
+      {required WalletCredentialResponseVerify? credential,
       required Set<AddressDerivationIndex> signers,
       required WalletSigningRequest<T> request,
       Duration? timeout}) async {
     if (_wallet.protectWallet) {
-      if (password == null) {
-        throw WalletExceptionConst.incorrectPassword;
+      if (credential == null) {
+        throw WalletExceptionConst.authFailed;
       }
-      await _validatePassword(password);
+      _getCachedCredPassword(credential);
     }
-
-    final sign = await request.sign((request) async {
-      if (!signers.contains(request.index)) {
-        throw WalletExceptionConst.notAuthorizedSigningAccount;
-      }
-      return await crypto.walletArgs(
-          message: WalletRequestSign(request),
-          encryptedMasterKey: _massterKey!.masterKey,
-          key: _walletKey!,
-          timeout: timeout);
-    });
-    return sign;
+    return await _callWalletInternal(
+      (WalletInMemoryData masterKey, List<int> memoryKey) async {
+        final sign = await request.sign((request) async {
+          if (!signers.contains(request.index)) {
+            throw WalletExceptionConst.notAuthorizedSigningAccount;
+          }
+          final result = await crypto.walletArgs(
+              memoryKey: memoryKey,
+              message: WalletRequestSign(request),
+              masterKey: masterKey,
+              timeout: timeout);
+          return result;
+        });
+        return WalletInternalCallResponse(result: sign);
+      },
+    );
   }
 
   /// find related imported key for coin
   /// -[derivationCoin]: find related imported key for this coin.
   List<EncryptedCustomKey> _getCustomKeysForCoin(CryptoCoins derivationCoin) {
     final List<EncryptedCustomKey> coins = [];
-    final customKeys = _massterKey!.customKeys;
+    final customKeys = _walletKey!.customKeys;
     for (final c in customKeys) {
       if (c.canUseFor(derivationCoin)) {
         coins.add(c);
@@ -290,27 +403,40 @@ mixin WalletManager on _WalletController {
 
   /// get imported keys details
   Future<List<EncryptedCustomKey>> _getImportedAccounts() async {
-    return List<EncryptedCustomKey>.from(_massterKey!.customKeys);
+    return List<EncryptedCustomKey>.from(_walletKey!.customKeys);
   }
 
   /// update wallet settings. like name, unlock time and security options
   /// -[walletInfos]: updated wallet information
-  /// -[password]: current wallet password
   Future<void> _updateWalletInfos(
       {required WalletUpdateInfosData walletInfos,
-      required String password}) async {
-    await _validatePassword(password);
+      required WalletCredentialResponseVerify credential}) async {
+    _getCachedCredPassword(credential);
     final requiredPassword = _wallet.requiredPassword;
-    final updatedWallet = _wallet.updateSettings(
-        newLockTime: walletInfos.lockTime,
-        reqPassword: walletInfos.requirmentPassword,
-        newName: walletInfos.name,
-        protectWallet: walletInfos.protectWallet);
-    _appChains.updateWalletData(updatedWallet);
-    await _updateWallet();
+    final updatedWallet = _wallet.updateSettings(update: walletInfos);
+    await _updateWallet(updatedWallet);
     if (!requiredPassword && _wallet.requiredPassword) {
       _setDefaultPageStatus();
     }
+  }
+
+  /// internal wallet request
+  /// this method get wallet keys and run the wallet request message.
+  Future<T> _walletRequest<T, A extends CborMessageResponseArgs>(
+      {required WalletArgsCompleter<T, A> message,
+      WalletInMemoryData? masterKey}) async {
+    if (masterKey != null) throw UnimplementedError();
+    return _callWalletInternal<T>(
+      (masterKey, memoryKey) async {
+        final result = await crypto.walletArgs<T, A>(
+            message: message, masterKey: masterKey, memoryKey: memoryKey);
+        return WalletInternalCallResponse<T>(result: result);
+      },
+    );
+    // return await crypto.walletArgs(
+    //   message: message,
+    //   masterKey: masterKey ?? _walletKey!.masterKey,
+    // );
   }
 
   /// update or import new network to wallet
@@ -323,7 +449,7 @@ mixin WalletManager on _WalletController {
   /// -[chain]: network for remove
   Future<void> _removeChain(Chain chain) async {
     await _appChains.removeChain(chain);
-    await _updateWallet();
+    await _updateWallet(_appChains.wallet);
   }
 
   /// update address balance
@@ -335,36 +461,34 @@ mixin WalletManager on _WalletController {
   }
 
   /// switch current wallet network
-  Future<void> _switchNetwork(Chain network) async {
+  Future<bool> _switchNetwork(Chain network) async {
     final change = await _appChains.switchNetwork(network);
     if (change) {
-      await _updateWallet();
+      await _updateWallet(_appChains.wallet);
     }
+    return change;
   }
 
   /// internal wallet call, to safty get wallet keys and process
-  Future<T?> _callWalletInternal<T>(
-      Future<T> Function(
-              {required List<int> masterKey, required List<int> wKey})
-          t) async {
-    final masterKey = _massterKey?.masterKey;
-    final wKey = _walletKey;
-    if (masterKey == null || wKey == null) {
-      return null;
+  Future<T> _callWalletInternal<T extends Object?>(
+      Future<WalletInternalCallResponse<T>> Function(
+              WalletInMemoryData masterKey, List<int> memoryKey)
+          t,
+      {bool updateWalletData = true}) async {
+    final masterKey = _walletKey?.masterKey;
+    final memoryKey = await _getMemoryKey();
+    if (masterKey == null) {
+      throw WalletExceptionConst.walletIsLocked;
     }
-    return t(masterKey: masterKey, wKey: wKey);
-  }
-
-  /// internal wallet request
-  /// this method get wallet keys and run the wallet request message.
-  Future<T> _walletRequest<T, A extends CborMessageResponseArgs>(
-      {required WalletArgsCompleter<T, A> message,
-      List<int>? masterkey,
-      List<int>? walletKey}) async {
-    return await crypto.walletArgs(
-        message: message,
-        encryptedMasterKey: masterkey ?? _massterKey!.masterKey,
-        key: walletKey ?? _walletKey!);
+    final result = await t(masterKey, memoryKey);
+    final key = result.key;
+    if (key != null) {
+      if (updateWalletData) {
+        await _updateWallet(_wallet.updateData(key.storageDataB64()));
+      }
+      _walletKey = key;
+    }
+    return result.result;
   }
 
   /// clear account when removing imported key
@@ -373,19 +497,78 @@ mixin WalletManager on _WalletController {
   Future<void> _cleanUpdateRemovedKeyAccounts(String removedKey) async {
     final chains = _appChains.chains();
     for (final chain in chains) {
-      final addresses = chain.addresses.clone();
+      final addresses = await chain.getAccountAddresses();
       for (final address in addresses) {
         final keyIndexes = address.signerKeyIndexes();
-        if (keyIndexes
-            .any((e) => e.isImportedKey && e.importedKeyId == removedKey)) {
+        if (keyIndexes.any((e) => e.importedKeyId == removedKey)) {
           await chain.removeAccount(address);
         }
       }
     }
   }
 
+  Future<void> _cleanUpdateRemovedSubWalletAccounts(int subWalletId) async {
+    final chains = _appChains.chains();
+    for (final chain in chains) {
+      final addresses = await chain.getAccountAddresses();
+      for (final address in addresses) {
+        final keyIndexes = address.signerKeyIndexes();
+        if (keyIndexes.any((e) => e.subId == subWalletId)) {
+          await chain.removeAccount(address);
+        }
+      }
+    }
+  }
+
+  ///
+
+  Future<void> _setupSubWallet(WalletImportSubWalletData subWalletData) async {
+    await _callWalletInternal(
+      (WalletInMemoryData masterKey, List<int> memoryKey) async {
+        final result = await crypto.walletArgs(
+            message: WalletRequestImportSubWallet(
+                mnemonic: subWalletData.mnemonic,
+                passphrase: subWalletData.passphrase,
+                type: subWalletData.type),
+            masterKey: masterKey,
+            memoryKey: memoryKey);
+        if (subWalletData.mainWalletId != _wallet.id) {
+          throw WalletExceptionConst.incorrectWalletData;
+        }
+        final updatedWallet = _wallet.addNewSubWallet(
+            name: subWalletData.name,
+            type: subWalletData.type,
+            data: result.masterKey.storageDataB64(),
+            subWalletId: result.subWalletId);
+        await _updateWallet(updatedWallet);
+        return WalletInternalCallResponse(result: null, key: result.masterKey);
+      },
+    );
+  }
+
+  Future<void> _removeSubWallet(
+      {required WalletCredentialResponseVerify credential,
+      required int subWalletId}) async {
+    if (!_credentials.containsKey(credential.id)) {
+      throw WalletExceptionConst.authFailed;
+    }
+    MainWallet updatedWallet = _wallet.removeSubWallet(subWalletId);
+    await _cleanUpdateRemovedSubWalletAccounts(subWalletId);
+    await _updateWallet(updatedWallet);
+    await _callWalletInternal(
+      (WalletInMemoryData masterKey, List<int> memoryKey) async {
+        final result = await crypto.walletArgs(
+            message: WalletRequestRemoveSubWallet(id: subWalletId),
+            masterKey: masterKey,
+            memoryKey: memoryKey);
+        return WalletInternalCallResponse(result: null, key: result);
+      },
+    );
+  }
+
   /// init the wallet
   Future<void> _onInitController() async {
+    _setDefaultPageStatus();
     await _appChains.init();
   }
 

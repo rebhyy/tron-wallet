@@ -27,6 +27,7 @@ final class PrivateKeyData extends CryptoPrivateKeyData {
       required String keyName}) {
     final wifKey =
         CryptoKeyUtils.toWif(privateKey: account.privateKey.raw, coin: coin);
+
     return PrivateKeyData.__(
         privateKey: account.privateKey.toHex(),
         extendedKey: account.privateKey.toExtended,

@@ -5,8 +5,7 @@ import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/control
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/widgets/ibc.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/cosmos/cosmos.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 
 class CosmosTransactionIbcTransferOperation

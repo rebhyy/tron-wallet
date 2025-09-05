@@ -43,9 +43,10 @@ class _RippleKeyConversionView extends StatefulWidget {
 }
 
 class __RippleKeyConversionViewState extends State<_RippleKeyConversionView>
-    with SafeState {
+    with
+        SafeState<_RippleKeyConversionView>,
+        ProgressMixin<_RippleKeyConversionView> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
   final GlobalKey<AppTextFieldState> keyController =
       GlobalKey<AppTextFieldState>(
           debugLabel: "__RippleKeyConversionViewState");
@@ -96,7 +97,7 @@ class __RippleKeyConversionViewState extends State<_RippleKeyConversionView>
               (element) => element.conf.type == key.algorithm.curveType));
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr, backToIdle: true);
+      progressKey.errorText(result.localizationError, backToIdle: true);
     } else {
       generatedKey = result.result;
       progressKey.success();
@@ -119,10 +120,9 @@ class __RippleKeyConversionViewState extends State<_RippleKeyConversionView>
       child: Form(
         key: formKey,
         autovalidateMode: AutovalidateMode.onUserInteraction,
-        child: PageProgress(
-          key: progressKey,
-          backToIdle: APPConst.oneSecoundDuration,
-          child: (context) => UnfocusableChild(
+        child: StreamPageProgress(
+          controller: progressKey,
+          builder: (context) => UnfocusableChild(
             child: CustomScrollView(
               slivers: [
                 SliverConstraintsBoxView(

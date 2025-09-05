@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
-import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
@@ -22,7 +21,8 @@ class SwapTransactionStateController extends StateController {
   List<ChainAccount> get sources => route.sources;
   ReceiptAddress get destAddress => route.destAddress;
   final _lock = SynchronizedLock();
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController();
   TransactionOperationStep? _step;
   TransactionOperationStep? get step => _step;
 
@@ -272,12 +272,18 @@ class SwapTransactionStateController extends StateController {
       });
       if (r.hasError) {
         _step = null;
-        _latestError = r.error!.tr;
+        _latestError = r.localizationError;
       }
       allowPop = true;
       notify();
       onstatus.close();
     });
+  }
+
+  @override
+  void close() {
+    super.close();
+    progressKey.dispose();
   }
 }
 

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/network/import/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/pages/import_network.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/exception.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/params/models/add_eth_chain.dart';
 
@@ -34,7 +32,7 @@ class Web3EthereumImportNetworkStateController
           response: newNetwork.coinParam.chainId.toRadix16);
     });
     if (result.hasError) {
-      throw Web3InternalError(result.error!.tr);
+      throw AppException(result.message!);
     }
     return result.result;
   }

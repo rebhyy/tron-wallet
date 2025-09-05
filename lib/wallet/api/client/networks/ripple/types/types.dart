@@ -1,3 +1,5 @@
+import 'package:xrpl_dart/xrpl_dart.dart';
+
 class XRPLMetaTokenInfo {
   final String? desc;
   final String? icon;
@@ -145,4 +147,22 @@ class XRPLMetaAsset {
         meta: XRPLMetaIssuerMeta.fromJson(json['meta']),
         metrics: XRPLMetaIssuerMetrics.fromJson(json['metrics']),
       );
+}
+
+class XRPLAccountTx {
+  final BaseTransactionWithInfoResult transaction;
+  final DateTime? ledgerTime;
+  final String txId;
+  const XRPLAccountTx(
+      {required this.transaction,
+      required this.ledgerTime,
+      required this.txId});
+}
+
+class XRPLAccountTxs {
+  final XRPAddress address;
+  final List<XRPLAccountTx> txes;
+  final int latestLedger;
+  XRPLAccountTxs(
+      {required this.txes, required this.latestLedger, required this.address});
 }

@@ -34,9 +34,11 @@ class _SolanaConversionView extends StatefulWidget {
 }
 
 class __SolanaKeyConversionViewState extends State<_SolanaConversionView>
-    with SafeState<_SolanaConversionView> {
+    with
+        SafeState<_SolanaConversionView>,
+        ProgressMixin<_SolanaConversionView> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  // final GlobalKey<PageProgressState> progressKey = GlobalKey();
   final GlobalKey<AppTextFieldState> keyController =
       GlobalKey<AppTextFieldState>(
           debugLabel: "__SolanaKeyConversionViewState");
@@ -71,7 +73,7 @@ class __SolanaKeyConversionViewState extends State<_SolanaConversionView>
           privateKey: key.seedBytes(), coin: widget.network.coins.first);
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr, backToIdle: true);
+      progressKey.errorText(result.localizationError, backToIdle: true);
     } else {
       generatedKey = result.result;
       progressKey.success();
@@ -91,10 +93,9 @@ class __SolanaKeyConversionViewState extends State<_SolanaConversionView>
     return PopScope(
       canPop: generatedKey == null,
       onPopInvokedWithResult: onBackButton,
-      child: PageProgress(
-        key: progressKey,
-        backToIdle: APPConst.oneSecoundDuration,
-        child: (context) => Form(
+      child: StreamPageProgress(
+        controller: progressKey,
+        builder: (context) => Form(
           key: formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction,
           child: UnfocusableChild(

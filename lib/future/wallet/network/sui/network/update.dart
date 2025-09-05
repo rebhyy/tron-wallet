@@ -30,7 +30,6 @@ class _UpdateSuiProvider extends StatefulWidget {
 class _UpdateSuiProviderState extends State<_UpdateSuiProvider>
     with
         SafeState<_UpdateSuiProvider>,
-        ProgressMixin<_UpdateSuiProvider>,
         UpdateNetworkProviderState<_UpdateSuiProvider, SuiAPIProvider,
             SuiAddress, ISuiAddress, SuiClient, TokenCore, NFTCore, SuiChain> {
   @override
@@ -67,7 +66,7 @@ class _UpdateSuiProviderState extends State<_UpdateSuiProvider>
         provider: provider, network: network.toNetwork());
     final init = await client.init();
     if (!init) {
-      throw WalletException("network_genesis_hash_validator");
+      throw AppException("network_genesis_hash_validator");
     }
     return provider;
   }

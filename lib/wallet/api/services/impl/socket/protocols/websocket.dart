@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:blockchain_utils/utils/utils.dart';
+import 'package:on_chain_wallet/app/error/exception/exception.dart';
 import 'package:on_chain_wallet/app/synchronized/basic_lock.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/app/websocket/core/core.dart';
@@ -72,8 +73,7 @@ class WebSocketService<T extends APIProvider> extends BaseSocketService<T> {
             _socket?.stream.cast<String>().listen(onMessge, onDone: _onClose);
       } else {
         _status = SocketStatus.disconnect;
-
-        throw result.exception!;
+        throw ApiProviderExceptionConst.socketConnectingFailed;
       }
     });
   }

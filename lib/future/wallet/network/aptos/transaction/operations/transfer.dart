@@ -7,7 +7,7 @@ import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/controll
 import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/models/networks/aptos/models/types.dart';
 
 class AptosTransactionTransferOperation

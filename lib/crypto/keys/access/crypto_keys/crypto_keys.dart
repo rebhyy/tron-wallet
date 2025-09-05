@@ -1,7 +1,7 @@
+import 'package:blockchain_utils/bip/mnemonic/mnemonic_utils.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:on_chain_wallet/app/error/exception.dart';
-import 'package:on_chain_wallet/app/euqatable/equatable.dart';
-import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
+import 'package:blockchain_utils/signer/types/types.dart';
+import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/coins/coins.dart';
 import 'package:on_chain_wallet/crypto/constant/tags.dart';
 import 'package:on_chain_wallet/crypto/utils/crypto/utils.dart';

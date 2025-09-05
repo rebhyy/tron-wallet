@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/api/api.dart';
 import 'package:ton_dart/ton_dart.dart';
 import 'fee.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'signer.dart';
 
 abstract class TonTransactionStateController2
@@ -109,7 +108,7 @@ abstract class TonTransactionStateController2
     await super.initForm(client, updateAccount: updateAccount);
     final state = await getAccountState(walletContract);
     if (state.state.isFrozen) {
-      throw WalletException("ton_address_is_freez_desc");
+      throw AppException("ton_address_is_freez_desc");
     }
   }
 }

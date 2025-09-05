@@ -4,7 +4,7 @@ final class PublicKeyData extends CryptoPublicKeyData {
   @override
   final String keyName;
 
-  const PublicKeyData.__(
+  PublicKeyData.__(
       {required super.extendedKey,
       required super.comprossed,
       required super.uncomprossed,

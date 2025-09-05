@@ -7,8 +7,7 @@ import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/client/ether
 import 'package:on_chain_wallet/wallet/api/client/networks/tron/tron.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/tron.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/networks.dart';
 import 'package:on_chain_wallet/wallet/models/token/token.dart';
@@ -116,7 +115,7 @@ class TronClient extends NetworkClient<TronWalletTransaction, TronAPIProvider,
             callTokenValue: callTokenValue,
             tokenId: tokenID));
     if (!energyRequired.isSuccess) {
-      throw ApiProviderException.error(
+      throw ApiProviderException.message(
           energyRequired.error ?? 'fee_estimate_failed');
     }
     return energyRequired.energyUsed!;
@@ -137,7 +136,7 @@ class TronClient extends NetworkClient<TronWalletTransaction, TronAPIProvider,
             callTokenValue: callTokenValue,
             tokenId: tokenID));
     if (!energyRequired.isSuccess) {
-      throw ApiProviderException.error(
+      throw ApiProviderException.message(
           energyRequired.error ?? 'fee_estimate_failed');
     }
     return energyRequired.energyUsed!;

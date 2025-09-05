@@ -29,8 +29,10 @@ class ElectrumAPIProvider extends BaseBitcoinAPIProvider {
 
   factory ElectrumAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.electrumApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.electrumApiServiceProvider);
     return ElectrumAPIProvider._(
         url: values.elementAs(0),
         protocol: ServiceProtocol.fromID(values.elementAs(1)),

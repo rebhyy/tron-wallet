@@ -8,8 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/control
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/widgets/account_set/account_set.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/ripple.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 class RippleTransactionAccountSetOperation
@@ -170,7 +169,7 @@ class RippleTransactionAccountSetOperation
       domain:
           domain.hasValue ? QuickBytesUtils.ensureIsHex(domain.value!) : null,
       emailHash: email.hasValue
-          ? QuickBytesUtils.ensureHexWithLength(
+          ? QuickBytesUtils.stringToHexWithLength(
               email.value!, RippleConst.maxEmailHashLength)
           : null,
       fee: txFee.fee.fee.balance,

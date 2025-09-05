@@ -1,5 +1,4 @@
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/string.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/substrate/models/metadata_fields.dart';
@@ -10,8 +9,6 @@ mixin SubstrateTransactionFeeController on SubstrateTransactionApiController {
   WalletSubstrateNetwork get network;
   final Cancelable _cancelable = Cancelable();
   final _lock = SynchronizedLock();
-  // SubstrateTransactionFee get _defaultFee =>
-  //  ;
 
   late final SubstrateTransactionFeeData txFee = SubstrateTransactionFeeData(
       select: SubstrateTransactionFee.init(network), feeToken: network.token);
@@ -38,7 +35,7 @@ mixin SubstrateTransactionFeeController on SubstrateTransactionApiController {
       final fee = await MethodUtils.call(() async => await simulateFee());
       if (fee.isCancel) return;
       if (fee.hasError) {
-        setDefaultFee(error: fee.error!.tr);
+        setDefaultFee(error: fee.localizationError);
         return;
       }
       txFee.setFee(fee.result);

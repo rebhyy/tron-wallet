@@ -20,8 +20,10 @@ class SolanaAPIProvider extends APIProvider {
 
   factory SolanaAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.solApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.solApiServiceProvider);
     return SolanaAPIProvider(
         httpNodeUri: values.elementAs(0),
         auth: values.elemetMybeAs<ProviderAuthenticated, CborTagValue>(

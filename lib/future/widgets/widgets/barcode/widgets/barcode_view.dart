@@ -32,10 +32,7 @@ class _BarcodeImageViewState extends State<BarcodeImageView>
     buttonState.process();
     try {
       final toFile = await QrUtils.qrCodeToFile(
-        data: widget.data,
-        uderImage: '',
-        color: context.theme.colorScheme,
-      );
+          data: widget.data, uderImage: '', color: context.theme.colorScheme);
 
       if (!context.mounted) return;
       await ShareUtils.shareFile(toFile!.$1, toFile.$2,

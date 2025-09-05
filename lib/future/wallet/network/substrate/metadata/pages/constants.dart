@@ -3,8 +3,7 @@ import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/substrate/client/substrate.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 
 class SubstrateMetadataConstantsView extends StatelessWidget {
@@ -49,7 +48,8 @@ class _SubstrateMetadataConstantsWidgetState
   @override
   SubstrateClient get client => widget.client;
   late final List<PalletInfo> contantsPallets;
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   Map<PalletInfo, Text> items = {};
   late PalletInfo pallet;
   void onChangePallet(PalletInfo? pallet) {
@@ -71,16 +71,20 @@ class _SubstrateMetadataConstantsWidgetState
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   SubstrateChain get account => widget.account;
   @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      initialStatus: StreamWidgetStatus.progress,
+    return StreamPageProgress(
+      controller: progressKey,
       initialWidget:
           ProgressWithTextView(text: 'retrieving_constants_please_wait'.tr),
-      child: (context) {
+      builder: (context) {
         return CustomScrollView(
           controller: widget.scrollController,
           slivers: [

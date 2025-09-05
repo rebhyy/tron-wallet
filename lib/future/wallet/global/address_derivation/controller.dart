@@ -13,35 +13,29 @@ class AddressDerivationController extends StateController {
   final Chain chain;
   final WalletProvider wallet;
   WalletNetwork get network => chain.network;
-  final GlobalKey<PageProgressState> pageProgressKey =
-      GlobalKey<PageProgressState>(debugLabel: "AddressDerivationController");
+  final StreamPageProgressController pageProgressKey =
+      StreamPageProgressController();
   final GlobalKey<FormState> form = GlobalKey<FormState>();
   List<CryptoCoins> get coins => network.coins;
   CryptoCoins get coin => coins.first;
 
-  Future<AddressDerivationIndex?> getCoin({
-    required BuildContext context,
-    required SeedTypes seedGeneration,
-    CryptoCoins? selectedCoins,
-  }) async {
+  Future<AddressDerivationIndex?> getCoin(
+      {required BuildContext context,
+      required SeedTypes seedGeneration,
+      required CryptoCoins selectedCoins,
+      ADDRESSDNEXTDERIVATION? nextAddressDerivationBuilder}) async {
     if (!form.ready()) return null;
-    if (selectedCoins != null) {
-      if (!coins.contains(selectedCoins)) {
-        throw WalletExceptionConst.invalidCoin;
-      }
+    if (!coins.contains(selectedCoins)) {
+      throw AppCryptoExceptionConst.invalidCoin;
     }
-
-    final defaultCoin = selectedCoins ?? coin;
-    final customKeys = await wallet.wallet.getCustomKeysForCoin(defaultCoin);
-    final activeCoins = selectedCoins != null ? [selectedCoins] : coins;
     return await context.openMaxExtendSliverBottomSheet<AddressDerivationIndex>(
         "setup_derivation".tr,
-        child: SetupDerivationModeView(
-            coin: defaultCoin,
+        bodyBuilder: (controller) => SetupDerivationModeView(
+            coin: selectedCoins,
+            controller: controller,
             chainAccout: chain,
-            customKeys: customKeys,
-            networkCoins: activeCoins,
-            seedGenerationType: seedGeneration));
+            seedGenerationType: seedGeneration,
+            nextAddressDerivationBuilder: nextAddressDerivationBuilder));
   }
 
   Future<void> generateAddress(NewAccountParams newAccount) async {
@@ -50,7 +44,7 @@ class AddressDerivationController extends StateController {
     final result = await wallet.wallet
         .deriveNewAccount(newAccountParams: newAccount, chain: chain);
     if (result.hasError) {
-      pageProgressKey.errorText(result.error!.tr);
+      pageProgressKey.errorText(result.localizationError);
     } else {
       pageProgressKey.success(
           backToIdle: false,
@@ -65,5 +59,11 @@ class AddressDerivationController extends StateController {
               text: "address_added_success".tr));
     }
     notify();
+  }
+
+  @override
+  void close() {
+    super.close();
+    pageProgressKey.dispose();
   }
 }

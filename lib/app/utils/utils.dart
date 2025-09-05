@@ -4,6 +4,7 @@ export 'uri/utils.dart';
 export 'method/utiils.dart';
 export 'share/utils.dart';
 export 'string/utils.dart';
+export 'string/password.dart';
 export 'platform/utils.dart';
 export 'extensions/numbers.dart';
 export 'list/extension.dart';

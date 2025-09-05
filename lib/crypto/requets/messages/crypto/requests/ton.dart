@@ -1,4 +1,6 @@
 import 'package:blockchain_utils/bip/bip/conf/core/coins.dart';
+import 'package:blockchain_utils/bip/mnemonic/mnemonic.dart';
+import 'package:blockchain_utils/bip/ton/mnemonic/ton_mnemonic_validator.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
@@ -86,7 +88,7 @@ class TonMnemonicToPrivateKeyMessage
 }
 
 class TonMenmonicGenerateMessage
-    extends CryptoRequest<String, MessageArgsOneBytes> {
+    extends CryptoRequest<Mnemonic, MessageArgsOneBytes> {
   final String? password;
   final int wordsNum;
   const TonMenmonicGenerateMessage(
@@ -117,16 +119,70 @@ class TonMenmonicGenerateMessage
     final mnemonic =
         TonUtils.generateTonMnemonic(wordsNum: wordsNum, password: password);
 
-    return MessageArgsOneBytes(keyOne: StringUtils.encode(mnemonic));
+    return MessageArgsOneBytes(keyOne: StringUtils.encode(mnemonic.toStr()));
   }
 
   @override
-  String parsResult(MessageArgsOneBytes result) {
-    return StringUtils.decode(result.keyOne);
+  Mnemonic parsResult(MessageArgsOneBytes result) {
+    return Mnemonic.fromString(StringUtils.decode(result.keyOne));
   }
 
   @override
-  String result() {
+  Mnemonic result() {
     return TonUtils.generateTonMnemonic(wordsNum: wordsNum, password: password);
+  }
+}
+
+class TonMnemonicValidateMessage
+    extends CryptoRequest<bool, MessageArgsOneBytes> {
+  final String mnemonic;
+  final String? password;
+  const TonMnemonicValidateMessage._(
+      {required this.mnemonic, required this.password});
+
+  factory TonMnemonicValidateMessage(
+      {required String mnemonic, String? password}) {
+    return TonMnemonicValidateMessage._(mnemonic: mnemonic, password: password);
+  }
+  factory TonMnemonicValidateMessage.deserialize(
+      {List<int>? bytes, CborTagValue? object}) {
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: object,
+        tags: CryptoRequestMethod.tonMnemonicValidate.tag);
+    return TonMnemonicValidateMessage(
+        mnemonic: values.valueAs(0), password: values.valueAs(1));
+  }
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborSerializable.fromDynamic(
+            [mnemonic, password ?? const CborNullValue()]),
+        method.tag);
+  }
+
+  @override
+  MessageArgsOneBytes getResult() {
+    return MessageArgsOneBytes.fromBool(result());
+  }
+
+  @override
+  bool parsResult(MessageArgsOneBytes result) {
+    return result.asBoolean();
+  }
+
+  @override
+  CryptoRequestMethod get method => CryptoRequestMethod.tonMnemonicValidate;
+
+  @override
+  bool result() {
+    try {
+      TomMnemonicValidator()
+          .validate(Mnemonic.fromString(mnemonic), password: password ?? "");
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

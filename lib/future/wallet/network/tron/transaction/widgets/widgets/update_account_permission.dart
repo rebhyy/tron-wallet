@@ -233,7 +233,7 @@ class _EditPermissionView extends StatelessWidget {
                     FixedElevatedButton.icon(
                       onPressed: form.onSavePermission,
                       activePress: validator.error == null,
-                      label: Text("Update permission".tr),
+                      label: Text("update_permission".tr),
                       icon: const Icon(Icons.save),
                     ),
                     if (permission.isActivePermission) ...[

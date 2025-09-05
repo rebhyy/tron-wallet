@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/sui/models/types.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/sui.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
 import 'package:on_chain_wallet/wallet/constant/constant.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/network/params/sui.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
@@ -39,7 +39,7 @@ class SuiClient extends NetworkClient<SuiWalletTransaction, SuiAPIProvider,
     final r = await provider.request(SuiRequestDryRunTransactionBlock(
         txBytes: transaction.toVariantBcsBase64()));
     if (r.effects.status.status != SuiApiExecutionStatusType.success) {
-      throw WalletException(
+      throw ApiProviderException.message(
           r.effects.status.error ?? "transaction_simulation_failed");
     }
     return r.effects.gasUsed;
@@ -201,33 +201,6 @@ class SuiClient extends NetworkClient<SuiWalletTransaction, SuiAPIProvider,
     final r = await getAccountCoins(address);
     _cachedAccountCoins[address] = SuiCachedAccountCoins(r);
     return _cachedAccountCoins[address]!.coinData;
-  }
-
-  Future<SuiTransactionDataV1> filledGasPayment(
-      SuiTransactionDataV1 transaction) async {
-    List<SuiApiCoinResponse> coins =
-        await getCachedAccountCoins(transaction.gasData.owner);
-    coins = coins
-        .where((e) => e.coinType == SuiTransactionConst.suiTypeArgs)
-        .toList();
-
-    final kind =
-        transaction.kind.cast<SuiTransactionKindProgrammableTransaction>();
-    final ownedObjectAddresses = kind.transaction.inputs
-        .whereType<SuiCallArgObject>()
-        .map((e) => e.object)
-        .whereType<SuiObjectArgImmOrOwnedObject>()
-        .map((e) => e.immOrOwnedObject.address);
-
-    final filterCoins = coins
-        .where((e) => !ownedObjectAddresses.contains(e.coinObjectId))
-        .map((e) => e.toObjectRef())
-        .toList();
-    if (filterCoins.isEmpty) {
-      throw WalletException("leak_of_gas_token_desc");
-    }
-    return transaction.copyWith(
-        gasData: transaction.gasData.copyWith(payment: filterCoins));
   }
 
   Future<bool> validateNetworkIdentifier() async {

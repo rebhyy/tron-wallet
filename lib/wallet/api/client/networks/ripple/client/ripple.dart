@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:blockchain_utils/exception/exceptions.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ripple/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ripple/types/types.dart';
@@ -16,10 +16,12 @@ import 'package:on_chain_wallet/wallet/models/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/xrp.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class _RippleApiProviderConst {
   static const int accountNotFound = 19;
+  static const int avarageDayLedger = 200000;
+  static const int rippleEpochTime = 946684800;
 }
 
 class XRPClient extends NetworkClient<XRPWalletTransaction, RippleAPIProvider,
@@ -50,17 +52,61 @@ class XRPClient extends NetworkClient<XRPWalletTransaction, RippleAPIProvider,
     return index;
   }
 
-  Future<List<XRPIssueToken>> getAddressTokens(XRPAddress address) async {
-    return await provider.request(XRPRPCFetchTokens(account: address.address));
-  }
-
   Future<SimulateResult> simulateTx(SubmittableTransaction transaction) async {
     return await provider
         .request(XRPRequestSimulateTx(txBlob: transaction.toTransactionBlob()));
   }
 
   Future<List<XRPIssueToken>> getAccountTokens(XRPAddress address) async {
-    return await provider.request(XRPRPCFetchTokens(account: address.address));
+    return await provider.request(XRPRPCFetchTokens(account: address));
+  }
+
+  Future<int> getCurrentLedger() async {
+    return await provider.request(XRPRequestLedgerCurrent());
+  }
+
+  Future<int> getLedgerDateTime(int index) async {
+    final ledger = await provider.request(
+        XRPRequestLedger(ledgerIndex: XRPLLedgerIndex.index(index.toString())));
+    return ledger.closeTime;
+  }
+
+  Future<XRPLAccountTxs> getAccountTxes(
+      {required XRPAddress address, int? ledger}) async {
+    dynamic marker;
+    if (ledger == null) {
+      final current = await getCurrentLedger();
+      ledger = current - _RippleApiProviderConst.avarageDayLedger;
+      assert(ledger > 0);
+    }
+    List<XRPLAccountTx> transactions = [];
+    int ledgerIndexMax = ledger;
+    while (true) {
+      final txes = await provider.request(XRPRequestAccountTx(
+          account: address.address,
+          binary: false,
+          ledgerIndexMin: ledger,
+          marker: marker));
+      ledgerIndexMax = txes.ledgerIndexMax;
+      for (final i in txes.transactions) {
+        if (i.txJson == null) continue;
+        final validate = i.validated ?? false;
+        final int? date = i.txJson!.date;
+        assert(i.txJson?.hash != null);
+        if (validate && date == null || i.txJson!.hash == null) continue;
+        transactions.add(XRPLAccountTx(
+            transaction: i.txJson!,
+            txId: i.txJson!.hash!,
+            ledgerTime: date == null
+                ? null
+                : DateTimeUtils.fromSecondsSinceEpoch(
+                    date + _RippleApiProviderConst.rippleEpochTime)));
+      }
+      if (txes.marker == null) break;
+      marker = txes.marker;
+    }
+    return XRPLAccountTxs(
+        txes: transactions, latestLedger: ledgerIndexMax, address: address);
   }
 
   Future<XRPAccountObjectEntry?> getAccountSignerList(String address) async {
@@ -101,7 +147,7 @@ class XRPClient extends NetworkClient<XRPWalletTransaction, RippleAPIProvider,
 
   Future<List<RippleIssueToken>> accountTokens(IXRPAddress address) async {
     final tokens = await provider
-        .request(XRPRPCFetchTokens(account: address.address.toAddress));
+        .request(XRPRPCFetchTokens(account: address.networkAddress));
     return tokens
         .map((e) => RippleIssueToken.create(
             balance: e.balance,
@@ -112,8 +158,8 @@ class XRPClient extends NetworkClient<XRPWalletTransaction, RippleAPIProvider,
   }
 
   Future<List<RippleIssueToken>> _accountTokens(XRPAddress address) async {
-    final tokens =
-        await provider.request(XRPRPCFetchTokens(account: address.address));
+    final tokens = await provider
+        .request(XRPRPCFetchTokens(account: address, allowObligations: false));
     return tokens
         .map((e) => RippleIssueToken.create(
             balance: e.balance,

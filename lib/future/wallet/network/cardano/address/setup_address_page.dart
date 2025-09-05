@@ -54,7 +54,7 @@ enum _AdaEra {
 
   CryptoCoins getRelatedByronLegacy(WalletCardanoNetwork network) {
     if (isShelly) {
-      throw WalletException.invalidArgruments(["byron", "shelly"]);
+      throw AppExceptionConst.internalError("getRelatedByronLegacy");
     }
     if (network.coinParam.mainnet) {
       return CustomCoins.byronLegacy;
@@ -92,8 +92,8 @@ class SetupCardanoAddressView extends StatefulWidget {
 
 class _SetupCardanoAddressViewState extends State<SetupCardanoAddressView>
     with SafeState {
-  final GlobalKey<PageProgressState> pageProgressKey =
-      GlobalKey<PageProgressState>(debugLabel: "_SetupCardanoAddressViewState");
+  final StreamPageProgressController pageProgressKey =
+      StreamPageProgressController();
   final GlobalKey visibleGenerateAddress =
       GlobalKey(debugLabel: "_SetupCardanoAddressViewState_visibleContinue");
   final GlobalKey visibleXAddressDetails =
@@ -256,16 +256,14 @@ class _SetupCardanoAddressViewState extends State<SetupCardanoAddressView>
     final result = await MethodUtils.call(() async {
       pageProgressKey.progressText("generating_new_addr".tr);
       final model = context.watch<WalletProvider>(StateConst.main);
-      final customKeys = await model.wallet.getCustomKeysForCoin(coin);
-
       Bip32AddressIndex? keyIndex =
           await context.openMaxExtendSliverBottomSheet<Bip32AddressIndex>(
               "setup_derivation".tr,
-              child: SetupDerivationModeView(
+              bodyBuilder: (controller) => SetupDerivationModeView(
                   coin: coin,
                   chainAccout: chainAccount,
-                  customKeys: customKeys,
-                  seedGenerationType: seedGenerationType));
+                  seedGenerationType: seedGenerationType,
+                  controller: controller));
       if (keyIndex == null) {
         return null;
       }
@@ -279,17 +277,18 @@ class _SetupCardanoAddressViewState extends State<SetupCardanoAddressView>
         stakeDerivation =
             await context.openMaxExtendSliverBottomSheet<Bip32AddressIndex>(
                 "setup_derivation".tr,
-                child: SetupDerivationModeView(
-                    coin: coin,
-                    chainAccout: chainAccount,
-                    customKeys: customKeys,
-                    seedGenerationType: seedGenerationType,
-                    defaultDerivation: defaultStakeKey));
+                bodyBuilder: (controller) => SetupDerivationModeView(
+                      coin: coin,
+                      chainAccout: chainAccount,
+                      seedGenerationType: seedGenerationType,
+                      defaultDerivation: defaultStakeKey,
+                      controller: controller,
+                    ));
         if (stakeDerivation == null) return null;
         stakeDerivation = stakeDerivation.copyWith(keyName: "stake_key");
       }
       if (addrType == ADAAddressType.base && keyIndex == stakeDerivation) {
-        throw WalletException("ada_base_stake_key_same_error");
+        throw AppException("ada_base_stake_key_same_error");
       }
       String? hdPath;
       List<int>? hdPathKey;
@@ -298,7 +297,7 @@ class _SetupCardanoAddressViewState extends State<SetupCardanoAddressView>
           hdPath = CryptoKeyUtils.validateHdPathKey(manuallyHdPath!,
               maxIndex: BlockchainConst.maxByronLegacyBip32LevelIndex);
           if (hdPath == null) {
-            throw WalletException("invalid_hd_wallet_derivation_path");
+            throw AppException("invalid_hd_wallet_derivation_path");
           }
           hdPathKey = BytesUtils.tryFromHexString(manuallyHdPathKey!);
         } else {
@@ -322,7 +321,7 @@ class _SetupCardanoAddressViewState extends State<SetupCardanoAddressView>
     });
 
     if (result.hasError) {
-      pageProgressKey.errorText(result.error!.tr);
+      pageProgressKey.errorText(result.localizationError);
     } else if (result.result == null) {
       pageProgressKey.backToIdle();
     } else {
@@ -342,6 +341,12 @@ class _SetupCardanoAddressViewState extends State<SetupCardanoAddressView>
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    pageProgressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Form(
       key: form,
@@ -350,11 +355,11 @@ class _SetupCardanoAddressViewState extends State<SetupCardanoAddressView>
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) backToDefault();
       },
-      child: PageProgress(
-        key: pageProgressKey,
-        backToIdle: APPConst.twoSecoundDuration,
-        initialStatus: PageProgressStatus.idle,
-        child: (context) => Center(
+      child: StreamPageProgress(
+        controller: pageProgressKey,
+        // backToIdle: APPConst.twoSecoundDuration,
+        // initialStatus: PageProgressStatus.idle,
+        builder: (context) => Center(
           child: CustomScrollView(
             shrinkWrap: true,
             slivers: [
@@ -365,21 +370,6 @@ class _SetupCardanoAddressViewState extends State<SetupCardanoAddressView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   key: const ValueKey<bool>(true),
                   children: [
-                    PageTitleSubtitle(
-                        title: "setup_network_address"
-                            .tr
-                            .replaceOne(network.coinParam.token.name),
-                        body: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("disable_standard_derivation".tr),
-                            WidgetConstant.height8,
-                            Text("setup_address_derivation_keys_desc".tr),
-                            WidgetConstant.height8,
-                            Text("please_following_steps_to_generate_address"
-                                .tr),
-                          ],
-                        )),
                     AnimatedSwitcher(
                       duration: APPConst.animationDuraion,
                       child: page == _GenerateAddressPage.seedGeneration

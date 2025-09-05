@@ -31,7 +31,6 @@ class _UpdateSolanaProvider extends StatefulWidget {
 class _UpdateSolanaProviderState extends State<_UpdateSolanaProvider>
     with
         SafeState<_UpdateSolanaProvider>,
-        ProgressMixin<_UpdateSolanaProvider>,
         UpdateNetworkProviderState<
             _UpdateSolanaProvider,
             SolanaAPIProvider,
@@ -75,7 +74,7 @@ class _UpdateSolanaProviderState extends State<_UpdateSolanaProvider>
         provider: provider, network: network.toNetwork());
     final init = await client.validateNetworkGenesis();
     if (!init) {
-      throw WalletException("network_genesis_hash_validator");
+      throw AppException("network_genesis_hash_validator");
     }
     return provider;
   }

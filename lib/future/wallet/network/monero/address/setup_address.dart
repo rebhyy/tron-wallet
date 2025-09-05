@@ -1,12 +1,12 @@
 import 'package:blockchain_utils/bip/bip/conf/bip/bip_coins.dart';
+import 'package:blockchain_utils/bip/bip/conf/core/coin_conf.dart';
 import 'package:blockchain_utils/bip/bip/conf/core/coins.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/constant/constant.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class SetupMoneroAddressView extends StatefulWidget {
   final AddressDerivationController controller;
@@ -43,11 +43,27 @@ class _SetupMoneroAddressViewState extends State<SetupMoneroAddressView>
     updateState();
   }
 
+  AddressDerivationIndex nextDerive({
+    required CryptoCoins<CoinConfig> coin,
+    required SeedTypes seedGeneration,
+    required int? subId,
+  }) {
+    return (widget.controller.chain as MoneroChain).nextDerive(
+        coin: coin,
+        seedGeneration: seedGeneration,
+        subId: subId,
+        major: major,
+        minor: minor);
+  }
+
   void generateAddress() async {
     final CryptoCoins coin =
         widget.controller.network.coins.whereType<BipCoins>().first;
     final keyIndex = await widget.controller.getCoin(
-        context: context, seedGeneration: SeedTypes.bip39, selectedCoins: coin);
+        context: context,
+        seedGeneration: SeedTypes.bip39,
+        selectedCoins: coin,
+        nextAddressDerivationBuilder: nextDerive);
     if (keyIndex == null || keyIndex.currencyCoin.conf.type != coin.conf.type) {
       return;
     }

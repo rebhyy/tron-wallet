@@ -10,8 +10,10 @@ final class AccessCryptoPrivateKeysRequest with CborSerializable {
   }
   factory AccessCryptoPrivateKeysRequest.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CryptoKeyConst.accessPrivateKeysRequest);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CryptoKeyConst.accessPrivateKeysRequest);
     final List<AccessCryptoPrivateKeyRequest> indexes = cbor.value
         .map((e) => AccessCryptoPrivateKeyRequest.fromCborBytesOrObject(obj: e))
         .toList();
@@ -39,8 +41,10 @@ final class AccessCryptoPrivateKeyRequest with CborSerializable {
 
   factory AccessCryptoPrivateKeyRequest.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CryptoKeyConst.accessPrivateKeyRequest);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CryptoKeyConst.accessPrivateKeyRequest);
 
     return AccessCryptoPrivateKeyRequest._(
         index:

@@ -263,7 +263,7 @@ mixin ExtentionWalletHandler on Web3RequestControllerImpl {
     final window = (await _getWindow());
     final windowId = window.id;
     if (windowId == null || context == null) {
-      throw WalletException('initialize_app_failed');
+      throw AppException('initialize_app_failed');
     }
     int? tabId;
     if (context.isTab) {
@@ -271,7 +271,7 @@ mixin ExtentionWalletHandler on Web3RequestControllerImpl {
           (e) => e.url?.contains(jsWindow.location.href) ?? false);
       tabId = tab?.id;
       if (tabId == null) {
-        throw WalletException('initialize_app_failed');
+        throw AppException('initialize_app_failed');
       }
     }
     final isIframe = parse?.queryParameters[
@@ -300,7 +300,7 @@ mixin ExtentionWalletHandler on Web3RequestControllerImpl {
         label: 'duplicate_wallet_instance'.tr,
         dismissible: false);
     _closeSelf();
-    throw WalletException('initialize_app_failed');
+    throw AppException('initialize_app_failed');
   }
 
   Web3ClientInfo? _createClientInfosFromTab(ChromeTab? tab) {

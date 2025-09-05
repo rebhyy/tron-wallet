@@ -18,7 +18,7 @@ import 'package:on_chain_wallet/wallet/api/provider/networks/ton.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/tron.dart';
 import 'package:on_chain_wallet/wallet/api/services/models/models.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/app/http/models/auth.dart';
 
 abstract class APIProvider with Equatable, CborSerializable {
@@ -35,7 +35,9 @@ abstract class APIProvider with Equatable, CborSerializable {
       identifier.startsWith(ProvidersConst.defaultidentifierName);
 
   T toProvider<T extends APIProvider>() {
-    if (this is! T) throw WalletExceptionConst.invalidProviderInformation;
+    if (this is! T) {
+      throw AppExceptionConst.internalError("APIProvider.toProvider");
+    }
     return this as T;
   }
 
@@ -78,8 +80,8 @@ abstract class APIProvider with Equatable, CborSerializable {
       case NetworkType.sui:
         return SuiAPIProvider.fromCborBytesOrObject(obj: obj, bytes: bytes);
       default:
-        throw UnimplementedError(
-            "Network does not exists ${network.type.name}");
+        throw AppExceptionConst.internalError(
+            "APIProvider.fromCborBytesOrObject");
     }
   }
 }
@@ -100,8 +102,7 @@ abstract class ProviderIdentifier with Equatable, CborSerializable {
   }
   T cast<T extends ProviderIdentifier>() {
     if (this is! T) {
-      throw WalletExceptionConst.invalidArgruments(
-          "$T", runtimeType.toString());
+      throw AppExceptionConst.internalError("ProviderIdentifier");
     }
     return this as T;
   }
@@ -113,12 +114,8 @@ class DefaultProviderIdentifier extends ProviderIdentifier {
       {required this.identifier, required super.network});
   factory DefaultProviderIdentifier(
       {required String identifier, required NetworkType network}) {
-    switch (network) {
-      case NetworkType.aptos:
-        throw WalletExceptionConst.invalidData(
-            messsage: "Invalid provider identifier network.");
-      default:
-    }
+    assert(
+        network != NetworkType.aptos, "Invalid provider identifier network.");
     return DefaultProviderIdentifier._(
         network: network, identifier: identifier);
   }

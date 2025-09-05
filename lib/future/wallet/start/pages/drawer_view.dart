@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/theme/theme.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
+
 import 'package:on_chain_wallet/future/wallet/setting/color_selector.dart';
 import 'package:on_chain_wallet/future/wallet/swap/pages/pages/swap.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
-import 'package:on_chain_wallet/wallet/models/wallet/hd_wallet.dart';
+import 'package:on_chain_wallet/wallet/models/wallet/models/hd_wallet.dart';
 
 class DrawerView extends StatefulWidget {
   const DrawerView({super.key});
@@ -54,11 +55,10 @@ class _DrawerViewState extends State<DrawerView> with SafeState<DrawerView> {
       context.openDialogPage(
         "",
         child: (context) {
-          return PasswordCheckerView(
-            accsess: WalletAccsessType.unlock,
-            onWalletAccess: (password) async {
-              return null;
-            },
+          return AccessWalletView<WalletCredentialResponseLogin,
+              WalletCredentialLogin>(
+            request: WalletCredentialLogin.instance,
+            onWalletAccess: (password) async {},
           );
         },
       );
@@ -68,24 +68,8 @@ class _DrawerViewState extends State<DrawerView> with SafeState<DrawerView> {
   }
 
   Future<void> switchOrCreateWallet() async {
-    context
-        .openSliverDialog<MainWallet>(
-            widget: (c) => SwitchWalletView(
-                  wallets: wallet.wallet.wallets,
-                  selectedWallet: wallet.wallet.wallet,
-                ),
-            label: "switch_wallets".tr,
-            content: (c) => [
-                  IconButton(
-                      onPressed: () {
-                        context.offTo(PageRouter.createWallet);
-                      },
-                      icon: const Icon(Icons.add))
-                ])
-        .then((e) {
-      if (e == null) return;
-      wallet.wallet.switchWallet(e);
-    });
+    context.openDialogPage<MainWallet>("switch_wallets".tr,
+        child: (c) => SwitchWalletsView());
   }
 
   late WalletProvider wallet;
@@ -316,48 +300,143 @@ class _DrawerViewState extends State<DrawerView> with SafeState<DrawerView> {
   }
 }
 
-class SwitchWalletView extends StatelessWidget {
-  const SwitchWalletView(
-      {super.key, required this.wallets, required this.selectedWallet});
-  final List<MainWallet> wallets;
-  final MainWallet selectedWallet;
+class SwitchWalletsView extends StatefulWidget {
+  const SwitchWalletsView({super.key});
+
+  @override
+  State<SwitchWalletsView> createState() => _SwitchWalletsViewState();
+}
+
+class _SwitchWalletsViewState extends State<SwitchWalletsView>
+    with SafeState<SwitchWalletsView> {
+  late final WalletProvider wallet;
+  List<MainWallet> get wallets => wallet.wallet.wallets;
+  MainWallet? get currentWallet => wallet.wallet.wallet;
+
+  @override
+  void onInitOnce() {
+    super.onInitOnce();
+    wallet = context.wallet;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemBuilder: (context, index) {
-        final wallet = wallets[index];
-        final bool selected = selectedWallet.name == wallet.name;
-        return ContainerWithBorder(
-          onRemove: () {
-            context.pop(wallet);
-          },
-          enableTap: selected ? false : true,
-          onRemoveWidget: selected
-              ? const Icon(Icons.check_circle)
-              : WidgetConstant.sizedBox,
-          child: Row(
-            children: [
-              wallet.requiredPassword
-                  ? const Icon(Icons.lock)
-                  : const Icon(Icons.lock_open),
-              WidgetConstant.width8,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(wallet.name, style: context.textTheme.labelLarge),
-                    Text(wallet.created.toString(),
-                        style: context.textTheme.bodySmall),
-                  ],
-                ),
+    return APPStreamBuilder(
+        value: wallet.wallet.status,
+        builder: (context, s) {
+          return CustomScrollView(
+            shrinkWrap: true,
+            slivers: [
+              SliverAppBar(
+                title: Text("switch_wallets".tr),
+                leading: WidgetConstant.sizedBox,
+                leadingWidth: 0,
+                pinned: true,
+                actions: [
+                  IconButton(
+                      onPressed: () {
+                        context.to(PageRouter.createWallet);
+                      },
+                      icon: Icon(Icons.add_box,
+                          color: context.onPrimaryContainer)),
+                  const CloseButton()
+                ],
+              ),
+              SliverConstraintsBoxView(
+                padding: WidgetConstant.padding20,
+                sliver: SliverList.builder(
+                    itemBuilder: (context, index) {
+                      final wallet = wallets[index];
+                      final bool selected = wallet == currentWallet;
+                      return CustomizedContainer(
+                        onStackIcon:
+                            selected ? Icons.check_circle : Icons.circle,
+                        onTapStackIcon: () =>
+                            this.wallet.wallet.switchWallet(wallet),
+                        child: APPExpansionListTile(
+                          title: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.account_balance_wallet),
+                                  WidgetConstant.width8,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(wallet.name,
+                                            style:
+                                                context.textTheme.labelLarge),
+                                        Text(wallet.created.toString(),
+                                            style: context.textTheme.bodySmall),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          children: [
+                            ConditionalWidget(
+                                onActive: (context) => Column(children: [
+                                      ...wallet.subWallets
+                                          .map((e) => ContainerWithBorder(
+                                                backgroundColor:
+                                                    context.onPrimaryContainer,
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                        Icons
+                                                            .account_balance_wallet_outlined,
+                                                        color: context
+                                                            .primaryContainer),
+                                                    WidgetConstant.width8,
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(e.name,
+                                                              style: context
+                                                                  .primaryTextTheme
+                                                                  .bodyMedium),
+                                                          Text(
+                                                              e.created
+                                                                  .toDateAndTime(),
+                                                              style: context
+                                                                  .primaryTextTheme
+                                                                  .bodySmall),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ))
+                                    ])),
+                            ConditionalWidget(
+                                enable: selected,
+                                onActive: (context) => ContainerWithBorder(
+                                      onRemove: () {
+                                        context.to(PageRouter.createSubWallet);
+                                      },
+                                      backgroundColor:
+                                          context.onPrimaryContainer,
+                                      onRemoveIcon: Icon(Icons.add_box,
+                                          color: context.primaryContainer),
+                                      child: Text("tap_to_add_a_subwallet".tr,
+                                          style: context
+                                              .primaryTextTheme.bodyMedium),
+                                    ))
+                          ],
+                        ),
+                      );
+                    },
+                    itemCount: wallets.length),
               ),
             ],
-          ),
-        );
-      },
-      itemCount: wallets.length,
-      shrinkWrap: true,
-    );
+          );
+        });
   }
 }

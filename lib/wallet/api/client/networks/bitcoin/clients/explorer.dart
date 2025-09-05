@@ -1,9 +1,10 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
+import 'package:on_chain_wallet/app/utils/datetime/datetime.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/bitcoin/core/core.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/bitcoin/bitcoin.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
@@ -52,6 +53,41 @@ class BitcoinExplorerApiProvider extends BitcoinClient<IBitcoinAddress> {
   Future<BigRational> estimateFeePerByte(SwapBitcoinNetwork network) async {
     final fee = await getFeeRate();
     return BigRational(fee.medium) / BigRational.from(1024);
+  }
+
+  @override
+  Future<ElectrumVerbosTxResponse?> getTransactionData(String txId) async {
+    try {
+      if (provider.api.apiType == APIType.blockCypher) {
+        final tx = await provider.getTransaction<BlockCypherTransaction>(txId);
+        return ElectrumVerbosTxResponse(
+            txId: txId,
+            version: tx.ver,
+            size: tx.size,
+            vsize: tx.vSize,
+            weight: tx.size,
+            locktime: 0,
+            blockhash: tx.hash,
+            blocktime: tx.received == null
+                ? null
+                : DateTimeUtils.secondsSinceEpoch(tx.received!),
+            confirmations: tx.confirmations);
+      }
+
+      final tx = await provider.getTransaction<MempoolTransaction>(txId);
+      return ElectrumVerbosTxResponse(
+          txId: txId,
+          version: tx.version,
+          size: tx.size,
+          vsize: tx.size,
+          weight: tx.weight,
+          locktime: tx.locktime,
+          blockhash: tx.status.blockHash,
+          blocktime: tx.status.blockTime,
+          confirmations: tx.status.confirmed ? 1 : null);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

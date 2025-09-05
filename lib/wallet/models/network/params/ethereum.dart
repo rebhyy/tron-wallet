@@ -37,7 +37,7 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
       bool defaultNetwork = true,
       int? bip32CoinType}) {
     if (chainId.isNegative || token.decimal != EthereumUtils.decimal) {
-      throw const WalletException("invalid_network_information");
+      throw const WalletException.error("invalid_network_information");
     }
     return EthereumNetworkParams._(
         transactionExplorer: transactionExplorer,
@@ -74,8 +74,8 @@ class EthereumNetworkParams extends NetworkCoinParams<EthereumAPIProvider> {
 
   factory EthereumNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.evmNetworkParam);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.evmNetworkParam);
     final bool? defaultNetwork = cbor.elementAs(7);
     return EthereumNetworkParams(
       chainId: cbor.elementAs(0),

@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:ton_dart/ton_dart.dart';
@@ -19,7 +19,7 @@ mixin TonTransactionApiController on DisposableMixin {
   Future<int> getAccountSeqno(VersionedWalletContract wallet) async {
     final state = await getAccountState(wallet);
     if (state.state.isFrozen) {
-      throw WalletException("ton_address_is_freez_desc");
+      throw AppException("ton_address_is_freez_desc");
     } else if (state.state.isActive) {
       final stateData = VersionedWalletUtils.readState(
           stateData: state.data, type: wallet.type, chain: wallet.chain);

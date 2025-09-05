@@ -1,20 +1,22 @@
 import 'package:blockchain_utils/helper/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/wallet/security/security.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class BackupWalletView extends StatelessWidget {
   const BackupWalletView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-        accsess: WalletAccsessType.verify,
-        onAccsess: (crendential, password, network) {
-          return _BackupWallet(password: password);
+    return AccessWalletView<WalletCredentialResponseRequirePassword,
+            WalletCredentialRequirePassword>(
+        request: WalletCredentialRequirePassword(),
+        onAccsess: (credential) {
+          return _BackupWallet(credential: credential.id);
         },
         title: "backup".tr,
         subtitle: PageTitleSubtitle(
@@ -31,16 +33,16 @@ class BackupWalletView extends StatelessWidget {
 }
 
 class _BackupWallet extends StatefulWidget {
-  const _BackupWallet({required this.password});
-  final String password;
+  const _BackupWallet({required this.credential});
+  final WalletCredentialResponseVerify credential;
 
   @override
   State<_BackupWallet> createState() => _BackupWalletState();
 }
 
 class _BackupWalletState extends State<_BackupWallet>
-    with SafeState<_BackupWallet> {
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+    with SafeState<_BackupWallet>, ProgressMixin<_BackupWallet> {
+  // final GlobalKey<PageProgressState> progressKey = GlobalKey();
   bool setupPassword = false;
   bool usePassphrase = false;
   bool dappPermissions = false;
@@ -57,6 +59,11 @@ class _BackupWalletState extends State<_BackupWallet>
   String password = "";
   void onChangePassword(String v) {
     password = v;
+    final passwordStrength = PasswordUtils.checkPasswordStrength(v);
+    if (passwordStrength != this.passwordStrength) {
+      this.passwordStrength = passwordStrength;
+      updateState();
+    }
   }
 
   String passphrase = "";
@@ -70,14 +77,14 @@ class _BackupWalletState extends State<_BackupWallet>
     return null;
   }
 
-  String? validator(String? value) {
-    if (value == widget.password) {
-      return "password_used_before".tr;
+  PasswordStrength passwordStrength = PasswordStrength.weak;
+
+  String? onValidatePassword(String? value) {
+    final passwordStrength = PasswordUtils.checkPasswordStrength(value ?? '');
+    if (passwordStrength == PasswordStrength.weak) {
+      return "weak_password_validator".tr;
     }
-    if (StrUtils.isStrongPassword(value)) {
-      return null;
-    }
-    return "weak_password".tr;
+    return null;
   }
 
   String? confirmForm(String? value) {
@@ -125,7 +132,7 @@ class _BackupWalletState extends State<_BackupWallet>
     await context.openSliverDialog(
         widget: (ctx) => GenerateBackupView(
             data: "",
-            password: widget.password,
+            credential: widget.credential,
             walletBackupOptions: options,
             type: WalletBackupTypes.walletV3),
         label: "backup_wallet".tr);
@@ -140,10 +147,9 @@ class _BackupWalletState extends State<_BackupWallet>
 
   @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      child: (c) => Center(
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (c) => Center(
         child: Form(
           key: form,
           child: CustomScrollView(
@@ -214,17 +220,21 @@ class _BackupWalletState extends State<_BackupWallet>
                                 children: [
                                   WidgetConstant.height20,
                                   AppTextField(
-                                    obscureText: true,
-                                    initialValue: password,
-                                    onChanged: onChangePassword,
-                                    keyboardType: TextInputType.visiblePassword,
-                                    textInputAction: TextInputAction.go,
-                                    disableContextMenu: true,
-                                    nextFocus: nextFocus,
-                                    validator: validator,
-                                    label: "enter_new_password".tr,
-                                    helperText: "password_desc".tr,
-                                  ),
+                                      obscureText: true,
+                                      initialValue: password,
+                                      onChanged: onChangePassword,
+                                      keyboardType:
+                                          TextInputType.visiblePassword,
+                                      textInputAction: TextInputAction.go,
+                                      disableContextMenu: true,
+                                      nextFocus: nextFocus,
+                                      errorBuilder: (context, errorText) =>
+                                          WidgetConstant.sizedBox,
+                                      validator: onValidatePassword,
+                                      label: "enter_new_password".tr),
+                                  PasswordStrengthIndicator(
+                                      strength: passwordStrength),
+                                  WidgetConstant.height20,
                                   AppTextField(
                                     obscureText: true,
                                     keyboardType: TextInputType.visiblePassword,

@@ -1,5 +1,5 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
 
@@ -21,8 +21,8 @@ enum AptosChainType {
     if (value == null || value > 170) return AptosChainType.devnet;
     return values.firstWhere(
       (e) => e.id == value,
-      orElse: () => throw WalletExceptionConst.invalidData(
-          messsage: "AptosChainType not found."),
+      orElse: () =>
+          throw AppSerializationException(objectName: "AptosChainType"),
     );
   }
 }
@@ -32,8 +32,8 @@ class AptosNetworkParams extends NetworkCoinParams<AptosAPIProvider> {
 
   factory AptosNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.aptosNetworkParams);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.aptosNetworkParams);
 
     return AptosNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(0)),

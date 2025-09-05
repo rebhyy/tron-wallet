@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/pages/q
 import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/forms/metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/substrate/substrate.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
@@ -370,8 +370,9 @@ class _BytesFieldValidatorView extends StatelessWidget {
                         pasteIcon: true,
                         initialValue: value),
                     enable: validator.address == null,
-                    onDeactive: (context) =>
-                        ReceiptAddressDetailsView(address: validator.address!),
+                    onDeactive: (context) => ReceiptAddressDetailsView(
+                        address: validator.address!,
+                        color: context.colors.onPrimaryContainer),
                   ),
                 ),
               ),

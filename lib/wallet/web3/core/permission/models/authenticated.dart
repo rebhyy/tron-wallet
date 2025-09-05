@@ -3,7 +3,7 @@ import 'package:blockchain_utils/helper/helper.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/types/account.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 abstract class Web3RequestAuthentication with CborSerializable {
   final String applicationId;
@@ -37,8 +37,8 @@ enum Web3APPProtocol {
   bool get isInjected => this == injected;
   static Web3APPProtocol fromValue(int? tag) {
     return values.firstWhere((e) => e.value == tag,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: 'invalid auth protocol tag.'));
+        orElse: () =>
+            throw AppSerializationException(objectName: "Web3APPProtocol"));
   }
 }
 

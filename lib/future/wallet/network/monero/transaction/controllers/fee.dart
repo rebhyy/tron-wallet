@@ -1,7 +1,6 @@
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/non_encrypted/requests/monero_build_fake_tx.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/string.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/transaction/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
@@ -82,7 +81,7 @@ mixin MoneroTransactionFeeController on MoneroTransactionApiController {
       final weight = await MethodUtils.call(() async => await simulateFee());
       if (weight.isCancel) return;
       if (weight.hasError) {
-        setDefaultFee(error: weight.error!.tr);
+        setDefaultFee(error: weight.localizationError);
         return;
       }
       setFees(weight: weight.result.$1, baseFee: weight.result.$2);

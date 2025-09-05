@@ -8,7 +8,7 @@ import 'package:on_chain/solidity/contract/contract_abi.dart';
 import 'package:on_chain/tron/src/address/tron_address.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/app/utils/platform/utils.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/crypto/utils/solidity/solidity.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/types/types.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';

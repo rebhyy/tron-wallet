@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/signer/const/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/crypto/requets/messages.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';

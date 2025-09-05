@@ -20,11 +20,13 @@ class CryptoKeyConst {
   static const List<int> accessAdaPubliKeyResponse = [180, 12];
   static const List<int> accessPublicKeysRequest = [180, 13];
   static const List<int> importCustomKeys = [180, 14];
-
   static const List<int> accessMoneroPublicKeyResponse = [180, 15];
   static const List<int> accessMoneroPrivateKeyResponse = [180, 16];
-
   static const List<int> backupMasterKey = [180, 17];
+  static const List<int> encryptedSubWallet = [180, 18];
+  static const List<int> subWalletMnemonicResponse = [180, 19];
+  static const List<int> inMemoryKey = [180, 20];
+  static const List<int> inMemoryPassword = [180, 21];
 
   static const List<int> globalSignature = [33, 1];
 
@@ -67,7 +69,6 @@ class CryptoKeyConst {
   static const List<int> sign = [111, 30];
   static const List<int> moneroOutputUnlocker = [111, 31];
 
-  static const List<int> decodeBackup = [111, 31];
   static const List<int> encodeBackup = [111, 32];
   static const List<int> readImportKey = [111, 33];
   static const List<int> generateBip39Mnemonic = [111, 34];
@@ -75,17 +76,23 @@ class CryptoKeyConst {
   static const List<int> randomGenerator = [111, 36];
   static const List<int> hexToBytes = [111, 37];
   static const List<int> hashing = [111, 38];
+  static const List<int> generateSymKey = [111, 39];
   static const List<int> walletBackup = [111, 40];
   static const List<int> setupMasterKey = [111, 41];
   static const List<int> moneroAccountTracker = [111, 42];
   static const List<int> moneroAccountTexesTracker = [111, 43];
   static const List<int> moneroMnemonicToPrivateKey = [111, 44];
   static const List<int> generateMoneroMnemonic = [111, 45];
+  static const List<int> jwt = [111, 46];
+  static const List<int> x25519 = [111, 47];
+  static const List<int> bitcoinPersonalSign = [111, 48];
+  static const List<int> tonMnemonicValidate = [111, 49];
+  static const List<int> importSubWallet = [111, 50];
+  static const List<int> decodeBackup = [111, 51];
+  static const List<int> removeSubWallet = [111, 52];
+  static const List<int> changeWalletPassword = [111, 53];
+
   static const List<int> restoreBackModel = [112, 0];
-  static const List<int> bitcoinPersonalSign = [111, 47];
-  static const List<int> generateSymKey = [111, 39];
-  static const List<int> jwt = [111, 40];
-  static const List<int> x25519 = [111, 41];
 
   /// none encrypted request
   static const List<int> moneroFakeTx = [61, 0];

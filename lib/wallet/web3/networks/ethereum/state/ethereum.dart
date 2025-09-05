@@ -6,7 +6,7 @@ import 'package:on_chain/ethereum/src/address/evm_address.dart';
 import 'package:on_chain/ethereum/src/transaction/eth_transaction.dart';
 import 'package:on_chain/solidity/abi/abi.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 import 'package:on_chain_wallet/wallet/api/services/models/models/protocols.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/ethereum.dart';

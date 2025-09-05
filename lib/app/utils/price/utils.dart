@@ -1,5 +1,4 @@
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
-import 'package:on_chain_wallet/app/constant/global/rational.dart';
 import 'package:on_chain_wallet/app/core.dart';
 
 class PriceUtils {
@@ -25,7 +24,7 @@ class PriceUtils {
     dec = dec * RetionalConst.fromDecimalNumber(decimal);
     if (validateDecimal) {
       if (decimal == 0 && dec.isDecimal) {
-        throw ArgumentError("price should not be decimal with decimal zero");
+        throw AppExceptionConst.invalidPriceFormat;
       }
     }
     return dec.toBigInt();
@@ -41,7 +40,8 @@ class PriceUtils {
     }
   }
 
-  static String encodePrice(BigInt price, int decimal, {int amoutDecimal = 8}) {
+  static String encodePrice(BigInt price, int decimal,
+      {int? amoutDecimal = 8}) {
     final BigRational dec =
         BigRational(price) / RetionalConst.fromDecimalNumber(decimal);
     return dec.toDecimal(digits: amoutDecimal);

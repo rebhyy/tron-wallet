@@ -4,28 +4,22 @@ import 'package:on_chain_wallet/wallet/models/nfts/core/core.dart';
 
 class RippleNFToken with Equatable implements NFTCore {
   factory RippleNFToken.deserialize({List<int>? bytes, CborObject? obj}) {
-    try {
-      final CborListValue cbor = CborSerializable.cborTagValue(
-          cborBytes: bytes, object: obj, tags: NFTType.ripple.tag);
-      final int flags = cbor.elementAs(0);
-      final String nftokenId = cbor.elementAs(1);
-      final int nftokenTaxon = cbor.elementAs(2);
-      final String issuer = cbor.elementAs(3);
-      final int serial = cbor.elementAs(4);
-      final String? uri = cbor.elementAs(5);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: NFTType.ripple.tag);
+    final int flags = cbor.elementAs(0);
+    final String nftokenId = cbor.elementAs(1);
+    final int nftokenTaxon = cbor.elementAs(2);
+    final String issuer = cbor.elementAs(3);
+    final int serial = cbor.elementAs(4);
+    final String? uri = cbor.elementAs(5);
 
-      return RippleNFToken(
-          flags: flags,
-          issuer: issuer,
-          nftokenId: nftokenId,
-          nftokenTaxon: nftokenTaxon,
-          serial: serial,
-          uri: uri);
-    } on WalletException {
-      rethrow;
-    } catch (e) {
-      throw WalletExceptionConst.invalidNftInformation;
-    }
+    return RippleNFToken(
+        flags: flags,
+        issuer: issuer,
+        nftokenId: nftokenId,
+        nftokenTaxon: nftokenTaxon,
+        serial: serial,
+        uri: uri);
   }
   const RippleNFToken({
     required this.flags,

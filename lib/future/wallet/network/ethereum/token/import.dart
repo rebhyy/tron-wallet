@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/account/pages/account_controller.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain/on_chain.dart';
 
 class ImportERC20TokenView extends StatelessWidget {
@@ -33,11 +33,13 @@ class _ImportErc20TokenView extends StatefulWidget {
   State<_ImportErc20TokenView> createState() => __ImportErc20TokenViewState();
 }
 
-class __ImportErc20TokenViewState extends State<_ImportErc20TokenView> {
+class __ImportErc20TokenViewState extends State<_ImportErc20TokenView>
+    with
+        SafeState<_ImportErc20TokenView>,
+        ProgressMixin<_ImportErc20TokenView> {
   late final address = widget.account.address;
   ReceiptAddress<ETHAddress>? contractAddress;
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>(debugLabel: "__ImportErc20TokenViewState");
+
   bool get hasContractAddress => contractAddress != null;
 
   void onSetupAddress(ReceiptAddress<ETHAddress>? addr) {
@@ -55,7 +57,7 @@ class __ImportErc20TokenViewState extends State<_ImportErc20TokenView> {
       return data;
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr);
+      progressKey.errorText(result.localizationError);
     } else if (result.result == null) {
       progressKey.errorText("smart_contract_not_found".tr);
     } else {
@@ -64,7 +66,7 @@ class __ImportErc20TokenViewState extends State<_ImportErc20TokenView> {
               address: address, token: result.result! as ETHERC20Token));
 
       if (addResult.hasError) {
-        progressKey.errorText(addResult.error!.tr);
+        progressKey.errorText(addResult.localizationError);
       } else {
         token = result.result! as ETHERC20Token;
         progressKey.success();
@@ -80,10 +82,9 @@ class __ImportErc20TokenViewState extends State<_ImportErc20TokenView> {
 
   @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.twoSecoundDuration,
-      child: (c) => ConstraintsBoxView(
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (c) => ConstraintsBoxView(
           padding: WidgetConstant.padding20,
           alignment: Alignment.center,
           child: token != null

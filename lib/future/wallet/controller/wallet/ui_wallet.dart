@@ -6,8 +6,7 @@ import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart'
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/wallet_signing_password.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
-import 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/core/request/web_request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/global/params/core/core.dart';
 
@@ -20,22 +19,15 @@ abstract class UIWallet extends WalletCore {
 
   Future<void> onWalletEvent(WalletActionEvent status);
 
-  Future<String> _getPassword(
+  Future<WalletCredentialResponseVerify> _getPassword(
       {required Set<AddressDerivationIndex> keys,
       required Set<ChainAccount> addresses}) async {
-    final pw = await navigatorKey.currentContext?.openSliverBottomSheet<String>(
-      "sign_transaction".tr,
-      initiaalExtend: 1,
-      bodyBuilder: (controller) => WalletSigningPassword(
-        addresses: addresses,
-        keys: keys,
-        controller: controller,
-        onPasswordForm: (password) async {
-          final result = await login(password);
-          return result.hasResult;
-        },
-      ),
-    );
+    final pw = await navigatorKey.currentContext
+        ?.openSliverBottomSheet<WalletCredentialResponseVerify>(
+            "sign_transaction".tr,
+            initiaalExtend: 1,
+            bodyBuilder: (controller) => WalletSigningPassword(
+                addresses: addresses, keys: keys, controller: controller));
     if (pw == null) {
       throw WalletExceptionConst.rejectSigning;
     }
@@ -48,10 +40,10 @@ abstract class UIWallet extends WalletCore {
       late final Set<ChainAccount> addresses = request.addresses.toSet();
       late final Set<AddressDerivationIndex> keys =
           addresses.map((e) => e.signerKeyIndexes()).expand((e) => e).toSet();
-      if (wallet.protectWallet) {
-        final password = await _getPassword(addresses: addresses, keys: keys);
+      if (wallet.protectWallet || !isUnlock) {
+        final credential = await _getPassword(addresses: addresses, keys: keys);
         final r = (await super.signRequest(
-            request: request, password: password, timeout: timeout));
+            request: request, credential: credential, timeout: timeout));
         return r.result;
       }
       return (await super.signRequest(request: request, timeout: timeout))

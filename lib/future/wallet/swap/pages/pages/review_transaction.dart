@@ -1,7 +1,7 @@
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/receipt_address_view.dart';
 import 'package:on_chain_wallet/future/wallet/swap/controller/controller/transaction.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/swap/swap/models.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
@@ -44,9 +44,9 @@ class TransactionReviewView extends StatelessWidget {
               //       icon: Icon(Icons.abc)),
               // ],
             ),
-            body: PageProgress(
-              key: controller.progressKey,
-              child: (context) => CustomScrollView(
+            body: StreamPageProgress(
+              controller: controller.progressKey,
+              builder: (context) => CustomScrollView(
                 slivers: [
                   SliverConstraintsBoxView(
                       padding: WidgetConstant.paddingHorizontal20,

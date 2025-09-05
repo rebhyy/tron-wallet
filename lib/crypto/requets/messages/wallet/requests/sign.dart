@@ -62,7 +62,7 @@ final class WalletRequestSign
       final unlockedPayment = MoneroTransactionHelper.toUnlockPayment(
           account: moneroKeys, lockedOut: e.payment);
       if (unlockedPayment == null) {
-        throw const WalletException("failed_to_unlock_output");
+        throw const AppCryptoException("failed_to_unlock_output");
       }
       return e.updatePayment(unlockedPayment);
     }).toList();
@@ -116,6 +116,7 @@ final class WalletRequestSign
         }
         final sighash = bitcoinRequest.sighash;
         signature = [...sig, if (sighash != null) sighash];
+
         return GlobalSignResponse(
             signature: signature, index: index, signerPubKey: key.publicKey);
       case SigningRequestMode.bitcoin:
@@ -155,38 +156,37 @@ final class WalletRequestSign
         signature = ethsigner.signConst(digest).toBytes();
         break;
       case SigningRequestMode.aptos:
-        switch (key.coin) {
-          case Bip44Coins.aptos:
-          case Bip44Coins.aptosEd25519SingleKey:
+        switch (key.coin.conf.type) {
+          case EllipticCurveTypes.ed25519:
             final ed25519Signer = Ed25519Signer.fromKeyBytes(keyBytes);
             signature = ed25519Signer.signConst(digest);
             break;
-          case Bip44Coins.aptosSecp256k1SingleKey:
+          case EllipticCurveTypes.secp256k1:
             final digestHash = QuickCrypto.sha3256Hash(digest);
             final secp256k1Signer = Secp256k1Signer.fromKeyBytes(keyBytes);
             signature =
                 secp256k1Signer.signConst(digestHash, hashMessage: false);
             break;
           default:
-            throw WalletExceptionConst.invalidCoin;
+            throw AppCryptoExceptionConst.invalidCoin;
         }
         break;
       case SigningRequestMode.sui:
-        switch (key.coin) {
-          case Bip44Coins.sui:
+        switch (key.coin.conf.type) {
+          case EllipticCurveTypes.ed25519:
             final ed25519signer = Ed25519Signer.fromKeyBytes(keyBytes);
             signature = ed25519signer.signConst(digest);
             break;
-          case Bip44Coins.suiSecp256k1:
+          case EllipticCurveTypes.secp256k1:
             final secp256k1Signer = Secp256k1Signer.fromKeyBytes(keyBytes);
             signature = secp256k1Signer.signConst(digest);
             break;
-          case Bip44Coins.suiSecp256r1:
+          case EllipticCurveTypes.nist256p1Hybrid:
             final secp256r1Signer = Nist256p1Signer.fromKeyBytes(keyBytes);
             signature = secp256r1Signer.sign(digest);
             break;
           default:
-            throw WalletExceptionConst.invalidCoin;
+            throw AppCryptoExceptionConst.invalidCoin;
         }
         break;
       case SigningRequestMode.moneroSpendKey:
@@ -219,16 +219,16 @@ final class WalletRequestSign
         }
         break;
       default:
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.internalError(
+            "NoneEncryptedRequestHashing");
     }
     return GlobalSignResponse(
         signature: signature, index: index, signerPubKey: key.publicKey);
   }
 
   @override
-  Future<MessageArgsOneBytes> getResult(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final sign = await result(wallet: wallet, key: key);
+  Future<MessageArgsOneBytes> getResult(WalletInMemory wallet) async {
+    final sign = await result(wallet);
     return MessageArgsOneBytes(keyOne: sign.toCbor().encode());
   }
 
@@ -238,9 +238,8 @@ final class WalletRequestSign
   }
 
   @override
-  Future<GlobalSignResponse> result(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final key = wallet
+  Future<GlobalSignResponse> result(WalletInMemory wallet) async {
+    final key = wallet.masterKey
         .readKeys([AccessCryptoPrivateKeyRequest(index: request.index)])
         .keys
         .first;

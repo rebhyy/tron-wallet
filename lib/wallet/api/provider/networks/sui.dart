@@ -17,8 +17,10 @@ class SuiAPIProvider extends APIProvider {
 
   factory SuiAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.suiApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.suiApiServiceProvider);
     return SuiAPIProvider(
         fullNodeUri: values.elementAs(0),
         auth: values.elemetMybeAs<ProviderAuthenticated, CborTagValue>(

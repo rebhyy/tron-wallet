@@ -6,7 +6,7 @@ final class AdaLegacyPublicKeyData extends CryptoPublicKeyData {
   String get chainCode => super.chainCode!;
   @override
   final String keyName;
-  const AdaLegacyPublicKeyData._(
+  AdaLegacyPublicKeyData._(
       {required super.extendedKey,
       required super.comprossed,
       required super.uncomprossed,

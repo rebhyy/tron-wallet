@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/swap/pages/pages/review_transaction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/wallet/swap/controller/controller/controller.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class SwapAddressesView extends StatelessWidget {
   final SwapStateController controller;

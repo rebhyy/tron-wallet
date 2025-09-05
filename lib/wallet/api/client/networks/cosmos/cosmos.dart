@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/api/services/networks/networks.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/cosmos/cosmos.dart';
 import 'package:on_chain_wallet/wallet/models/token/token.dart';
@@ -130,7 +130,7 @@ mixin CosmosCustomRequest on HttpImpl {
     if (chainName == null) return null;
     final chain = await MethodUtils.call(
         () => getChainData(chainName, chainType: chainType));
-    assert(!chain.hasError, "fetching asset failed. Error: ${chain.error}");
+    assert(!chain.hasError, "fetching asset failed. Error: ${chain.message}");
     if (chain.hasResult) {
       return chain.result.$1.assetList.assets
           .firstWhereOrNull((e) => e.base == denom);
@@ -278,7 +278,7 @@ class CosmosClient extends NetworkClient<CosmosWalletTransaction,
   @override
   Future<ThorNodeNetworkConstants> getThorNodeConstants() async {
     if (network.coinParam.networkConstantUri == null) {
-      throw WalletException("invalid_url");
+      throw ApiProviderExceptionConst.invalidRequestUrl;
     }
     final constantsJson = await httpGet<Map<String, dynamic>>(
         network.coinParam.networkConstantUri!,
@@ -360,7 +360,7 @@ class CosmosClient extends NetworkClient<CosmosWalletTransaction,
         return BigInt.from(networkConst.nativeTransactionFee);
       });
       assert(fee.hasResult,
-          "failed to fetch ${network.networkName} native trasaction fee: ${fee.error}");
+          "failed to fetch ${network.networkName} native trasaction fee: ${fee.message}");
       if (fee.hasResult) {
         fixedFee = fee.result;
       } else {
@@ -373,7 +373,7 @@ class CosmosClient extends NetworkClient<CosmosWalletTransaction,
         return getEthermintBaseFee();
       });
       assert(fee.hasResult,
-          "failed to fetch ${network.networkName} base gas fee: ${fee.error}");
+          "failed to fetch ${network.networkName} base gas fee: ${fee.message}");
       if (fee.hasResult) {
         ethermintTxFee = fee.result;
       } else {
@@ -422,7 +422,7 @@ class CosmosClient extends NetworkClient<CosmosWalletTransaction,
   Future<bool> initSwapClient() async {
     final init = await this.init();
     if (!init) {
-      throw WalletException('network_client_initialize_failed');
+      throw ApiProviderExceptionConst.initializeClientFailed;
     }
     return true;
   }

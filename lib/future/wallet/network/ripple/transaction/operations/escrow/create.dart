@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/control
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/widgets/escrow/create.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 class RippleTransactionEscrowCreateOperation

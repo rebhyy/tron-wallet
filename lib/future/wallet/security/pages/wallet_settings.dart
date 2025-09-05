@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/update_wallet_infos.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class UpdateWalletSettingView extends StatelessWidget {
   const UpdateWalletSettingView({super.key});
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-        accsess: WalletAccsessType.verify,
-        onAccsess: (crendential, password, network) {
-          return _UpdateWalletSettingView(password: password);
+    return AccessWalletView<WalletCredentialResponseVerify,
+            WalletCredentialVerify>(
+        request: WalletCredentialVerify(),
+        onAccsess: (credential) {
+          return _UpdateWalletSettingView(credential: credential);
         },
         title: "wallet_preferences".tr,
         subtitle: PageTitleSubtitle(
@@ -28,9 +29,8 @@ class UpdateWalletSettingView extends StatelessWidget {
 }
 
 class _UpdateWalletSettingView extends StatefulWidget {
-  const _UpdateWalletSettingView({required this.password});
-
-  final String password;
+  const _UpdateWalletSettingView({required this.credential});
+  final WalletCredentialResponseVerify credential;
 
   @override
   State<_UpdateWalletSettingView> createState() =>
@@ -38,45 +38,18 @@ class _UpdateWalletSettingView extends StatefulWidget {
 }
 
 class _UpdateWalletSettingViewState extends State<_UpdateWalletSettingView>
-    with SafeState {
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+    with
+        SafeState<_UpdateWalletSettingView>,
+        ProgressMixin<_UpdateWalletSettingView> {
   late final MainWallet hdWallet;
-  late String name = hdWallet.name;
-  late bool reqPassword = hdWallet.requiredPassword;
-  late bool protectWallet = hdWallet.protectWallet;
-  late WalletLockTime locktime = hdWallet.locktime;
-  late List<String> walletIds;
-
-  bool inited = false;
-  void init() {
-    if (!inited) {
-      inited = true;
-      final wallet = context.watch<WalletProvider>(StateConst.main);
-      hdWallet = wallet.wallet.wallet;
-      walletIds = wallet.wallet.wallets.map((e) => e.name).toList();
-      walletIds.remove(hdWallet.name);
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    init();
-  }
-
-  void setup(WalletUpdateInfosData walletInfos) async {
-    name = walletInfos.name;
-    locktime = walletInfos.lockTime;
-    reqPassword = walletInfos.requirmentPassword;
-    protectWallet = walletInfos.protectWallet;
-
+  Future<void> setup(WalletUpdateInfosData walletInfos) async {
     progressKey.progressText("updating".tr);
     final model = context.watch<WalletProvider>(StateConst.main).wallet;
 
     final result = await model.updateWalletInfos(
-        password: widget.password, walletInfos: walletInfos);
+        credential: widget.credential, walletInfos: walletInfos);
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr);
+      progressKey.errorText(result.localizationError);
     } else {
       progressKey.successText("setting_update_successfully".tr,
           backToIdle: false);
@@ -84,11 +57,17 @@ class _UpdateWalletSettingViewState extends State<_UpdateWalletSettingView>
   }
 
   @override
+  void onInitOnce() {
+    super.onInitOnce();
+    final wallet = context.wallet;
+    hdWallet = wallet.wallet.wallet;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      child: (c) => Center(
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (c) => Center(
         child: CustomScrollView(
           shrinkWrap: true,
           slivers: [
@@ -97,13 +76,9 @@ class _UpdateWalletSettingViewState extends State<_UpdateWalletSettingView>
                 padding: WidgetConstant.paddingHorizontal20,
                 alignment: Alignment.center,
                 child: UpdateWalletInfosWidget(
-                    name: name,
-                    locktime: locktime,
-                    requrmentPassword: reqPassword,
-                    exitsIds: walletIds,
+                    wallet: hdWallet,
                     setupButtonTitle: "update_settings".tr,
-                    onUpdate: (update) => setup(update),
-                    protectWallet: protectWallet),
+                    onUpdate: (update) => setup(update)),
               ),
             ),
           ],

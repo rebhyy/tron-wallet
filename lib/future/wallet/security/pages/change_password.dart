@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class ChangeWalletPasswordView extends StatelessWidget {
   const ChangeWalletPasswordView({super.key});
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-        accsess: WalletAccsessType.seed,
-        onAccsess: (crendential, password, network) {
-          return _ChangePasswordView(password: password);
+    return AccessWalletView<WalletCredentialResponseRequirePassword,
+            WalletCredentialRequirePassword>(
+        request: WalletCredentialRequirePassword(),
+        onAccsess: (credential) {
+          return _ChangePasswordView(credential: credential.id);
         },
         title: "change_password".tr,
         subtitle: PageTitleSubtitle(
@@ -26,40 +27,43 @@ class ChangeWalletPasswordView extends StatelessWidget {
 }
 
 class _ChangePasswordView extends StatefulWidget {
-  const _ChangePasswordView({required this.password});
+  const _ChangePasswordView({required this.credential});
 
-  final String password;
+  final WalletCredentialResponseVerify credential;
 
   @override
   State<_ChangePasswordView> createState() => _ChangePasswordViewState();
 }
 
 class _ChangePasswordViewState extends State<_ChangePasswordView>
-    with SafeState<_ChangePasswordView> {
+    with SafeState<_ChangePasswordView>, ProgressMixin<_ChangePasswordView> {
   final GlobalKey<FormState> form =
       GlobalKey<FormState>(debugLabel: "_ChangePasswordView");
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  PasswordStrength passwordStrength = PasswordStrength.weak;
 
   final FocusNode nextFocus = FocusNode();
   String password = "";
   void onChangePassword(String v) {
     password = v;
+    final passwordStrength = PasswordUtils.checkPasswordStrength(v);
+    if (passwordStrength != this.passwordStrength) {
+      this.passwordStrength = passwordStrength;
+      updateState();
+    }
   }
 
   bool _obscureText = true;
   void toggleObscure() {
     _obscureText = !_obscureText;
-    setState(() {});
+    updateState(() {});
   }
 
-  String? validator(String? value) {
-    if (value == widget.password) {
-      return "password_used_before".tr;
+  String? onValidatePassword(String? value) {
+    final passwordStrength = PasswordUtils.checkPasswordStrength(value ?? '');
+    if (passwordStrength == PasswordStrength.weak) {
+      return "weak_password_validator".tr;
     }
-    if (StrUtils.isStrongPassword(value)) {
-      return null;
-    }
-    return "weak_password".tr;
+    return null;
   }
 
   String? confirmForm(String? value) {
@@ -74,9 +78,9 @@ class _ChangePasswordViewState extends State<_ChangePasswordView>
       progressKey.progressText("changing_password".tr);
       final model = context.watch<WalletProvider>(StateConst.main);
       final result =
-          await model.wallet.changePassword(widget.password, password);
+          await model.wallet.changePassword(widget.credential, password);
       if (result.hasError) {
-        progressKey.errorText(result.error!.tr);
+        progressKey.errorText(result.localizationError);
       } else {
         progressKey.successText("password_changed".tr, backToIdle: false);
         await MethodUtils.wait();
@@ -87,10 +91,9 @@ class _ChangePasswordViewState extends State<_ChangePasswordView>
 
   @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      child: (c) => UnfocusableChild(
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (c) => UnfocusableChild(
         child: CustomScrollView(
           shrinkWrap: true,
           slivers: [
@@ -115,16 +118,18 @@ class _ChangePasswordViewState extends State<_ChangePasswordView>
                               ],
                             )),
                         AppTextField(
-                          obscureText: _obscureText,
-                          onChanged: onChangePassword,
-                          keyboardType: TextInputType.visiblePassword,
-                          textInputAction: TextInputAction.go,
-                          disableContextMenu: true,
-                          nextFocus: nextFocus,
-                          validator: validator,
-                          label: "enter_new_password".tr,
-                          helperText: "password_desc".tr,
-                        ),
+                            obscureText: _obscureText,
+                            onChanged: onChangePassword,
+                            keyboardType: TextInputType.visiblePassword,
+                            textInputAction: TextInputAction.go,
+                            disableContextMenu: true,
+                            nextFocus: nextFocus,
+                            validator: onValidatePassword,
+                            errorBuilder: (context, errorText) =>
+                                WidgetConstant.sizedBox,
+                            label: "enter_new_password".tr),
+                        PasswordStrengthIndicator(strength: passwordStrength),
+                        WidgetConstant.height20,
                         AppTextField(
                           obscureText: _obscureText,
                           keyboardType: TextInputType.visiblePassword,

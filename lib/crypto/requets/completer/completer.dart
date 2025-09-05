@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 
 class WorkerMessageCompleter {
@@ -13,7 +13,7 @@ class WorkerMessageCompleter {
 
   void close() {
     _messageCompleter
-        .completeError(WalletException("isolate_terminated_error"));
+        .completeError(AppCryptoException("isolate_terminated_error"));
   }
 
   Future<CborMessageResponseArgs> getResult({Duration? timeout}) async {

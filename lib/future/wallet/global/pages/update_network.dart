@@ -1,37 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class UpdateNetworkView extends StatelessWidget {
   const UpdateNetworkView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
+    return AccessWalletView<WalletCredentialResponseLogin,
+            WalletCredentialLogin>(
+        request: WalletCredentialLogin.instance,
         title: "update_network".tr,
-        accsess: WalletAccsessType.unlock,
-        onAccsess: (credential, password, network) =>
-            _UpdateNetworkView(network));
+        onAccsess: (_) => _UpdateNetworkView());
   }
 }
 
 class _UpdateNetworkView extends StatefulWidget {
-  const _UpdateNetworkView(this.network);
-  final WalletNetwork network;
+  const _UpdateNetworkView();
+  // final WalletNetwork network;
   @override
   State<_UpdateNetworkView> createState() => _UpdateNetworkViewState();
 }
 
 class _UpdateNetworkViewState extends State<_UpdateNetworkView>
     with SafeState<_UpdateNetworkView> {
+  late final WalletNetwork network;
   String symbol = '';
   String networkName = '';
   String explorerAddressLink = "";
   String explorerTransaction = "";
-  final GlobalKey<PageProgressState> pageProgressKey = GlobalKey();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController();
+  // final GlobalKey<PageProgressState> pageProgressKey = GlobalKey();
   void onChangeSymbol(String v) {
     symbol = v;
   }
@@ -70,9 +73,8 @@ class _UpdateNetworkViewState extends State<_UpdateNetworkView>
   }
 
   Future<void> updateNetwork() async {
-    final network = widget.network;
     final wallet = context.wallet;
-    pageProgressKey.progressText("updating_network".tr);
+    progressKey.progressText("updating_network".tr);
     final updateNetwork = network.copyWith(
         coinParam: network.coinParam.updateParams(
             token: Token(
@@ -87,16 +89,16 @@ class _UpdateNetworkViewState extends State<_UpdateNetworkView>
     final update = await MethodUtils.call(
         () async => wallet.wallet.updateImportNetwork(updateNetwork));
     if (update.hasError) {
-      pageProgressKey.errorText(update.error!.tr,
+      progressKey.errorText(update.localizationError,
           backToIdle: false, showBackButton: true);
     } else {
-      pageProgressKey.successText("network_imported_to_your_wallet".tr,
+      progressKey.successText("network_imported_to_your_wallet".tr,
           backToIdle: false);
     }
   }
 
   void _init() {
-    final network = widget.network;
+    network = context.wallet.wallet.network;
     networkName = network.token.name;
     symbol = network.token.symbol;
     explorerAddressLink = network.coinParam.addressExplorer ?? '';
@@ -110,12 +112,18 @@ class _UpdateNetworkViewState extends State<_UpdateNetworkView>
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return UnfocusableChild(
-      child: PageProgress(
-        key: pageProgressKey,
+      child: StreamPageProgress(
+        controller: progressKey,
         // initialStatus: StreamWidgetStatus.progress,
-        child: (context) => CustomScrollView(
+        builder: (context) => CustomScrollView(
           slivers: [
             SliverConstraintsBoxView(
               padding: WidgetConstant.paddingHorizontal20,

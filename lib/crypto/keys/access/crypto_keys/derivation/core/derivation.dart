@@ -11,7 +11,8 @@ enum AddressDerivationType {
 
   static AddressDerivationType fromTag(List<int>? tag) {
     return values.firstWhere((e) => BytesUtils.bytesEqual(e.tag, tag),
-        orElse: () => throw WalletExceptionConst.invalidAccountDetails);
+        orElse: () => throw AppSerializationException(
+            objectName: "AddressDerivationType"));
   }
 }
 
@@ -20,7 +21,8 @@ abstract final class AddressDerivationIndex with CborSerializable, Equatable {
   String? get hdPath;
   CryptoCoins get currencyCoin;
   AddressDerivationType get derivationType;
-  abstract final String? importedKeyId;
+  String? get importedKeyId;
+  int? get subId;
   bool get isImportedKey => importedKeyId != null;
   String get name;
   bool get isSubstrate => derivationType == AddressDerivationType.substrate;
@@ -29,6 +31,8 @@ abstract final class AddressDerivationIndex with CborSerializable, Equatable {
 
   /// change address index key (use imported key)
   AddressDerivationIndex asImportedKey(String importKeyId);
+
+  AddressDerivationIndex asSubWalletKey(int subId);
 
   factory AddressDerivationIndex.deserialize(
       {List<int>? bytes, CborObject? obj}) {
@@ -52,8 +56,7 @@ abstract final class AddressDerivationIndex with CborSerializable, Equatable {
 
   T cast<T extends AddressDerivationIndex>() {
     if (this is! T) {
-      throw WalletExceptionConst.invalidArgruments(
-          "$T", runtimeType.toString());
+      throw AppCryptoExceptionConst.internalError("AddressDerivationIndex");
     }
     return this as T;
   }

@@ -2,7 +2,7 @@ import 'package:on_chain_wallet/app/utils/list/extension.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/constant/constant.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 class Web3EthereumRequestMethods extends Web3NetworkRequestMethods {
   const Web3EthereumRequestMethods._(

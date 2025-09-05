@@ -4,7 +4,6 @@ import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/constant/const.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/controllers/controllers.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/pages/send_transaction.dart';
@@ -13,7 +12,7 @@ import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/types/types.da
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/cosmos/cosmos.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/networks/cosmos/models/network_types.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
@@ -298,7 +297,8 @@ class WebCosmosSignTransactionStateController
           txMessages: tx.body.messages);
     });
     if (simulate.hasError) {
-      fee.setFail(CosmosWeb3TransactionSimulate.fail(simulate.error!.tr));
+      fee.setFail(
+          CosmosWeb3TransactionSimulate.fail(simulate.localizationError));
     } else {
       fee.setSimulate(CosmosWeb3TransactionSimulate.simulate(simulate.result));
     }

@@ -1,5 +1,6 @@
 import 'package:on_chain_bridge/platform_interface.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:ton_dart/ton_dart.dart';
@@ -75,7 +76,7 @@ class ProvidersConst {
           APIProviderServiceInfo(
               name: "Sui Node", url: "https://docs.sui.io/sui-api-ref"),
         ],
-      _ => throw UnimplementedError("invalid network."),
+      _ => throw AppExceptionConst.internalError("ProvidersConst"),
     };
   }
 

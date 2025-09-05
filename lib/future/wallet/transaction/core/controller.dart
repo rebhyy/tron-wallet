@@ -5,11 +5,9 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
-import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
-
-import '../fields/fields.dart';
-import '../types/types.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
+import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 mixin TransactionStatePageController<
     SUCCESS extends SubmitTransactionSuccess,
@@ -181,7 +179,10 @@ abstract class TransactionStateController<
     final warning = stateStatus.value.warning;
     if (context != null && warning != null) {
       final accept = await context.openSliverDialog(
-          widget: (context) => DialogTextView(text: warning));
+          widget: (context) => DialogTextView(
+                text: warning,
+                buttonWidget: DialogDoubleButtonView(),
+              ));
       if (accept != true) return;
     }
     setPageProgress(text: "creating_transaction".tr);
@@ -198,13 +199,12 @@ abstract class TransactionStateController<
       appLogger.error(
           runtime: runtimeType,
           functionName: "signAndSendTransaction",
-          msg: result.error?.tr);
+          msg: result.localizationError);
 
       if (result.exception == WalletExceptionConst.rejectSigning) {
         setPageIdle();
       } else {
-        final error = result.error;
-        setPageError(error!.tr);
+        setPageError(result.localizationError);
       }
       return;
     }
@@ -259,9 +259,10 @@ abstract class TransactionStateController<
       appLogger.error(
           runtime: runtimeType,
           functionName: "init",
-          msg: init.error,
+          msg: init.localizationError,
           trace: init.trace);
-      setPageError(init.error!.tr, backToIdle: false, showBackButton: false);
+      setPageError(init.localizationError,
+          backToIdle: false, showBackButton: false);
       return;
     }
     setPageIdle();

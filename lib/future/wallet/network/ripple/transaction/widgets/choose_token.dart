@@ -43,6 +43,11 @@ class _RipplePickTokenState extends State<RipplePickToken>
   }
 
   void onPickAccountToken(RippleIssueToken token) {
+    if (token.issuer == widget.address.networkAddress.address) {
+      final asset = RipplePickedAsset.create(token);
+      context.pop(asset);
+      return;
+    }
     final asset = RipplePickedAsset.account(token);
     context.pop(asset);
   }
@@ -69,7 +74,7 @@ class _RipplePickTokenState extends State<RipplePickToken>
       return await client.accountTokens(widget.address);
     });
     if (r.hasError) {
-      pageKey.errorText(r.error!.tr, backToIdle: false);
+      pageKey.errorText(r.localizationError, backToIdle: false);
       return;
     }
     tokens = r.result;

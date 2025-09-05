@@ -22,6 +22,8 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
   Web3WalletConnectHandler get walletConnect =>
       _controller.walletConnectHandler;
 
+  bool get hasWalletKey => _controller.hasWalletKey;
+
   int? get reminingWalletTime => _timeout.remining;
 
   @override
@@ -43,6 +45,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
       {required WalletRestoreV2 backup,
       required String password,
       required WalletUpdateInfosData walletInfos}) async {
+    Logg.log("wKey ${backup.wallet.key}");
     return await _callSynchronized(() async {
       await _setup(
           hdWallet: backup.wallet,
@@ -50,6 +53,14 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
           walletInfos: walletInfos,
           backup: backup);
     }, action: () => WalletActionEventType.setup);
+  }
+
+  Future<MethodResult<void>> setupSubWallet(
+      {required WalletImportSubWalletData subWalletData}) async {
+    final result = await _callSynchronized(() async {
+      return await _controller._setupSubWallet(subWalletData);
+    }, action: () => WalletActionEventType.importSubWallet);
+    return result;
   }
 
   Future<MethodResult<Web3MessageCore>> web3Request(
@@ -137,18 +148,27 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
         action: () => WalletActionEventType.updateWeb3Auth);
   }
 
-  Future<MethodResult<void>> removeWeb3Application(
-      Web3ApplicationAuthentication application) async {
+  Future<MethodResult<Web3APPData?>> disconnectWeb3Application(
+      Web3ApplicationAuthentication application,
+      {bool removeApplication = false}) async {
     return _callSynchronized(
-        () async => _controller._removeWeb3Authenticated(application),
+        () async => _controller._disconnectWeb3Application(application,
+            removeApplication: removeApplication),
         action: () => WalletActionEventType.updateWeb3Auth);
   }
 
   Future<MethodResult<void>> changePassword(
-      String password, String newPassword) async {
+      WalletCredentialResponseVerify credential, String newPassword) async {
     return await _callSynchronized(() async {
-      await _controller._changePassword(password, newPassword);
+      await _controller._changePassword(credential, newPassword);
     }, action: () => WalletActionEventType.changePassword);
+  }
+
+  Future<MethodResult<void>> expireCredential(
+      WalletCredentialResponseVerify credential) async {
+    return await _walletAction(() async {
+      _wallet?._expireCredential(credential);
+    });
   }
 
   Future<MethodResult<NETWORKCHAINACCOUNT<NETWORKADDRESS>>>
@@ -163,10 +183,11 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
         action: () => WalletActionEventType.deriveAddress);
   }
 
-  Future<MethodResult<void>> importAccount(
-      ImportedKeyStorage newAccountParams, String password) async {
+  Future<MethodResult<void>> importAccount(ImportedKeyStorage newAccountParams,
+      WalletCredentialResponseVerify credential) async {
     final result = await _callSynchronized(
-        () async => await _controller._importNewKey(newAccountParams, password),
+        () async =>
+            await _controller._importNewKey(newAccountParams, credential),
         action: () => WalletActionEventType.importKey);
     return result;
   }
@@ -192,9 +213,9 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
   }
 
   Future<MethodResult<void>> removeImportedKey(
-      EncryptedCustomKey key, String password) {
+      EncryptedCustomKey key, WalletCredentialResponseVerify credential) {
     return _callSynchronized(() async {
-      return await _controller._removeKey(key, password);
+      return await _controller._removeKey(key, credential);
     }, action: () => WalletActionEventType.removeKey);
   }
 
@@ -203,10 +224,10 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     final result = await _callSynchronized(
         () async => await _controller._switchNetwork(network),
         action: () => WalletActionEventType.switchNetwork);
-    assert(!result.hasError, "failed to switch network ${result.error}");
+    assert(!result.hasError, "failed to switch network ${result.message}");
   }
 
-  Future<MethodResult<List<CryptoPublicKeyData>>> getAccountPubKys(
+  Future<MethodResult<List<PublicKeyDerivationResult>>> getAccountPubKys(
       {required ChainAccount account}) async {
     final result = await _callSynchronized(
         () async => _controller._getAccountPubKys(account: account),
@@ -243,24 +264,34 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
   }
 
   Future<MethodResult<String>> generateWalletBackup(
-      {required String password,
+      {required WalletCredentialResponseVerify credential,
       required GenerateWalletBackupOptions options}) async {
     final result = await _callSynchronized(() async {
       return await _controller._generateWalletBackup(
-          options: options, password: password);
+          options: options, credential: credential);
     }, action: () => WalletActionEventType.backupWallet);
     return result;
   }
 
-  Future<MethodResult<void>> eraseWallet(String password) async {
+  Future<MethodResult<void>> eraseWallet(
+      WalletCredentialResponseVerify credential) async {
     return await _callSynchronized(() async {
-      await _eraseWallet(password);
+      await _eraseWallet(credential);
     }, action: () => WalletActionEventType.eraseWallet);
+  }
+
+  Future<MethodResult<void>> removeSubWallet(
+      {required WalletCredentialResponseVerify credential,
+      required int subWalletId}) async {
+    return await _callSynchronized(() async {
+      await _controller._removeSubWallet(
+          credential: credential, subWalletId: subWalletId);
+    }, action: () => WalletActionEventType.removeSubWallet);
   }
 
   Future<MethodResult<T>> signRequest<T>(
       {required WalletSigningRequest<T> request,
-      String? password,
+      WalletCredentialResponseVerify? credential,
       Duration? timeout}) async {
     final result = await _callSynchronized(() async {
       final Set<ChainAccount> addresses = request.addresses.toSet();
@@ -268,7 +299,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
           addresses.map((e) => e.signerKeyIndexes()).expand((e) => e).toSet();
       return await _controller._signTransaction(
           request: request,
-          password: password,
+          credential: credential,
           signers: keys,
           timeout: timeout);
     }, action: () => WalletActionEventType.walletRequest);
@@ -278,52 +309,41 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
 
   Future<MethodResult<void>> updateWalletInfos(
       {required WalletUpdateInfosData walletInfos,
-      required String password}) async {
+      required WalletCredentialResponseVerify credential}) async {
     return await _callSynchronized(() async {
       return await _controller._updateWalletInfos(
-          password: password, walletInfos: walletInfos);
+          credential: credential, walletInfos: walletInfos);
     }, action: () => WalletActionEventType.updateWallet);
   }
 
-  Future<MethodResult<List<CryptoKeyData>>> accsess(
-      WalletAccsessType accsessType, String password,
-      {ChainAccount? account, String? keyId}) async {
-    final result = await _callSynchronized(() async {
-      if (accsessType.isUnlock && isUnlock) {
-        return [FakeKeyData()];
-      } else if (isReadOnly || isLock) {
-        await _controller._login(password);
-      } else {
-        await _controller._validatePassword(password);
-      }
-      return await _controller._accsess(accsessType,
-          account: account, keyId: keyId);
-    },
-        delay: (accsessType.isUnlock && password.isEmpty)
-            ? null
-            : APPConst.oneSecoundDuration,
-        action: () => WalletActionEventType.accessKey);
-    return result;
-  }
+  Future<void> _validateCredential(WalletCredentialRequest request) async {}
 
-  Future<MethodResult<WalletLockTime>> login(String password) async {
-    if (isUnlock) {
-      return _walletAction(() async {
-        await _controller._validatePassword(password);
-        return _wallet!._wallet.locktime;
-      });
-    }
-    return await _callSynchronized(() async {
-      if (isReadOnly || isLock) {
-        await _controller._login(password);
-      } else {
-        await _controller._validatePassword(password);
-      }
-      return _wallet!._wallet.locktime;
-    },
-        action: () => isUnlock
-            ? WalletActionEventType.changePassword
-            : WalletActionEventType.login);
+  Future<MethodResult<RESPONSE>>
+      login_<RESPONSE extends WalletCredentialResponse>(
+          WalletCredentialRequest<RESPONSE> request) async {
+    final duration = isUnlock &&
+            (request.password == null && request.platformCredential != true)
+        ? null
+        : APPConst.animationDuraion;
+    Logg.log("duration $duration");
+    final result = await _callSynchronized(
+      () async {
+        if (!isUnlock ||
+            request.credential.type != WalletCredentialType.login) {
+          await _controller._login(
+              password: request.password,
+              platformCredential: request.platformCredential);
+        }
+        await _validateCredential(request);
+        return _controller._accsess(request, password: request.password);
+      },
+      delay: duration,
+      action: () {
+        if (isUnlock) return WalletActionEventType.accessKey;
+        return WalletActionEventType.login;
+      },
+    );
+    return result;
   }
 
   Future<MethodResult<void>> updateCurrentAccountBalance() async {
@@ -372,9 +392,10 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     return crypto.cryptoMainRequest(request);
   }
 
-  Future<T> cryptoIsolateRequest<T, A extends CborMessageResponseArgs,
-      E extends CryptoArgsCompleter<T, A>>(E request) async {
-    return crypto.cryptoIsolateRequest(request);
+  Future<T> cryptoIsolateRequest<T, A extends CborMessageResponseArgs>(
+      CryptoArgsCompleter<T, A> message,
+      {Duration? timeout}) async {
+    return crypto.cryptoIsolateRequest<T, A>(message, timeout: timeout);
   }
 
   Future<T> nonEncryptedRequest<T, A extends CborMessageResponseArgs>(
@@ -415,10 +436,10 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
   Future<MethodResult<String>> generateWalletKeyBackup(
       {required String data,
       required WalletBackupTypes type,
-      required String password}) async {
+      required WalletCredentialResponseVerify credential}) async {
     return _callSynchronized(
         () async => await _controller._generateWalletKeyBackup(
-            data: data, password: password, type: type),
+            data: data, credential: credential, type: type),
         action: () => WalletActionEventType.backup);
   }
 
@@ -427,7 +448,7 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
       required String? passphrase,
       required String password}) async {
     if (passphrase?.isEmpty ?? false) {
-      throw WalletExceptionConst.invalidMnemonicPassphrase;
+      throw AppCryptoExceptionConst.invalidMnemonicPassphrase;
     }
     final newWallet = _wallets.createNewMainWallet(
         name: StrUtils.addNumberToMakeUnique(
@@ -438,11 +459,11 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
             passphrase: passphrase,
             password: password,
             checksum: newWallet.checkSumBytes));
-    return newWallet.updateData(encrypt.storageData);
+    return newWallet.updateData(encrypt.masterKey.storageDataB64());
   }
 
   Future<WalletRestoreV2> restoreWalletBackupV3(
-      {required WalletBackupCore backup,
+      {required WalletBackup backup,
       required String? passhphrase,
       required String password}) async {
     try {
@@ -450,22 +471,28 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
         throw WalletExceptionConst.invalidBackup;
       }
       if (passhphrase?.isEmpty ?? false) {
-        throw WalletExceptionConst.invalidMnemonicPassphrase;
+        throw AppCryptoExceptionConst.invalidMnemonicPassphrase;
       }
-      final newWallet = _wallets.createNewMainWallet(
-          name: StrUtils.addNumberToMakeUnique(
-              _wallets.walletNames, HDWalletsConst.initializeName));
-      final key = await _toWalletPassword(password, newWallet.checkSumBytes);
+      final newWallet = backup.wallet
+          .updateId(_wallets.generateNewWalletId())
+          .updateKey(_wallets.generateNewWalletChecksum());
+      final memoryKey = QuickCrypto.generateRandom();
       final resotreKey = await crypto.cryptoIsolateRequest(
           CryptoRequestRestoreBackupMasterKey(
-              key: key,
+              rawKey: StringUtils.encode(password),
+              checksum: newWallet.checkSumBytes,
               backup: BytesUtils.fromHexString(backup.key),
-              passphrase: passhphrase));
+              passphrase: passhphrase,
+              memoryKey: memoryKey));
+
       return await _validateBackupAccounts(
-          backup: backup as WalletBackup,
-          wallet: newWallet.updateData(resotreKey.storageData),
+          backup: backup,
+          wallet:
+              newWallet.updateData(resotreKey.encryptedKey.storageDataB64()),
           resotreKey: resotreKey,
-          key: key);
+          memoryKey: memoryKey);
+
+      ///
     } on WalletException catch (e) {
       if (e == WalletExceptionConst.invalidBackupChecksum) {
         rethrow;
@@ -476,14 +503,19 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
     }
   }
 
-  Future<WalletRestoreV2> _validateBackupAccounts({
-    required WalletBackup backup,
-    required CryptoRestoreBackupMasterKeyResponse resotreKey,
-    required MainWallet wallet,
-    required List<int> key,
-  }) async {
+  Future<WalletRestoreV2> _validateBackupAccounts(
+      {required WalletBackup backup,
+      required CryptoRestoreBackupMasterKeyResponse resotreKey,
+      required MainWallet wallet,
+      required List<int> memoryKey}) async {
+    // Logg.log("r ${resotreKey.masterKey.sub}");
+    // throw Exception();
     final setupKey = resotreKey.masterKey;
-    if (!resotreKey.isValid) {
+    Logg.log(
+        "R ${resotreKey.checksum} ${backup.checksum} ${resotreKey.isValid}");
+    final bool validChekcsum =
+        BytesUtils.bytesEqual(backup.checksum, resotreKey.checksum);
+    if (!resotreKey.isValid || !validChekcsum) {
       return WalletRestoreV2(
           masterKeys: resotreKey.masterKey,
           chains: const [],
@@ -494,7 +526,8 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
           wallet: wallet);
     }
     final List<WalletNetworkBackup> validateChains = [];
-    final List<ChainAccount> invalidAddresses = [];
+    List<ChainAccount> invalidAddresses = [];
+
     for (final c in backup.networks) {
       final List<ChainAccount> addresses = [];
 
@@ -513,10 +546,10 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
             continue;
           }
           final addr = await crypto.walletArgs(
+              memoryKey: memoryKey,
               message: WalletRequestDeriveAddress(
                   addressParams: address.toAccountParams()),
-              encryptedMasterKey: resotreKey.encryptedKey.masterKey,
-              key: key);
+              masterKey: resotreKey.encryptedKey.masterKey);
           final account = addr.accountParams.toAccount(network, addr.publicKey);
           final isValid = address.identifier == account.identifier;
           if (isValid) {
@@ -534,6 +567,12 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
 
       validateChains.add(chain);
     }
+
+    Logg.log("accounts ${invalidAddresses.length}");
+
+    for (final i in backup.networks) {
+      i.chain.dispose();
+    }
     return WalletRestoreV2(
         masterKeys: setupKey,
         dapps: backup.dapps,
@@ -541,6 +580,6 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
         invalidAddresses: invalidAddresses,
         chains: backup.chains,
         wallet: wallet,
-        verifiedChecksum: true);
+        verifiedChecksum: validChekcsum);
   }
 }

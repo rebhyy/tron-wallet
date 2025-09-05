@@ -50,7 +50,7 @@ class _ByronLegacyKeyDerivationViewState
       final index = Bip44LevelsDetails.fromIntIndex(v, level);
       if (!index.isHardened && !isSupportNoneHardend) return;
       levels[level] = Bip44LevelsDetails.fromIntIndex(v, level);
-    } on Exception {
+    } catch (_) {
       levels[level] = null;
     } finally {
       path = calculatePath();

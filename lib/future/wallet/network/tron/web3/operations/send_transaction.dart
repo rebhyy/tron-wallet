@@ -15,8 +15,7 @@ import 'package:on_chain_wallet/future/wallet/network/tron/web3/pages/send_trans
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/tron/client/tron.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/params/models/transaction.dart';
 

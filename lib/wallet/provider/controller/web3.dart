@@ -281,9 +281,16 @@ mixin Web3Impl on WalletManager {
         clientInfo: application.toClient());
   }
 
-  Future<void> _removeWeb3Authenticated(
-      Web3ApplicationAuthentication application) async {
+  Future<Web3APPData?> _disconnectWeb3Application(
+      Web3ApplicationAuthentication application,
+      {bool removeApplication = false}) async {
     await _core._removeWeb3Permission(wallet: _wallet, permission: application);
+    if (removeApplication) {
+      await _appChains.disconnectWeb3Chain(application);
+      await _removeWeb3ApplicationActivities(application);
+      return null;
+    }
+    return _appChains.createAuth(application);
   }
 
   Future<Web3APPData> _getDefaultAuth() async {

@@ -227,11 +227,8 @@ class _EIP1559CustomGasOptionsViewState
             keyboardType: const TextInputType.numberWithOptions(
                 decimal: true, signed: false),
             inputFormatters: [
-              BigRetionalRangeTextInputFormatter(
-                max: null,
-                min: BigRational.zero,
-                allowDecimal: true,
-              ),
+              BigRetionalTextInputFormatter(
+                  max: null, allowDecimal: true, allowSign: false),
             ],
             textAlign: TextAlign.center,
             validator: validatorBaseGass,
@@ -267,11 +264,8 @@ class _EIP1559CustomGasOptionsViewState
             keyboardType: const TextInputType.numberWithOptions(
                 decimal: true, signed: false),
             inputFormatters: [
-              BigRetionalRangeTextInputFormatter(
-                max: null,
-                min: BigRational.zero,
-                allowDecimal: true,
-              ),
+              BigRetionalTextInputFormatter(
+                  max: null, allowDecimal: true, allowSign: false),
             ],
             textAlign: TextAlign.center,
             validator: validateProrityFee,
@@ -312,11 +306,8 @@ class _EIP1559CustomGasOptionsViewState
                 decimal: true, signed: false),
             helperText: gasLimitHelper,
             inputFormatters: [
-              BigRetionalRangeTextInputFormatter(
-                max: null,
-                min: BigRational.zero,
-                allowDecimal: false,
-              ),
+              BigRetionalTextInputFormatter(
+                  max: null, allowDecimal: false, allowSign: false),
             ],
             textAlign: TextAlign.center,
           ),
@@ -494,11 +485,8 @@ class __ETHLegacyCustomGasViewSelectViewState
             keyboardType: const TextInputType.numberWithOptions(
                 decimal: true, signed: false),
             inputFormatters: [
-              BigRetionalRangeTextInputFormatter(
-                max: null,
-                min: BigRational.zero,
-                allowDecimal: true,
-              ),
+              BigRetionalTextInputFormatter(
+                  max: null, allowSign: false, allowDecimal: true),
             ],
             textAlign: TextAlign.center,
             validator: validatorBaseGass,
@@ -539,9 +527,9 @@ class __ETHLegacyCustomGasViewSelectViewState
                 decimal: true, signed: false),
             helperText: gasLimitHelper,
             inputFormatters: [
-              BigRetionalRangeTextInputFormatter(
+              BigRetionalTextInputFormatter(
                 max: null,
-                min: BigRational.zero,
+                allowSign: false,
                 allowDecimal: false,
               ),
             ],

@@ -28,8 +28,10 @@ class CosmosAPIProvider extends APIProvider {
 
   factory CosmosAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.cosmosApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.cosmosApiServiceProvider);
     final int? protocolId = values.elementAs(1);
     return CosmosAPIProvider._(
         uri: values.elementAs(0),

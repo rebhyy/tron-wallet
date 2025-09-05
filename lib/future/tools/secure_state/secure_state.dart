@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_bridge/models/models.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 
 mixin SecureState<T extends StatefulWidget> on State<T> {

@@ -7,7 +7,7 @@ import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/crypto/utils/bitcoin/bitcoin.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
@@ -21,9 +21,9 @@ class SetupBitcoinAddressView extends StatefulWidget {
 }
 
 class _SetupBitcoinAddressViewState extends State<SetupBitcoinAddressView>
-    with SafeState {
-  final GlobalKey<PageProgressState> pageProgressKey =
-      GlobalKey<PageProgressState>(debugLabel: "SetupBitcoinAddressView");
+    with SafeState<SetupBitcoinAddressView> {
+  final StreamPageProgressController pageProgressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   late final BitcoinChain chainAccount = widget.chain;
   final GlobalKey visibleGenerateAddress =
       GlobalKey(debugLabel: "_SetupBitcoinAddressViewState_visibleContinue");
@@ -85,7 +85,7 @@ class _SetupBitcoinAddressViewState extends State<SetupBitcoinAddressView>
   }
 
   CryptoCoins findCoin() {
-    return network.findCOinFromBitcoinAddressType(selected);
+    return network.findCoinFromBitcoinAddressType(selected);
   }
 
   void _init() {
@@ -150,20 +150,19 @@ class _SetupBitcoinAddressViewState extends State<SetupBitcoinAddressView>
     }
   }
 
-  void generateAddress() async {
+  Future<void> generateAddress() async {
     final wallet = context.watch<WalletProvider>(StateConst.main);
     final coin = findCoin();
     final BitcoinAddressType selectedType = correctAddressType();
-    final customKeys = await wallet.wallet.getCustomKeysForCoin(coin);
 
     final Bip32AddressIndex? keyIndex =
         await context.openMaxExtendSliverBottomSheet<Bip32AddressIndex>(
             "setup_derivation".tr,
-            child: SetupDerivationModeView(
+            bodyBuilder: (controller) => SetupDerivationModeView(
                 coin: coin,
                 chainAccout: chainAccount,
-                customKeys: customKeys,
-                seedGenerationType: SeedTypes.bip39));
+                seedGenerationType: SeedTypes.bip39,
+                controller: controller));
 
     if (keyIndex == null) return;
 
@@ -186,7 +185,7 @@ class _SetupBitcoinAddressViewState extends State<SetupBitcoinAddressView>
     final result = await wallet.wallet
         .deriveNewAccount(newAccountParams: newAccount, chain: chainAccount);
     if (result.hasError) {
-      pageProgressKey.errorText(result.error!.tr);
+      pageProgressKey.errorText(result.localizationError);
     } else {
       pageProgressKey.success(
           backToIdle: false,
@@ -204,18 +203,24 @@ class _SetupBitcoinAddressViewState extends State<SetupBitcoinAddressView>
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    MethodUtils.after(() async => _init());
+  void onInitOnce() {
+    super.onInitOnce();
+    _init();
+  }
+
+  @override
+  void safeDispose() {
+    super.safeDispose();
+    pageProgressKey.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: pageProgressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      initialStatus: PageProgressStatus.progress,
-      child: (c) => Center(
+    return StreamPageProgress(
+      controller: pageProgressKey,
+      // backToIdle: APPConst.oneSecoundDuration,
+      // initialStatus: PageProgressStatus.progress,
+      builder: (c) => Center(
         child: CustomScrollView(
           shrinkWrap: true,
           slivers: [
@@ -226,15 +231,6 @@ class _SetupBitcoinAddressViewState extends State<SetupBitcoinAddressView>
                 key: const ValueKey<bool>(true),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  PageTitleSubtitle(
-                      title: "setup_network_address"
-                          .tr
-                          .replaceOne(network.coinParam.token.name),
-                      body: LargeTextView([
-                        "disable_standard_derivation".tr,
-                        "setup_address_derivation_keys_desc".tr,
-                        "please_following_steps_to_generate_address".tr
-                      ])),
                   _DriveFromHdWallet(
                       onVisibleGenerateAddress: visibleGenerateAddress,
                       typesToSelect: typesToSelect,

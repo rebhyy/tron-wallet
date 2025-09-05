@@ -1,7 +1,7 @@
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 abstract class TransactionOperations {
   abstract final String value;
@@ -27,7 +27,7 @@ sealed class SubmitTransactionResult {
 
   T cast<T extends SubmitTransactionResult>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", "$runtimeType"]);
+      throw AppExceptionConst.internalError("SubmitTransactionResult");
     }
     return this as T;
   }

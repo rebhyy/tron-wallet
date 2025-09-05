@@ -2,7 +2,6 @@ import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/constant/const.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/string.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
@@ -113,7 +112,7 @@ mixin CosmosTransactionFeeController on BaseCosmosTransactionController {
       final fee = await MethodUtils.call(() async => await simulateFee());
       if (fee.isCancel) return;
       if (fee.hasError) {
-        _setupFees(txFee.denom, error: fee.error!.tr);
+        _setupFees(txFee.denom, error: fee.localizationError);
         return;
       }
       _setupFees(txFee.denom,

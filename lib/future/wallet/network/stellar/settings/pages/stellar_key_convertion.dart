@@ -34,9 +34,10 @@ class _StellarConversionView extends StatefulWidget {
 }
 
 class __StellarKeyConversionViewState extends State<_StellarConversionView>
-    with SafeState {
+    with
+        SafeState<_StellarConversionView>,
+        ProgressMixin<_StellarConversionView> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
   final GlobalKey<AppTextFieldState> keyController =
       GlobalKey<AppTextFieldState>(
           debugLabel: "__StellarKeyConversionViewState");
@@ -71,7 +72,7 @@ class __StellarKeyConversionViewState extends State<_StellarConversionView>
           privateKey: key, coin: widget.network.coins.first);
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr, backToIdle: true);
+      progressKey.errorText(result.localizationError, backToIdle: true);
     } else {
       generatedKey = result.result;
       progressKey.success();
@@ -91,10 +92,9 @@ class __StellarKeyConversionViewState extends State<_StellarConversionView>
     return PopScope(
       canPop: generatedKey == null,
       onPopInvokedWithResult: onBackButton,
-      child: PageProgress(
-        key: progressKey,
-        backToIdle: APPConst.oneSecoundDuration,
-        child: (c) => Form(
+      child: StreamPageProgress(
+        controller: progressKey,
+        builder: (c) => Form(
           key: formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction,
           child: UnfocusableChild(

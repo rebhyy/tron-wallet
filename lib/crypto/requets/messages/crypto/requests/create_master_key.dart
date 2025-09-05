@@ -4,21 +4,26 @@ import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/core/message.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/generate_master_key.dart';
+import 'package:on_chain_wallet/crypto/utils/crypto/utils.dart';
 
 class CryptoRequestRestoreBackupMasterKey extends CryptoRequest<
     CryptoRestoreBackupMasterKeyResponse, MessageArgsFourBytes> {
   final String? passphrase;
   final List<int> backup;
-  final List<int> key;
-  const CryptoRequestRestoreBackupMasterKey._(
-      {required this.passphrase, required this.backup, required this.key});
+  final List<int> rawKey;
+  final List<int> memoryKey;
+  final List<int> checksum;
+  CryptoRequestRestoreBackupMasterKey(
+      {required this.passphrase,
+      required List<int> backup,
+      required List<int> rawKey,
+      required List<int> memoryKey,
+      required List<int> checksum})
+      : backup = backup.asImmutableBytes,
+        rawKey = rawKey.asImmutableBytes,
+        memoryKey = memoryKey.asImmutableBytes,
+        checksum = checksum.asImmutableBytes;
 
-  // Public factory constructor
-  factory CryptoRequestRestoreBackupMasterKey(
-      {String? passphrase, required List<int> backup, required List<int> key}) {
-    return CryptoRequestRestoreBackupMasterKey._(
-        passphrase: passphrase, backup: backup, key: key);
-  }
   factory CryptoRequestRestoreBackupMasterKey.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
     final CborListValue values = CborSerializable.cborTagValue(
@@ -27,39 +32,46 @@ class CryptoRequestRestoreBackupMasterKey extends CryptoRequest<
         hex: hex,
         tags: CryptoRequestMethod.createMasterKey.tag);
     return CryptoRequestRestoreBackupMasterKey(
-        passphrase: values.elementAs(0),
-        backup: values.elementAs(1),
-        key: values.elementAs(2));
+        passphrase: values.valueAs(0),
+        backup: values.valueAs(1),
+        rawKey: values.valueAs(2),
+        memoryKey: values.valueAs(3),
+        checksum: values.valueAs(4));
   }
 
   @override
   MessageArgsFourBytes getResult() {
-    final masterKey = WalletMasterKeys.generateFromBackup(
-        passphrase: passphrase, bytes: backup);
-    final encrypt = masterKey.$1.encrypt(key: key);
+    final result = this.result();
+    // final masterKey = WalletMasterKeys.generateFromBackup(
+    //     passphrase: passphrase, bytes: backup);
+    // final encrypt = masterKey.$1
+    //     .encrypt_(key: rawKey, rawKey: rawKey, memoryKey: memoryKey);
     return MessageArgsFourBytes(
-        keyOne: masterKey.$1.toCbor().encode(),
-        keyTwo: encrypt.$1.toCbor().encode(),
-        keyThree: encrypt.$2,
-        keyFour: [masterKey.$2 ? 1 : 0]);
+        keyOne: result.masterKey.toCbor().encode(),
+        keyTwo: result.encryptedKey.toCbor().encode(),
+        keyThree: [result.isValid ? 1 : 0],
+        keyFour: result.checksum ?? []);
   }
 
   @override
   CryptoRestoreBackupMasterKeyResponse parsResult(MessageArgsFourBytes result) {
     return CryptoRestoreBackupMasterKeyResponse(
-      masterKey: WalletMasterKeys.deserialize(bytes: result.keyOne),
-      encryptedKey: EncryptedMasterKey.deserialize(bytes: result.keyTwo),
-      storageData:
-          StringUtils.decode(result.keyThree, type: StringEncoding.base64),
-      isValid: result.keyFour[0] == 0 ? false : true,
-    );
+        masterKey: WalletMasterKeys.deserialize(bytes: result.keyOne),
+        encryptedKey: EncryptedMasterKey.deserialize(bytes: result.keyTwo),
+        isValid: result.keyThree[0] == 0 ? false : true,
+        checksum: result.keyFour.emptyAsNull);
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborSerializable.fromDynamic(
-            [passphrase, CborBytesValue(backup), CborBytesValue(key)]),
+        CborSerializable.fromDynamic([
+          passphrase,
+          CborBytesValue(backup),
+          CborBytesValue(rawKey),
+          CborBytesValue(memoryKey),
+          CborBytesValue(checksum)
+        ]),
         method.tag);
   }
 
@@ -70,12 +82,13 @@ class CryptoRequestRestoreBackupMasterKey extends CryptoRequest<
   CryptoRestoreBackupMasterKeyResponse result() {
     final masterKey = WalletMasterKeys.generateFromBackup(
         passphrase: passphrase, bytes: backup);
-    final encrypt = masterKey.$1.encrypt(key: key);
+    final key = WorkerCryptoUtils.hashKeyNew(key: rawKey, checksum: checksum);
+    final encrypt =
+        masterKey.$1.encrypt_(key: key, rawKey: rawKey, memoryKey: memoryKey);
     return CryptoRestoreBackupMasterKeyResponse(
-        encryptedKey: encrypt.$1,
+        encryptedKey: encrypt,
         masterKey: masterKey.$1,
-        storageData:
-            StringUtils.decode(encrypt.$2, type: StringEncoding.base64),
-        isValid: masterKey.$2);
+        isValid: masterKey.$2,
+        checksum: masterKey.$3);
   }
 }

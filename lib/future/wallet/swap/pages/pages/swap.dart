@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/app/constant/constant.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/swap/controller/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/swap/swap.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
 

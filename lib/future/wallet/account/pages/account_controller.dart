@@ -52,8 +52,8 @@ class _NetworkAccountControllerViewState<CL extends NetworkClient?,
   ChainAccount? address;
   NetworkClient? client;
 
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   void switchAccount(ChainAccount? updateAddress) async {
     final account = this.account;
     if (updateAddress == null ||
@@ -65,7 +65,7 @@ class _NetworkAccountControllerViewState<CL extends NetworkClient?,
     final result = await MethodUtils.call(
         () async => await account.switchAccount(updateAddress));
     if (result.hasError) {
-      progressKey.errorText(result.error!, backToIdle: false);
+      progressKey.errorText(result.localizationError, backToIdle: false);
       return;
     }
     address = updateAddress;
@@ -131,16 +131,20 @@ class _NetworkAccountControllerViewState<CL extends NetworkClient?,
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar(),
-      body: PageProgress(
-          initialStatus: StreamWidgetStatus.progress,
-          backToIdle: APPConst.milliseconds100,
+      body: StreamPageProgress(
           initialWidget:
               ProgressWithTextView(text: "page_retrieval_requirment".tr),
-          key: progressKey,
-          child: (c) {
+          controller: progressKey,
+          builder: (c) {
             return widget.childBulder(wallet, account!.cast<T>(), client as CL,
                 address as CHAINACCOUNT, switchAccount);
           }),

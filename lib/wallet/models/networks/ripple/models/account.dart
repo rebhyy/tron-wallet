@@ -1,15 +1,20 @@
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 class XRPIssueToken {
+  final XRPAddress account;
   final XRPAddress issuer;
   final String currency;
   final String balance;
   const XRPIssueToken(
-      {required this.issuer, required this.currency, required this.balance});
+      {required this.issuer,
+      required this.currency,
+      required this.balance,
+      required this.account});
   XRPIssueToken.fromJson(Map<String, dynamic> json)
       : issuer = XRPAddress(json["issuer"]),
         balance = json["value"],
-        currency = json["currency"];
+        currency = json["currency"],
+        account = XRPAddress(json["issuer"]);
   @override
   String toString() {
     return "{name: $currency, issuer: $issuer, balance: $balance}";

@@ -7,11 +7,9 @@ enum HTTPClientType {
   single;
 
   static HTTPClientType fromName(String? name) {
-    return values.firstWhere(
-      (e) => e.name == name,
-      orElse: () => throw WalletExceptionConst.invalidData(
-          messsage: "invalid client type name"),
-    );
+    return values.firstWhere((e) => e.name == name,
+        orElse: () =>
+            throw AppSerializationException(objectName: "HTTPClientType"));
   }
 }
 
@@ -26,11 +24,9 @@ enum HTTPResponseType {
   listOfMap;
 
   static HTTPResponseType fromName(String? name) {
-    return values.firstWhere(
-      (e) => e.name == name,
-      orElse: () => throw WalletExceptionConst.invalidData(
-          messsage: "invalid response type name"),
-    );
+    return values.firstWhere((e) => e.name == name,
+        orElse: () =>
+            throw AppSerializationException(objectName: "HTTPResponseType"));
   }
 }
 
@@ -164,7 +160,7 @@ class HTTPCallerResponse {
     } on ApiProviderException {
       rethrow;
     } catch (e) {
-      throw ApiProviderException.error("invalid_request_type");
+      throw ApiProviderExceptionConst.invalidRequestType;
     }
   }
 }
@@ -187,7 +183,7 @@ enum DigestAuthHeadersAlg {
     if (name == null) return DigestAuthHeadersAlg.md5;
     return values.firstWhere((e) => e.name == name,
         orElse: () =>
-            throw WalletException("unsuported_digest_auth_algorithm"));
+            throw ApiProviderExceptionConst.invalidOrUnsuportedDigestAuth);
   }
 
   List<int> hashBytes(List<int> input) {
@@ -220,7 +216,8 @@ enum DigestAuthQop {
   const DigestAuthQop({required this.name});
   static DigestAuthQop fromName(String? name) {
     return values.firstWhere((e) => e.name == name,
-        orElse: () => throw WalletException("unsuported_digest_auth_qop"));
+        orElse: () =>
+            throw ApiProviderExceptionConst.invalidOrUnsuportedDigestAuth);
   }
 }
 

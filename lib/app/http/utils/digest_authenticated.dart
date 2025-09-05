@@ -68,7 +68,9 @@ class DigestAuthenticatedUtils {
   static DigestAuthHeaders? getChallenges(Map<String, String> headers) {
     if (!canUseAuthDigest(headers)) return null;
     final challenges = parseDigestHeader(headers[digestAuthKey]!);
-    if (challenges.isEmpty) throw WalletException("unsuported_digest_auth_qop");
+    if (challenges.isEmpty) {
+      throw ApiProviderExceptionConst.invalidOrUnsuportedDigestAuth;
+    }
     return challenges.first;
   }
 
@@ -92,7 +94,7 @@ class DigestAuthenticatedUtils {
 
   static List<DigestAuthHeaders> parseDigestHeader(String header) {
     if (!header.contains(digestKey)) {
-      throw WalletException("invalid_dgiest_auth_headers");
+      throw ApiProviderExceptionConst.invalidOrUnsuportedDigestAuth;
     }
     final digestParts = header
         .split('Digest ')
@@ -115,7 +117,7 @@ class DigestAuthenticatedUtils {
       try {
         final digestParams = DigestAuthHeaders.fromJson(params);
         auth.add(digestParams);
-      } on WalletException catch (_) {}
+      } on ApiProviderException catch (_) {}
     }
 
     return auth;

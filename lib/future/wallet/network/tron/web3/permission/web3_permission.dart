@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/chain_permission.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/permission_view.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 import 'package:on_chain/tron/src/address/tron_address.dart';
 

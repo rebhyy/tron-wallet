@@ -15,6 +15,8 @@ class CborTagsConst {
 
   static const List<int> coingeckoInfo = [60, 12];
   static const List<int> coingeckoCoins = [60, 13];
+  static const List<int> walletPlatformCredentialLocalAuth = [60, 14];
+  static const List<int> walletPlatformCredentialWebAuth = [60, 15];
 
   static const List<int> setting = [160];
   static const List<int> backup = [170];
@@ -50,6 +52,11 @@ class CborTagsConst {
     170,
     12
   ];
+  static const List<int> walletBackupSubWalletInfos = [
+    walletBackupVersion,
+    170,
+    13
+  ];
 
   static const List<int> mnemonic = [180];
   static const List<int> walletCustomKey = [180, 0];
@@ -69,6 +76,8 @@ class CborTagsConst {
   static const List<int> bitcoinWalletTransactionAmount = [200, 191, 25];
   static const List<int> bitcoinWalletTransactionInput = [200, 191, 26];
   static const List<int> bitcoinWalletTransactionScriptOutput = [200, 191, 27];
+  static const List<int> bitcoinUtxo = [200, 192, 2];
+  static const List<int> bitcoinAddressUtxo = [200, 192, 3];
 
   // xrp
   static const List<int> rippleAccount = [200, 193];
@@ -343,15 +352,17 @@ class CborTagsConst {
   static const List<int> xrpChainConfig = [201, 11];
   static const List<int> tronChainConfig = [201, 12];
   static const List<int> substrateChainConfig = [201, 13];
+  // static const List<int> bitcoinChainConfig = [201, 14];
   //// transactions
   static const List<int> transactionOutputTransfer = [0, 0];
   static const List<int> transactionOutputOperation = [0, 1];
   static const List<int> transactionOutputContract = [0, 2];
-  static const List<int> transactionInput = [1, 0];
-  static const List<int> transactionInputUtxos = [1, 1];
+  // static const List<int> transactionInput = [1, 0];
+  // static const List<int> transactionInputUtxos = [1, 1];
   static const List<int> transactionWeb3Client = [2, 0];
   static const List<int> transactionIntegerAmount = [3, 0];
   static const List<int> transactionDecimalsAmount = [4, 0];
+  static const List<int> transactionInputOperation = [1, 0];
 
   static const List<int> swapSetting = [10, 0];
 

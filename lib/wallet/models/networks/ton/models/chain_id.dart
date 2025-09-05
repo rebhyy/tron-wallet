@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 
 enum TonChainId {
   mainnet(value: '-239', workchain: 0),
@@ -10,6 +10,7 @@ enum TonChainId {
   const TonChainId({required this.value, required this.workchain});
   static TonChainId fromNetworkId(int id) {
     return values.firstWhere((e) => e.workchain == id,
-        orElse: () => throw Web3RequestExceptionConst.invalidNetwork);
+        orElse: () =>
+            throw AppSerializationException(objectName: "TonChainId"));
   }
 }

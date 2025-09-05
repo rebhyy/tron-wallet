@@ -11,8 +11,7 @@ enum SeedTypes {
   const SeedTypes({required this.name, required this.value});
   static SeedTypes fromValue(int? tag) {
     return values.firstWhere((e) => e.value == tag,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: 'invalid seed type tag.'));
+        orElse: () => throw AppSerializationException(objectName: "SeedTypes"));
   }
 }
 
@@ -55,7 +54,7 @@ enum APPBip39Languages {
       final language = Bip39WordsListFinder().findLanguage(mnemonic);
       return fromBip39Language(language.item2 as Bip39Languages);
     } catch (_) {
-      throw WalletExceptionConst.invalidMnemonic;
+      throw AppCryptoExceptionConst.invalidMnemonic;
     }
   }
 
@@ -71,7 +70,7 @@ enum APPBip39Languages {
       Bip39Languages.portuguese => portuguese,
       Bip39Languages.spanish => spanish,
       Bip39Languages.japanese => japanese,
-      _ => throw WalletExceptionConst.invalidMnemonic
+      _ => throw AppCryptoExceptionConst.invalidMnemonic
     };
   }
 
@@ -92,7 +91,86 @@ enum APPBip39Languages {
 
   static APPBip39Languages fromValue(int? tag) {
     return values.firstWhere((e) => e.value == tag,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: 'invalid bip39 language type tag.'));
+        orElse: () =>
+            throw AppSerializationException(objectName: "APPBip39Languages"));
+  }
+}
+
+enum AppMoneroMnemonicLanguages {
+  /// Chinese (Simplified)
+  chineseSimplified(0),
+
+  dutch(1),
+
+  english(2),
+
+  /// French
+  french(3),
+
+  /// Czech
+  german(4),
+
+  /// Italian
+  italian(5),
+
+  /// Japanese
+  japanese(6),
+
+  /// Portuguese
+  portuguese(7),
+
+  /// Spanish
+  spanish(8),
+
+  russian(9);
+
+  final int value;
+  const AppMoneroMnemonicLanguages(this.value);
+
+  static AppMoneroMnemonicLanguages findLanguage(Mnemonic mnemonic) {
+    try {
+      final language = MoneroWordsListFinder().findLanguage(mnemonic);
+      return fromBip39Language(language.item2 as MoneroLanguages);
+    } catch (_) {
+      throw AppCryptoExceptionConst.invalidMnemonic;
+    }
+  }
+
+  static AppMoneroMnemonicLanguages fromBip39Language(
+      MoneroLanguages language) {
+    return switch (language) {
+      MoneroLanguages.chineseSimplified => chineseSimplified,
+      MoneroLanguages.dutch => dutch,
+      MoneroLanguages.russian => russian,
+      MoneroLanguages.english => english,
+      MoneroLanguages.french => french,
+      MoneroLanguages.italian => italian,
+      MoneroLanguages.portuguese => portuguese,
+      MoneroLanguages.spanish => spanish,
+      MoneroLanguages.japanese => japanese,
+      MoneroLanguages.german => german,
+      _ => throw AppCryptoExceptionConst.invalidMnemonic
+    };
+  }
+
+  MoneroLanguages get language {
+    return switch (this) {
+      chineseSimplified => MoneroLanguages.chineseSimplified,
+      dutch => MoneroLanguages.dutch,
+      english => MoneroLanguages.english,
+      french => MoneroLanguages.french,
+      italian => MoneroLanguages.italian,
+      russian => MoneroLanguages.russian,
+      portuguese => MoneroLanguages.portuguese,
+      spanish => MoneroLanguages.spanish,
+      japanese => MoneroLanguages.japanese,
+      german => MoneroLanguages.german,
+    };
+  }
+
+  static AppMoneroMnemonicLanguages fromValue(int? tag) {
+    return values.firstWhere((e) => e.value == tag,
+        orElse: () => throw AppSerializationException(
+            objectName: "AppMoneroMnemonicLanguages"));
   }
 }

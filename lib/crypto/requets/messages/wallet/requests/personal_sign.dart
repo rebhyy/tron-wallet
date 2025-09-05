@@ -1,7 +1,7 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/core/message.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/personal_sign_response.dart';
@@ -88,10 +88,12 @@ final class WalletRequestSignMessage
   }
 
   @override
-  Future<MessageArgsOneBytes> getResult(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final signature =
-        sign(wallet: wallet, index: index, message: message, network: network);
+  Future<MessageArgsOneBytes> getResult(WalletInMemory wallet) async {
+    final signature = sign(
+        wallet: wallet.masterKey,
+        index: index,
+        message: message,
+        network: network);
     return MessageArgsOneBytes(keyOne: signature);
   }
 
@@ -104,10 +106,12 @@ final class WalletRequestSignMessage
   }
 
   @override
-  Future<CryptoPersonalSignResponse> result(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final signature =
-        sign(wallet: wallet, index: index, message: message, network: network);
+  Future<CryptoPersonalSignResponse> result(WalletInMemory wallet) async {
+    final signature = sign(
+        wallet: wallet.masterKey,
+        index: index,
+        message: message,
+        network: network);
     return CryptoPersonalSignResponse(
         signatureHex: BytesUtils.toHexString(signature, prefix: "0x"),
         signature: signature);

@@ -30,6 +30,7 @@ class DialogView extends StatelessWidget {
   final bool dismissible;
   @override
   Widget build(BuildContext context) {
+    // print("sliver $sliver");
     return ScaffoldMessenger(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -70,8 +71,9 @@ class DialogView extends StatelessWidget {
                             ),
                             ConditionalWidget(
                               enable: widget != null,
-                              onDeactive: (context) =>
-                                  sliver ?? WidgetConstant.sliverSizedBox,
+                              onDeactive: (context) {
+                                return sliver ?? WidgetConstant.sliverSizedBox;
+                              },
                               onActive: (context) => SliverToBoxAdapter(
                                 child: ConstraintsBoxView(
                                     padding: WidgetConstant.padding20,
@@ -201,7 +203,7 @@ class _AsyncDialogDoubleButtonViewState
     if (closed) return;
     if (result.hasError) {
       pKey.error();
-      _error = result.error!;
+      _error = result.localizationError;
       setState(() {});
     } else {
       pKey.success();

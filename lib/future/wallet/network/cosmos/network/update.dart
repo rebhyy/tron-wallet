@@ -31,7 +31,6 @@ class _UpdateCosmosProvider extends StatefulWidget {
 class _UpdateCosmosProviderState extends State<_UpdateCosmosProvider>
     with
         SafeState<_UpdateCosmosProvider>,
-        ProgressMixin<_UpdateCosmosProvider>,
         UpdateNetworkProviderState<
             _UpdateCosmosProvider,
             CosmosAPIProvider,
@@ -73,7 +72,7 @@ class _UpdateCosmosProviderState extends State<_UpdateCosmosProvider>
         provider: provider, network: network.toNetwork());
     final init = await client.validateNetworkChainId();
     if (!init) {
-      throw WalletException("network_incorrect_chain_id");
+      throw AppException("network_incorrect_chain_id");
     }
     return provider;
   }

@@ -30,8 +30,8 @@ enum SolanaNetworkType {
       {required this.identifier, required this.value, required this.genesis});
   static SolanaNetworkType fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: 'Solana network type not found.'));
+        orElse: () =>
+            throw AppSerializationException(objectName: "SolanaNetworkType"));
   }
 }
 
@@ -41,8 +41,8 @@ class SolanaNetworkParams extends NetworkCoinParams<SolanaAPIProvider> {
 
   factory SolanaNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.solNetworkParam);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.solNetworkParam);
 
     return SolanaNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),

@@ -1,8 +1,9 @@
 import 'package:blockchain_utils/bip/bip/bip.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/restore_backup.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
@@ -57,10 +58,11 @@ class ImportAccountView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ImportCustomKeys? importKey = context.getNullArgruments();
-    return PasswordCheckerView(
-        accsess: WalletAccsessType.verify,
-        onAccsess: (crendential, password, network) {
-          return _ImportAccount(password: password, customKey: importKey);
+    return AccessWalletView<WalletCredentialResponseVerify,
+            WalletCredentialVerify>(
+        request: WalletCredentialVerify(),
+        onAccsess: (credential) {
+          return _ImportAccount(credential: credential, customKey: importKey);
         },
         title: "import_account".tr,
         subtitle: PageTitleSubtitle(
@@ -69,21 +71,21 @@ class ImportAccountView extends StatelessWidget {
 }
 
 class _ImportAccount extends StatefulWidget {
-  const _ImportAccount({required this.password, required this.customKey});
-  final String password;
+  const _ImportAccount({required this.credential, required this.customKey});
+  final WalletCredentialResponseVerify credential;
   final ImportCustomKeys? customKey;
   @override
   State<_ImportAccount> createState() => _ImportAccountState();
 }
 
-class _ImportAccountState extends State<_ImportAccount> with SafeState {
+class _ImportAccountState extends State<_ImportAccount>
+    with SafeState<_ImportAccount> {
   late final WalletNetwork network;
   final GlobalKey<AppTextFieldState> textFieldState =
       GlobalKey<AppTextFieldState>(debugLabel: "_ImportAccountState");
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>(debugLabel: "_ImportAccountState_1");
-  final GlobalKey<AppTextFieldState> backupTextField =
-      GlobalKey<AppTextFieldState>(debugLabel: "_ImportAccountState_3");
+  final StreamPageProgressController controller =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
+
   final GlobalKey<FormState> form =
       GlobalKey(debugLabel: "_ImportAccountState_2");
 
@@ -177,7 +179,7 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
     if (widget.customKey != null) {
       final ImportCustomKeys customKey = widget.customKey!;
       if (!coins.contains(customKey.coin)) {
-        progressKey.errorText(
+        controller.errorText(
             "wrong_network_key_error".tr.replaceOne(network.token.name),
             backToIdle: false);
         return;
@@ -187,7 +189,7 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
       keyTypes = _buildKeyTypes();
       _key = customKey.privateKey;
     }
-    progressKey.success();
+    controller.success();
   }
 
   void onRestoreBackup(String? v) {
@@ -200,7 +202,7 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
       if (!form.ready()) return;
     }
 
-    progressKey.progressText("importing_key_pls_wait".tr);
+    controller.progressText("importing_key_pls_wait".tr);
     final model = context.watch<WalletProvider>(StateConst.main);
 
     final createKey = await MethodUtils.call(() async {
@@ -218,79 +220,90 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
     });
 
     if (createKey.hasError) {
-      _error = createKey.error!.tr;
-      progressKey.errorText(createKey.error!.tr);
+      _error = createKey.localizationError;
+      controller.errorText(createKey.localizationError,
+          backToIdle: false, showBackButton: true);
       return;
     }
     final result =
-        await model.wallet.importAccount(createKey.result, widget.password);
+        await model.wallet.importAccount(createKey.result, widget.credential);
     if (result.hasError) {
-      _error = result.error!.tr;
-      progressKey.errorText(result.error!.tr);
+      _error = result.localizationError;
+      controller.errorText(result.localizationError,
+          backToIdle: false, showBackButton: true);
+      Logg.log("here?");
     } else {
-      progressKey.successText("address_imported_desc1".tr, backToIdle: false);
+      controller.successText("address_imported_desc1".tr, backToIdle: false);
     }
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    MethodUtils.after(() async => _init());
+  void onInitOnce() {
+    super.onInitOnce();
+    _init();
+  }
+
+  @override
+  void safeDispose() {
+    super.safeDispose();
+    _key = "";
+    controller.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      initialStatus: StreamWidgetStatus.progress,
-      initialWidget: ProgressWithTextView(text: "retrieving_resources".tr),
-      child: (c) => UnfocusableChild(
-        child: CustomScrollView(
-          // shrinkWrap: true,
-          slivers: [
-            SliverConstraintsBoxView(
-              padding: WidgetConstant.paddingHorizontal20,
-              sliver: SliverToBoxAdapter(
-                child: Form(
-                  key: form,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        PageTitleSubtitle(
-                            title: "import_account".tr,
-                            body: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("import_account_desc2".tr),
-                                WidgetConstant.height8,
-                                Text("import_account_desc1".tr)
-                              ],
-                            )),
-                        if (needSelectCoins) ...[
-                          Text("coin_type".tr,
-                              style: context.textTheme.titleMedium),
-                          Text("choose_key_coin_desc".tr),
-                          WidgetConstant.height8,
-                          AppDropDownBottom(
-                              items: coinItems,
-                              value: coin,
-                              hint: "coin_type".tr,
-                              onChanged: onChangeKeyAlogrithm),
-                          WidgetConstant.height20,
+    return SensitiveContent(
+      sensitivity: ContentSensitivity.sensitive,
+      child: StreamPageProgress(
+        controller: controller,
+        initialWidget: ProgressWithTextView(text: "retrieving_resources".tr),
+        builder: (c) => UnfocusableChild(
+          child: CustomScrollView(
+            // shrinkWrap: true,
+            slivers: [
+              SliverConstraintsBoxView(
+                padding: WidgetConstant.paddingHorizontal20,
+                sliver: SliverToBoxAdapter(
+                  child: Form(
+                    key: form,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          PageTitleSubtitle(
+                              title: "import_account".tr,
+                              body: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("import_account_desc2".tr),
+                                  WidgetConstant.height8,
+                                  Text("import_account_desc1".tr)
+                                ],
+                              )),
+                          if (needSelectCoins) ...[
+                            Text("coin_type".tr,
+                                style: context.textTheme.titleMedium),
+                            Text("choose_key_coin_desc".tr),
+                            WidgetConstant.height8,
+                            AppDropDownBottom(
+                                items: coinItems,
+                                value: coin,
+                                hint: "coin_type".tr,
+                                onChanged: onChangeKeyAlogrithm),
+                            WidgetConstant.height20,
+                          ],
+                          APPAnimatedSize(
+                              isActive: coin != null,
+                              onActive: (c) => _ImportAccountStateKeyType(this),
+                              onDeactive: (c) => WidgetConstant.sizedBox)
                         ],
-                        APPAnimatedSize(
-                            isActive: coin != null,
-                            onActive: (c) => _ImportAccountStateKeyType(this),
-                            onDeactive: (c) => WidgetConstant.sizedBox)
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

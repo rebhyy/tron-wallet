@@ -8,8 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/typ
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/widgets/widgets/undelegate_resource.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/tron/client/tron.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class TronTransactionUnDelegateResourceContractOperation
     extends TronTransactionStateController2<UnDelegateResourceContract> {
@@ -76,7 +75,7 @@ class TronTransactionUnDelegateResourceContractOperation
       });
       if (to.closed) return;
       if (result.hasError) {
-        to.setError(error: result.error!.tr);
+        to.setError(error: result.localizationError);
       } else {
         to.setResource(result.result);
       }
@@ -125,7 +124,7 @@ class TronTransactionUnDelegateResourceContractOperation
                     view: e, type: null, networkAddress: TronAddress(e))))
         .toList();
     if (_resourceAddresses.isEmpty) {
-      throw WalletException("no_delegated_resources_found".tr);
+      throw AppException("no_delegated_resources_found");
     }
     final resource = _resourceAddresses.first;
     resourceInf0.setValue(resource);

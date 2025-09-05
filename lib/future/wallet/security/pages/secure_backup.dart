@@ -5,20 +5,19 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/models/backup/backup.dart';
+import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
+import 'package:on_chain_wallet/wallet/models/wallet/models/backup.dart';
 
 class GenerateBackupView extends StatefulWidget {
   const GenerateBackupView(
       {super.key,
       required this.data,
-      required this.password,
+      required this.credential,
       required this.type,
       this.walletBackupOptions,
-      this.descriptions = const []})
-      : assert((type != WalletBackupTypes.walletV2 &&
-            type != WalletBackupTypes.wallet));
+      this.descriptions = const []});
   final String data;
-  final String password;
+  final WalletCredentialResponseVerify credential;
   final List<Widget> descriptions;
   final WalletBackupTypes type;
   final GenerateWalletBackupOptions? walletBackupOptions;
@@ -28,7 +27,7 @@ class GenerateBackupView extends StatefulWidget {
 }
 
 class _SecureBackupViewState extends State<GenerateBackupView>
-    with SafeState<GenerateBackupView> {
+    with SafeState<GenerateBackupView>, ProgressMixin<GenerateBackupView> {
   bool get canUseKeyStore => widget.type == WalletBackupTypes.privatekey;
 
   bool useKeyStore = false;
@@ -38,7 +37,6 @@ class _SecureBackupViewState extends State<GenerateBackupView>
     updateState();
   }
 
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
   String? backup;
   String? viewText;
   void createBackup() async {
@@ -51,17 +49,16 @@ class _SecureBackupViewState extends State<GenerateBackupView>
         progressKey.errorText("invalid_backup_options".tr, backToIdle: false);
         return;
       }
-      result = await wallet.wallet
-          .generateWalletBackup(password: widget.password, options: options);
+      result = await wallet.wallet.generateWalletBackup(
+          credential: widget.credential, options: options);
     } else {
       result = await wallet.wallet.generateWalletKeyBackup(
-        data: widget.data,
-        type: useKeyStore ? WalletBackupTypes.keystore : widget.type,
-        password: widget.password,
-      );
+          data: widget.data,
+          type: useKeyStore ? WalletBackupTypes.keystore : widget.type,
+          credential: widget.credential);
     }
     if (result.hasError) {
-      progressKey.errorText(result.error?.tr ?? "");
+      progressKey.errorText(result.localizationError);
     } else {
       backup = result.result;
       viewText = backup!.substring(0, IntUtils.min(200, backup!.length));
@@ -72,7 +69,7 @@ class _SecureBackupViewState extends State<GenerateBackupView>
   final GlobalKey<StreamWidgetState> buttonState = GlobalKey();
   String? _shareError;
 
-  void share() async {
+  Future<void> share() async {
     if (backup == null) return;
     if (_shareError != null) {
       _shareError = null;
@@ -91,7 +88,7 @@ class _SecureBackupViewState extends State<GenerateBackupView>
     });
     if (result.hasError || !result.result) {
       buttonState.error();
-      _shareError = result.error?.tr;
+      _shareError = result.localizationErrorOrNull;
       setState(() {});
     } else {
       buttonState.success();
@@ -130,10 +127,9 @@ class _SecureBackupViewState extends State<GenerateBackupView>
                 ]
               ],
             )),
-        PageProgress(
-            key: progressKey,
-            backToIdle: APPConst.oneSecoundDuration,
-            child: (c) => backup == null
+        StreamPageProgress(
+            controller: progressKey,
+            builder: (c) => backup == null
                 ? Column(
                     children: [
                       if (canUseKeyStore)

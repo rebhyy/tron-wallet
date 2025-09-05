@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
+import 'package:on_chain_wallet/future/wallet/start/pages/start_wallet_page.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/status.dart';
+import 'package:on_chain_wallet/wallet/models/others/models/wallet.dart';
 import 'account_page.dart';
 import 'login_page.dart';
-import 'setup.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 class WalletScreen extends StatelessWidget {
@@ -49,6 +49,7 @@ class _APPPage extends StatelessWidget {
         return value.action.rebuild;
       },
       builder: (context, value) {
+        Logg.error("state updated ${value.action} ${value.status}");
         return APPAnimated(
             isActive: wallet.wallet.isOpen,
             onDeactive: (context) {
@@ -57,7 +58,7 @@ class _APPPage extends StatelessWidget {
               }
               return switch (value.walletStatus) {
                 WStatus.init => ProgressWithAPPLogo(),
-                WStatus.setup => const WalletSetupPageWidget(),
+                WStatus.setup => const StartWalletPage(),
                 WStatus.lock => const WalletLoginPageView(),
                 _ => WidgetConstant.sizedBox
               };

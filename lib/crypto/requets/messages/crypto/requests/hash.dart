@@ -16,7 +16,8 @@ enum CryptoRequestHashingType {
 
   static CryptoRequestHashingType fromName(String? name) {
     return values.firstWhere((e) => e.name == name,
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () => throw AppSerializationException(
+            objectName: "CryptoRequestHashingType"));
   }
 }
 
@@ -33,11 +34,11 @@ class CryptoRequestHashing
       String? dataHex,
       List<int>? dataBytes}) {
     if (dataHex != null && dataBytes != null) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppCryptoExceptionConst.internalError("CryptoRequestHashing");
     }
     if ((dataHex == null && dataBytes == null) &&
         type != CryptoRequestHashingType.generateUuid) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppCryptoExceptionConst.internalError("CryptoRequestHashing");
     }
     return CryptoRequestHashing._(
         hashingType: type, dataBytes: dataBytes, dataHex: dataHex);
@@ -105,7 +106,7 @@ class CryptoRequestHashing
         final hash = MD4.hash(bytes);
         return StringUtils.encode(UUID.fromBuffer(hash));
       default:
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.internalError("CryptoRequestHashing");
     }
   }
 

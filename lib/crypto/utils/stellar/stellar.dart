@@ -33,7 +33,7 @@ class StellarUtils {
   }
 
   static List<int> stellarBase32SecretKeyToImportKey(String? secretKey) {
-    if (secretKey == null) throw WalletExceptionConst.invalidPrivateKey;
+    if (secretKey == null) throw AppCryptoExceptionConst.invalidPrivateKey;
     try {
       final key = XlmAddrDecoder()
           .decode(secretKey, {'addr_type': XlmAddrTypes.privKey});
@@ -42,7 +42,7 @@ class StellarUtils {
       }
       return key.pubKeyBytes;
     } catch (_) {
-      throw WalletExceptionConst.invalidPrivateKey;
+      throw AppCryptoExceptionConst.invalidPrivateKey;
     }
   }
 }

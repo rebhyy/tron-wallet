@@ -1,9 +1,7 @@
 import 'dart:io';
-
 import 'package:blockchain_utils/crypto/crypto/crc32/crc32.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:flutter/services.dart';
-import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/native_impl/io/path_provider.dart';
 
@@ -41,7 +39,7 @@ Future<void> _validate(String path, int checksum) async {
   final fileBytes = await File(path).readAsBytes();
   final currentChecksum = Crc32.quickIntDigest(fileBytes);
   if (currentChecksum != checksum) {
-    throw WalletExceptionConst.fileVerificationFiled;
+    throw AppExceptionConst.fileVerificationFiled;
   }
 }
 
@@ -50,8 +48,8 @@ Future<List<int>> loadAssetBuffer(String assetPath, {String? package}) async {
     final buffer =
         await rootBundle.load(toAssetPath(assetPath, package: package));
     return buffer.buffer.asUint8List();
-  } catch (e) {
-    throw const AppException("file_does_not_exist");
+  } catch (_) {
+    throw AppExceptionConst.fileDoesNotExists;
   }
 }
 
@@ -61,7 +59,7 @@ Future<String> loadAssetText(String assetPath, {String? package}) async {
         await rootBundle.loadString(toAssetPath(assetPath, package: package));
     return data;
   } catch (e) {
-    throw const AppException("file_does_not_exist");
+    throw AppExceptionConst.fileDoesNotExists;
   }
 }
 

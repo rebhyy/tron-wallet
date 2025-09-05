@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/types/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/widgets/transfer.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:ton_dart/ton_dart.dart';
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:on_chain_wallet/crypto/utils/ton/ton.dart';
@@ -202,7 +202,7 @@ class TonTransactionTransferOperation extends TonTransactionStateController2 {
         .map((e) => e.toMessage(address.networkAddress))
         .toList();
     if (walletVesion == 1 && messages.length > 1) {
-      throw WalletException("ton_wallet_validator_desc");
+      throw AppException("ton_wallet_validator_desc");
     }
     final payments = recipients.value.expand((e) => e.toPaymentInfo()).toList();
     return ITonTransactionData(

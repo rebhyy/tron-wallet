@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
@@ -29,9 +29,14 @@ abstract class NetworkClient<TRANSACTION extends ChainTransaction,
       identifier: service.provider.identifier, network: networkType);
   Future<bool> onInit();
   Future<bool> init() async {
-    final init = await MethodUtils.call(() async => await onInit());
-
-    return init.hasResult && init.result;
+    final init = await () async {
+      try {
+        return await onInit();
+      } catch (_) {
+        return null;
+      }
+    }();
+    return init == true;
   }
 
   Future<WalletTransactionStatus> transactionStatus({required String txId});

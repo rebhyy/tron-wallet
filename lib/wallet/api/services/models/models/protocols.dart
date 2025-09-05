@@ -1,5 +1,5 @@
 import 'package:on_chain_bridge/models/models.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/exception.dart';
 
 enum ServiceProtocol {
   http("HTTP", 0),
@@ -48,8 +48,7 @@ enum ServiceProtocol {
     } else if (lower.startsWith("ws")) {
       return ServiceProtocol.websocket;
     } else {
-      throw const WalletException(
-          "Invalid URL. The ServiceProtocol.fromURI function is designed to work exclusively with http and websocket URIs.");
+      throw ApiProviderExceptionConst.invalidRequestUrl;
     }
   }
 

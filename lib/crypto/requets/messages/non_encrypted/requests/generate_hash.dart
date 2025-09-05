@@ -22,11 +22,13 @@ final class NoneEncryptedRequestHashing
       String? dataHex,
       List<int>? dataBytes}) {
     if (dataHex != null && dataBytes != null) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppCryptoExceptionConst.internalError(
+          "NoneEncryptedRequestHashing");
     }
     if ((dataHex == null && dataBytes == null) &&
         type != CryptoRequestHashingType.generateUuid) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppCryptoExceptionConst.internalError(
+          "NoneEncryptedRequestHashing");
     }
     return NoneEncryptedRequestHashing._(
         hashingType: type, dataBytes: dataBytes, dataHex: dataHex);
@@ -95,7 +97,8 @@ final class NoneEncryptedRequestHashing
         final hash = MD4.hash(bytes);
         return StringUtils.encode(UUID.fromBuffer(hash));
       default:
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.internalError(
+            "NoneEncryptedRequestHashing");
     }
   }
 

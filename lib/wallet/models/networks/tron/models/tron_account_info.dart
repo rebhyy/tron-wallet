@@ -15,7 +15,7 @@ class _TronAccountCborConst {
   static const List<int> accountPermission = [200, 195, 100, 8];
 }
 
-class TronAccountInfo with CborSerializable {
+class TronAccountInfo with CborSerializable, Equatable {
   final String? accountName;
   final String address;
   final BigInt balance;
@@ -30,6 +30,15 @@ class TronAccountInfo with CborSerializable {
   final TronAccountResource accountResource;
   final AccountPermission ownerPermission;
 
+  final List<AccountPermission> activePermissions;
+  final AccountPermission? witnessPermission;
+  final List<FrozenV2> frozenV2;
+  final List<UnfrozenV2> unfrozenV2;
+  final List<AssetV2> assetV2;
+  final String? assetIssuedID;
+  final List<FreeAssetNetUsageV2> freeAssetNetUsageV2;
+  final bool assetOptimized;
+
   List<AccountPermission> get permissions => [
         ownerPermission,
         ...activePermissions,
@@ -37,8 +46,8 @@ class TronAccountInfo with CborSerializable {
       ];
 
   factory TronAccountInfo.deserialize({List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.tronAccountInfo);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.tronAccountInfo);
 
     final witness = cbor.elementAs<CborTagValue?>(14);
     return TronAccountInfo._(
@@ -120,15 +129,6 @@ class TronAccountInfo with CborSerializable {
         ]),
         CborTagsConst.tronAccountInfo);
   }
-
-  final List<AccountPermission> activePermissions;
-  final AccountPermission? witnessPermission;
-  final List<FrozenV2> frozenV2;
-  final List<UnfrozenV2> unfrozenV2;
-  final List<AssetV2> assetV2;
-  final String? assetIssuedID;
-  final List<FreeAssetNetUsageV2> freeAssetNetUsageV2;
-  final bool assetOptimized;
 
   const TronAccountInfo._({
     this.accountName,
@@ -219,35 +219,32 @@ class TronAccountInfo with CborSerializable {
   }
 
   @override
-  String toString() {
-    return '''
-      TronAccount {
-        accountName: $accountName,
-        address: $address,
-        balance: $balance,
-        createTime: $createTime,
-        latestOperationTime: $latestOperationTime,
-        frozenSupply: $frozenSupply,
-        assetIssuedName: $assetIssuedName,
-        freeNetUsage: $freeNetUsage,
-        latestConsumeFreeTime: $latestConsumeFreeTime,
-        netWindowSize: $netWindowSize,
-        netWindowOptimized: $netWindowOptimized,
-        accountResource: $accountResource,
-        ownerPermission: $ownerPermission,
-        activePermissions: $activePermissions,
-        frozenV2: $frozenV2,
-        unfrozenV2: $unfrozenV2,
-        assetV2: $assetV2,
-        assetIssuedID: $assetIssuedID,
-        freeAssetNetUsageV2: $freeAssetNetUsageV2,
-        assetOptimized: $assetOptimized
-      }
-    ''';
-  }
+  List get variabels => [
+        accountName,
+        address,
+        balance,
+        createTime,
+        latestOperationTime,
+        frozenSupply,
+        assetIssuedName,
+        freeNetUsage,
+        latestConsumeFreeTime,
+        netWindowSize,
+        netWindowOptimized,
+        accountResource,
+        ownerPermission,
+        activePermissions,
+        witnessPermission,
+        frozenV2,
+        unfrozenV2,
+        assetV2,
+        assetIssuedID,
+        freeAssetNetUsageV2,
+        assetOptimized
+      ];
 }
 
-class AccountPermission with CborSerializable {
+class AccountPermission with CborSerializable, Equatable {
   final PermissionType type;
   final int? id;
   final String? permissionName;
@@ -295,8 +292,10 @@ class AccountPermission with CborSerializable {
 
   factory AccountPermission.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, _TronAccountCborConst.accountPermission);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: _TronAccountCborConst.accountPermission);
     final keys = cbor
         .elementAsListOf<CborObject>(5)
         .map((e) => PermissionKeys.fromCborBytesOrObject(obj: e))
@@ -335,20 +334,6 @@ class AccountPermission with CborSerializable {
     );
   }
 
-  @override
-  String toString() {
-    return '''
-      ActivePermission {
-        type: $type,
-        id: $id,
-        permissionName: $permissionName,
-        threshold: $threshold,
-        operations: $operations,
-        keys: $keys
-      }
-    ''';
-  }
-
   // CopyWith method for immutable updates
   AccountPermission copyWith({
     PermissionType? type,
@@ -367,6 +352,9 @@ class AccountPermission with CborSerializable {
       keys: keys ?? this.keys,
     );
   }
+
+  @override
+  List get variabels => [type, id, permissionName, threshold, operations, keys];
 }
 
 class PermissionKeys with CborSerializable, Equatable {
@@ -383,11 +371,6 @@ class PermissionKeys with CborSerializable, Equatable {
   }
 
   @override
-  String toString() {
-    return 'PermissionKeys(address: $address, weight: $weight)';
-  }
-
-  @override
   CborTagValue toCbor() {
     return CborTagValue(
         CborSerializable.fromDynamic([address.toAddress(), weight]),
@@ -396,17 +379,19 @@ class PermissionKeys with CborSerializable, Equatable {
 
   factory PermissionKeys.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, _TronAccountCborConst.permissionKeys);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: _TronAccountCborConst.permissionKeys);
     return PermissionKeys(
         address: TronAddress(cbor.elementAs(0)), weight: cbor.elementAs(1));
   }
 
   @override
-  List get variabels => [address.toAddress(), weight];
+  List get variabels => [address, weight];
 }
 
-class FrozenSupply with CborSerializable {
+class FrozenSupply with CborSerializable, Equatable {
   final BigInt frozenBalance;
   final BigInt expireTime;
 
@@ -419,8 +404,10 @@ class FrozenSupply with CborSerializable {
 
   factory FrozenSupply.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, _TronAccountCborConst.frozenSupply);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: _TronAccountCborConst.frozenSupply);
     return FrozenSupply._(
         frozenBalance: cbor.elementAs(0), expireTime: cbor.elementAs(1));
   }
@@ -438,17 +425,10 @@ class FrozenSupply with CborSerializable {
   }
 
   @override
-  String toString() {
-    return '''
-      FrozenSupply {
-        frozenBalance: $frozenBalance,
-        expireTime: $expireTime
-      }
-    ''';
-  }
+  List get variabels => [frozenBalance, expireTime];
 }
 
-class FrozenV2 with CborSerializable {
+class FrozenV2 with CborSerializable, Equatable {
   final BigInt amount;
   final ResourceCode type;
   @override
@@ -458,8 +438,10 @@ class FrozenV2 with CborSerializable {
   }
 
   factory FrozenV2.fromCborBytesOrObject({List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, _TronAccountCborConst.assetFrozenV2);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: _TronAccountCborConst.assetFrozenV2);
     return FrozenV2._(
         type: ResourceCode.fromName(cbor.elementAs(1))!,
         amount: cbor.elementAs(0));
@@ -479,17 +461,10 @@ class FrozenV2 with CborSerializable {
   }
 
   @override
-  String toString() {
-    return '''
-      FrozenV2 {
-        amount: $amount,
-        type: $type
-      }
-    ''';
-  }
+  List get variabels => [amount, type];
 }
 
-class UnfrozenV2 with CborSerializable {
+class UnfrozenV2 with CborSerializable, Equatable {
   final String? type;
   final BigInt unfreezeAmount;
   final BigInt unfreezeExpireTime;
@@ -507,8 +482,10 @@ class UnfrozenV2 with CborSerializable {
 
   factory UnfrozenV2.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, _TronAccountCborConst.assetUnfreezV2);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: _TronAccountCborConst.assetUnfreezV2);
     return UnfrozenV2._(
         type: cbor.elementAs(0),
         unfreezeAmount: cbor.elementAs(1),
@@ -530,25 +507,14 @@ class UnfrozenV2 with CborSerializable {
   }
 
   @override
-  String toString() {
-    return '''
-      UnfrozenV2 {
-        type: $type,
-        unfreezeAmount: $unfreezeAmount,
-        unfreezeExpireTime: $unfreezeExpireTime
-      }
-    ''';
-  }
+  List get variabels => [type, unfreezeAmount, unfreezeExpireTime];
 }
 
-class AssetV2 with CborSerializable {
+class AssetV2 with CborSerializable, Equatable {
   final String key;
   final BigInt value;
 
-  AssetV2._({
-    required this.key,
-    required this.value,
-  });
+  AssetV2._({required this.key, required this.value});
   @override
   CborTagValue toCbor() {
     return CborTagValue(
@@ -560,37 +526,26 @@ class AssetV2 with CborSerializable {
   }
 
   factory AssetV2.fromCborBytesOrObject({List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, _TronAccountCborConst.assetVersion2);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: _TronAccountCborConst.assetVersion2);
     return AssetV2._(key: cbor.elementAs(0), value: cbor.elementAs(1));
   }
 
   factory AssetV2.fromJson(Map<String, dynamic> json) {
-    return AssetV2._(
-      key: json['key'],
-      value: BigintUtils.parse(json["value"]),
-    );
+    return AssetV2._(key: json['key'], value: BigintUtils.parse(json["value"]));
   }
 
   @override
-  String toString() {
-    return '''
-      AssetV2 {
-        key: $key,
-        value: $value
-      }
-    ''';
-  }
+  List get variabels => [key, value];
 }
 
-class FreeAssetNetUsageV2 with CborSerializable {
+class FreeAssetNetUsageV2 with CborSerializable, Equatable {
   final String key;
   final BigInt value;
 
-  FreeAssetNetUsageV2._({
-    required this.key,
-    required this.value,
-  });
+  FreeAssetNetUsageV2._({required this.key, required this.value});
   @override
   CborTagValue toCbor() {
     return CborTagValue(
@@ -603,8 +558,10 @@ class FreeAssetNetUsageV2 with CborSerializable {
 
   factory FreeAssetNetUsageV2.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, _TronAccountCborConst.frozenAssetsNetUsage);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: _TronAccountCborConst.frozenAssetsNetUsage);
     return FreeAssetNetUsageV2._(
         key: cbor.elementAs(0), value: cbor.elementAs(1));
   }
@@ -617,26 +574,18 @@ class FreeAssetNetUsageV2 with CborSerializable {
   }
 
   @override
-  String toString() {
-    return '''
-      FreeAssetNetUsageV2 {
-        key: $key,
-        value: $value
-      }
-    ''';
-  }
+  List get variabels => [key, value];
 }
 
-class TronAccountResource with CborSerializable {
+class TronAccountResource with CborSerializable, Equatable {
   final int energyWindowSize;
   final BigInt? delegatedFrozenV2BalanceForEnergy;
   final bool energyWindowOptimized;
 
-  TronAccountResource._({
-    required this.energyWindowSize,
-    required this.delegatedFrozenV2BalanceForEnergy,
-    required this.energyWindowOptimized,
-  });
+  TronAccountResource._(
+      {required this.energyWindowSize,
+      required this.delegatedFrozenV2BalanceForEnergy,
+      required this.energyWindowOptimized});
 
   factory TronAccountResource.fromJson(Map<String, dynamic> json) {
     return TronAccountResource._(
@@ -671,16 +620,25 @@ class TronAccountResource with CborSerializable {
 
   factory TronAccountResource.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, _TronAccountCborConst.tronAccountResource);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: _TronAccountCborConst.tronAccountResource);
     return TronAccountResource._(
         energyWindowSize: cbor.elementAs(0),
         delegatedFrozenV2BalanceForEnergy: cbor.elementAs(1),
         energyWindowOptimized: cbor.elementAs(2));
   }
+
+  @override
+  List get variabels => [
+        energyWindowSize,
+        delegatedFrozenV2BalanceForEnergy,
+        energyWindowOptimized
+      ];
 }
 
-class TronAccountResourceInfo with CborSerializable {
+class TronAccountResourceInfo with CborSerializable, Equality {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
@@ -699,8 +657,8 @@ class TronAccountResourceInfo with CborSerializable {
 
   factory TronAccountResourceInfo.deserialize(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.tronAccountResource);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.tronAccountResource);
     return TronAccountResourceInfo(
       freeNetUsed: cbor.elementAs(0),
       freeNetLimit: cbor.elementAs(1),
@@ -802,6 +760,18 @@ class TronAccountResourceInfo with CborSerializable {
       "EnergyLimit": energyLimit,
     };
   }
+
+  @override
+  List get variabels => [
+        freeNetUsed,
+        freeNetLimit,
+        netLimit,
+        netUsed,
+        energyLimit,
+        energyUsed,
+        tronPowerLimit,
+        tronPowerUsed
+      ];
 }
 
 class TronAccountData {

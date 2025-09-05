@@ -5,8 +5,7 @@ import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/text_field/input_formaters.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class UpdateCosmosTokenView extends StatefulWidget {
   final CosmosFeeToken? token;
@@ -115,7 +114,7 @@ class _UpdateCosmosTokenViewState extends State<UpdateCosmosTokenView>
   String? onValidateGasPrice(String? v) {
     if (v != null) {
       final p = BigRational.tryParseDecimaal(v);
-      if (p != null) return null;
+      if (p != null && !p.isNegative) return null;
     }
     return "gas_price_validator".tr;
   }
@@ -189,11 +188,8 @@ class _UpdateCosmosTokenViewState extends State<UpdateCosmosTokenView>
               onChanged: onChangeMinGasPrice,
               validator: onValidateGasPrice,
               inputFormatters: [
-                BigRetionalRangeTextInputFormatter(
-                    min: BigRational.zero,
-                    allowSign: false,
-                    allowDecimal: true,
-                    maxScale: decimals)
+                BigRetionalTextInputFormatter(
+                    allowSign: false, allowDecimal: true, maxScale: decimals)
               ],
             ),
             WidgetConstant.height20,
@@ -208,11 +204,8 @@ class _UpdateCosmosTokenViewState extends State<UpdateCosmosTokenView>
               onChanged: onChangeAvarageGasPrice,
               validator: onValidateGasPrice,
               inputFormatters: [
-                BigRetionalRangeTextInputFormatter(
-                    min: BigRational.zero,
-                    allowSign: false,
-                    allowDecimal: true,
-                    maxScale: decimals)
+                BigRetionalTextInputFormatter(
+                    allowSign: false, allowDecimal: true, maxScale: decimals)
               ],
             ),
             WidgetConstant.height20,
@@ -227,11 +220,8 @@ class _UpdateCosmosTokenViewState extends State<UpdateCosmosTokenView>
               validator: onValidateGasPrice,
               hint: "example_s".tr.replaceOne(APPConst.exampleDouble),
               inputFormatters: [
-                BigRetionalRangeTextInputFormatter(
-                    min: BigRational.zero,
-                    allowSign: false,
-                    allowDecimal: true,
-                    maxScale: decimals)
+                BigRetionalTextInputFormatter(
+                    allowSign: false, allowDecimal: true, maxScale: decimals)
               ],
             ),
           ],

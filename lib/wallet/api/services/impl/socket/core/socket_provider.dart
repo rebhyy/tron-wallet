@@ -37,7 +37,7 @@ abstract class BaseSocketService<T extends APIProvider>
     try {
       await connect(timeout);
       if (!isConnected) {
-        throw ApiProviderException.error("node_connection_error");
+        throw ApiProviderExceptionConst.socketConnectingFailed;
       }
       final response = await t();
       return response;

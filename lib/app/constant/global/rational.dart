@@ -1,11 +1,11 @@
 import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 
 class RetionalConst {
-  static BigRational bigR8 = BigRational(BigInt.from(10).pow(8));
-  static BigRational bigR18 = BigRational(BigInt.from(10).pow(18));
-  static BigRational bigR6 = BigRational(BigInt.from(10).pow(6));
-  static BigRational bigR12 = BigRational(BigInt.from(10).pow(12));
-  static BigRational bigR10 = BigRational(BigInt.from(10).pow(10));
+  static final BigRational bigR8 = BigRational(BigInt.from(10).pow(8));
+  static final BigRational bigR18 = BigRational(BigInt.from(10).pow(18));
+  static final BigRational bigR6 = BigRational(BigInt.from(10).pow(6));
+  static final BigRational bigR12 = BigRational(BigInt.from(10).pow(12));
+  static final BigRational bigR10 = BigRational(BigInt.from(10).pow(10));
   static BigRational fromDecimalNumber(int decimal) {
     switch (decimal) {
       case 8:

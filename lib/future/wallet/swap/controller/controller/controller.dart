@@ -233,7 +233,7 @@ class SwapStateController
       }, cancelable: _cancelable);
       if (r.isCancel) return;
       if (r.hasError) {
-        _errors = [RouteError(error: r.error!.tr)];
+        _errors = [RouteError(error: r.localizationError)];
       } else {
         _currentRoute = _buildRoutes(
             routes:
@@ -327,7 +327,7 @@ class SwapStateController
       }, delay: APPConst.animationDuraion);
     });
     if (r.hasError) {
-      _txError = r.error!.tr;
+      _txError = r.localizationError;
     }
     _page = SwapPage.swap;
     notify();

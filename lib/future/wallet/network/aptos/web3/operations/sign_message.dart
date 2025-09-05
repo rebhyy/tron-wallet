@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/future/wallet/network/aptos/web3/types/types.dar
 import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/aptos/constant/constants/constant.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/aptos/params/models/sign_message.dart';

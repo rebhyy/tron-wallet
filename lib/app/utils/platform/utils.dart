@@ -1,5 +1,5 @@
 import 'package:blockchain_utils/utils/utils.dart';
-import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/app/platform_methods/cross/methods.dart';
 
 class PlatformUtils {
   static Future<String> writeString(String data, String fileName,

@@ -1,7 +1,6 @@
 import 'package:on_chain/aptos/src/transaction/constants/const.dart';
 import 'package:on_chain/aptos/src/transaction/types/types.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/string.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'provider.dart';
@@ -31,7 +30,7 @@ mixin AptosTransactionFeeController on AptosTransactionApiController {
     final simulateResult =
         await simulate(rawTransaction: transaction.rawTransaction);
     if (!simulateResult.success) {
-      throw WalletException(simulateResult.vmStatus);
+      throw AppException(simulateResult.vmStatus);
     }
     return IAptosTransactionSimulateInfo(
         vmStatus: simulateResult.vmStatus, simulateTx: simulateResult);
@@ -49,7 +48,7 @@ mixin AptosTransactionFeeController on AptosTransactionApiController {
             runtime: runtimeType,
             functionName: "estimateFee",
             msg: fee.exception);
-        setDefaultFee(error: fee.error!.tr);
+        setDefaultFee(error: fee.localizationError);
         return;
       }
       if (!fee.result.isSuccess) {

@@ -3,12 +3,12 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain/solana/src/exception/exception.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/solana.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/solana.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/networks/solana/models/solana_account_tokens_info.dart';
 import 'package:on_chain_wallet/wallet/models/token/token.dart';
@@ -243,12 +243,12 @@ class SolanaClient extends NetworkClient<
     if (tokenProgramId == null) {
       final mintAccount = await getAccountInfo(mint);
       if (mintAccount == null) {
-        throw WalletException("mint_account_not_found");
+        throw ApiProviderException.message("mint_account_not_found");
       }
       tokenProgramId = mintAccount.owner;
       if (tokenProgramId != SPLTokenProgramConst.token2022ProgramId &&
           tokenProgramId != SPLTokenProgramConst.tokenProgramId) {
-        throw WalletException("invalid_mint_account_owner");
+        throw ApiProviderException.message("invalid_mint_account_owner");
       }
     }
     final pda = AssociatedTokenAccountProgramUtils.associatedTokenAccount(
@@ -275,8 +275,8 @@ class SolanaClient extends NetworkClient<
         final receipt = await getSignatureStatuses(transactionId);
         if (receipt != null) {
           if (receipt.err != null) {
-            completer.completeError(
-                WalletException("transaction_confirmation_failed"));
+            completer.completeError(ApiProviderException.message(
+                "transaction_confirmation_failed"));
           } else {
             final status = receipt.confirmationStatus;
             if (status == TransactionConfirmationStatus.finalized) {
@@ -288,7 +288,7 @@ class SolanaClient extends NetworkClient<
       final receipt = await completer.future.timeout(timeout);
       return receipt;
     } on TimeoutException {
-      throw WalletException("transaction_confirmation_failed");
+      throw ApiProviderException.message("transaction_confirmation_failed");
     } finally {
       timer?.cancel();
       timer = null;
@@ -299,7 +299,7 @@ class SolanaClient extends NetworkClient<
   Future<bool> initSwapClient() async {
     final init = await this.init();
     if (!init) {
-      throw WalletException('network_client_initialize_failed');
+      throw ApiProviderExceptionConst.initializeClientFailed;
     }
     return true;
   }
@@ -308,7 +308,7 @@ class SolanaClient extends NetworkClient<
   Future<SwapSolanaAccountAssetBalance> getAccountsAssetBalance(
       SolanaSwapAsset asset, SolAddress account) async {
     if (asset.isContract && asset.contractAddress == null) {
-      throw WalletException("invalid_swap_asset");
+      throw ApiProviderExceptionConst.unexpectedRequestData;
     }
     return SwapSolanaAccountAssetBalance(
         address: account,

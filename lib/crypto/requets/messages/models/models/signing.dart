@@ -5,6 +5,7 @@ import 'package:blockchain_utils/helper/helper.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:monero_dart/monero_dart.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
@@ -34,7 +35,7 @@ abstract final class SignRequest with CborSerializable {
   }
   T cast<T extends SignRequest>() {
     if (this is! T) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppCryptoExceptionConst.internalError("SignRequest");
     }
     return this as T;
   }
@@ -62,7 +63,8 @@ enum SigningRequestMode {
   static SigningRequestMode fromTag(List<int> tag) {
     return values.firstWhere(
         (element) => BytesUtils.bytesEqual(tag, element.tag),
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () =>
+            throw AppSerializationException(objectName: "SigningRequestMode"));
   }
 }
 
@@ -93,7 +95,7 @@ final class BitcoinSigning extends GlobalSignRequest {
     final network = SigningRequestMode.fromTag(tag.tags);
     if (network != SigningRequestMode.bitcoin &&
         network != SigningRequestMode.bitcoinCash) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppCryptoExceptionConst.internalError("BitcoinSigning");
     }
     final CborListValue values = tag.valueAs();
     return BitcoinSigning(
@@ -205,7 +207,7 @@ final class GlobalSignRequest extends SignRequest {
   factory GlobalSignRequest.substrate(
       {required List<int> digest, required AddressDerivationIndex index}) {
     if (index.isMultiSig) {
-      throw WalletExceptionConst.multiSigDerivationNotSuported;
+      throw AppCryptoExceptionConst.multiSigDerivationNotSuported;
     }
     return GlobalSignRequest._(
         digest: digest, network: SigningRequestMode.substrate, index: index);
@@ -233,10 +235,10 @@ final class CosmosSigningRequest extends SignRequest {
     required CosmosKeysAlgs alg,
   }) {
     if (!CosmosKeysAlgs.supportedAlgs.contains(alg)) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppCryptoExceptionConst.internalError("CosmosSigningRequest");
     }
     if (alg.coin(ChainType.mainnet).conf.type != index.currencyCoin.conf.type) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppCryptoExceptionConst.internalError("CosmosSigningRequest");
     }
     return CosmosSigningRequest._(
         digest: digest,

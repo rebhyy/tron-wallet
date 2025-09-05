@@ -3,7 +3,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 
 mixin BitcoinTransactionUtxosController on DisposableMixin {
@@ -44,14 +44,14 @@ mixin BitcoinTransactionUtxosController on DisposableMixin {
           try {
             if (e.isSuccess) return;
             e.setPending();
-            List<UtxoWithAddress> utxos = await account
-                .getAccountUtxos(e.address, includeTokens: includeTokens);
+            List<UtxoWithAddress> utxos =
+                await account.getAccountUtxos(e.address);
             if (!includeTokens) {
               utxos = utxos.where((e) => e.utxo.token == null).toList();
             }
             e.setUtxo(BitcoinAccountWithUtxos(
                 address: e.address,
-                addressDetails: e.address.toUtxoRequest(),
+                addressDetails: e.address.toUtxoRequest,
                 utxos: utxos,
                 network: account.network));
           } catch (err) {

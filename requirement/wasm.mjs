@@ -6,7 +6,6 @@ self.addEventListener('message', async (event) => {
         return;
     }
     let module;
-    console.log(event.data.isHttp)
     if (event.data.module === null) {
         if (event.data.isHttp) {
             module = await import("./http.js");
@@ -29,7 +28,7 @@ self.addEventListener('message', async (event) => {
     }
 
     _inited = true;
-    const data = cryptoJsActivation();
+    const data = cryptoJsActivation(event.data.key);
     self.postMessage(data);
 
 });

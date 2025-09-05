@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/error/exception/exception.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/http/http.dart';
 
 enum HTTPRequestType {
@@ -10,11 +10,9 @@ enum HTTPRequestType {
   final String name;
   const HTTPRequestType(this.name);
   static HTTPRequestType fromName(String? name) {
-    return values.firstWhere(
-      (e) => e.name == name,
-      orElse: () => throw WalletExceptionConst.invalidData(
-          messsage: "invalid http request type name"),
-    );
+    return values.firstWhere((e) => e.name == name,
+        orElse: () =>
+            throw AppSerializationException(objectName: "HTTPRequestType"));
   }
 }
 
@@ -113,7 +111,8 @@ class HTTPWorkerResponseError<T> extends HTTPWorkerResponse {
   bool get isSuccess => false;
   final String message;
   @override
-  HTTPCallerResponse get response => throw ApiProviderException.error(message);
+  HTTPCallerResponse get response =>
+      throw ApiProviderException.message(message);
   const HTTPWorkerResponseError({required this.message, required super.id});
   factory HTTPWorkerResponseError.fromJson(Map<String, dynamic> json) {
     return HTTPWorkerResponseError(id: json["id"], message: json["message"]);
@@ -133,7 +132,7 @@ class HTTPWorkerMessageCompleter {
     _messageCompleter.complete(message);
   }
 
-  void error(WalletException err) {
+  void error(ApiProviderException err) {
     _messageCompleter.completeError(err);
   }
 

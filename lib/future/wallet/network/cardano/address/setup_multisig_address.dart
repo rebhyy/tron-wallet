@@ -8,7 +8,7 @@ import 'package:on_chain_wallet/crypto/worker.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/cardano/cardano.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
 
 class SetupCardanoMultisigAddress extends StatelessWidget {
@@ -301,7 +301,7 @@ class _CredentialView extends StatelessWidget {
                           "tap_to_input_value".tr,
                       style: context.onPrimaryTextTheme.bodyMedium),
                 ),
-                WidgetConstant.height20,
+                WidgetConstant.height20
               ])),
       APPAnimated(
           isActive: hasThreshold,
@@ -316,18 +316,17 @@ class _CredentialView extends StatelessWidget {
                     onActive: (context) => APPExpansionListTile(
                           margin: WidgetConstant.padding5,
                           title: RichText(
-                            text: TextSpan(
-                                text: "public_keys".tr,
-                                style: context.onPrimaryTextTheme.bodyMedium,
-                                children: [
-                                  WidgetSpan(child: WidgetConstant.width8),
-                                  TextSpan(
-                                      text: "n_item_selected".tr.replaceOne(
-                                          pubKeys.length.toString()),
-                                      style:
-                                          context.onPrimaryTextTheme.bodySmall)
-                                ]),
-                          ),
+                              text: TextSpan(
+                                  text: "public_keys".tr,
+                                  style: context.onPrimaryTextTheme.bodyMedium,
+                                  children: [
+                                WidgetSpan(child: WidgetConstant.width8),
+                                TextSpan(
+                                    text: "n_item_selected"
+                                        .tr
+                                        .replaceOne(pubKeys.length.toString()),
+                                    style: context.onPrimaryTextTheme.bodySmall)
+                              ])),
                           children: [
                             ListView.separated(
                                 itemCount: pubKeys.length,
@@ -365,11 +364,11 @@ class _CredentialView extends StatelessWidget {
                             onPressed: () {
                               context
                                   .openMaxExtendSliverBottomSheet<
-                                      PublicKeyDerivationResult>(
+                                      PublicKeyDerivationWithMode>(
                                     '',
                                     bodyBuilder: (c) => PublicKeyDerivationView(
                                         controller: c,
-                                        type: EllipticCurveTypes.ed25519Kholaw),
+                                        coins: account.network.coins),
                                   )
                                   .then(onSetupPublicKey);
                             },
@@ -426,10 +425,10 @@ class _SelectedPubkeysView extends StatelessWidget {
               widget: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AddressDrivationInfo(pubkey.keyIndex,
-                      color: context.onPrimaryContainer),
                   OneLineTextWidget(pubkey.key,
                       style: context.onPrimaryTextTheme.bodyMedium),
+                  AddressDrivationInfo(pubkey.keyIndex,
+                      color: context.onPrimaryContainer),
                 ],
               ),
             )),
@@ -439,7 +438,7 @@ class _SelectedPubkeysView extends StatelessWidget {
 }
 
 class _CardanoMultisigPublicKeys with Equatable {
-  final PublicKeyDerivationResult? publicKey;
+  final PublicKeyDerivationWithMode? publicKey;
   final ICardanoAddress? address;
   final String key;
   final AddressDerivationIndex keyIndex;
@@ -454,7 +453,7 @@ class _CardanoMultisigPublicKeys with Equatable {
 
 typedef _ONSETUPWEIGHT = void Function(BigRational?);
 typedef _ONSETUPADDRESS = void Function(ICardanoAddress?);
-typedef _ONSETUPPublicKey = void Function(PublicKeyDerivationResult?);
+typedef _ONSETUPPublicKey = void Function(PublicKeyDerivationWithMode?);
 
 class _CardanoGeneratedAddress {
   final CardanoMultiSignatureAddressDetails multiSigAddresInfo;
@@ -631,18 +630,21 @@ class _SetupCardanoMultisigForm with DisposableMixin, StreamStateController {
     onStateUpdated();
   }
 
-  void onGenerateAddressPubKey(PublicKeyDerivationResult? pubKeys) {
+  void onGenerateAddressPubKey(PublicKeyDerivationWithMode? pubKeys) {
     if (pubKeys == null) return;
-    if (pubKeys.key.curve != EllipticCurveTypes.ed25519Kholaw) return;
+    if (pubKeys.derivation.key.curve != EllipticCurveTypes.ed25519Kholaw) {
+      return;
+    }
     final key = _CardanoMultisigPublicKeys(
         key: CryptoKeyUtils.normalizePublicKeyHex(
-            pubKeys.viewKey.comprossed, pubKeys.key.curve),
+            pubKeys.derivation.viewKey.comprossed,
+            pubKeys.derivation.key.curve),
         address: account.addresses.firstWhereOrNull((e) =>
             !e.multiSigAccount &&
-            StringUtils.hexEqual(
-                pubKeys.viewKey.comprossed, e.addressInfo.publicKeyHex!)),
+            StringUtils.hexEqual(pubKeys.derivation.viewKey.comprossed,
+                e.addressInfo.publicKeyHex!)),
         publicKey: pubKeys,
-        keyIndex: pubKeys.index);
+        keyIndex: pubKeys.derivation.index);
     addressPubKeys.add(key);
     onStateUpdated();
   }
@@ -659,19 +661,23 @@ class _SetupCardanoMultisigForm with DisposableMixin, StreamStateController {
     onStateUpdated();
   }
 
-  void onGenerateStakePubKey(PublicKeyDerivationResult? pubKeys) {
+  /// PublicKeyDerivationWithMode
+  void onGenerateStakePubKey(PublicKeyDerivationWithMode? pubKeys) {
     if (pubKeys == null) return;
-    if (pubKeys.key.curve != EllipticCurveTypes.ed25519Kholaw) return;
+    if (pubKeys.derivation.key.curve != EllipticCurveTypes.ed25519Kholaw) {
+      return;
+    }
 
     final key = _CardanoMultisigPublicKeys(
         key: CryptoKeyUtils.normalizePublicKeyHex(
-            pubKeys.viewKey.comprossed, pubKeys.key.curve),
+            pubKeys.derivation.viewKey.comprossed,
+            pubKeys.derivation.key.curve),
         publicKey: pubKeys,
         address: account.addresses.firstWhereOrNull((e) =>
             !e.multiSigAccount &&
-            StringUtils.hexEqual(
-                pubKeys.viewKey.comprossed, e.addressInfo.publicKeyHex!)),
-        keyIndex: pubKeys.index);
+            StringUtils.hexEqual(pubKeys.derivation.viewKey.comprossed,
+                e.addressInfo.publicKeyHex!)),
+        keyIndex: pubKeys.derivation.index);
     stakePubKeys.add(key);
     onStateUpdated();
   }
@@ -712,14 +718,14 @@ class _SetupCardanoMultisigForm with DisposableMixin, StreamStateController {
           coin: account.network.coins.elementAt(0));
     }, delay: APPConst.oneSecoundDuration);
     if (r.hasError) {
-      controller.errorText(r.error!.tr,
+      controller.errorText(r.localizationError,
           showBackButton: true, backToIdle: false);
       return;
     }
     final import = await wallet.wallet
         .deriveNewAccount(newAccountParams: r.result, chain: account);
     if (import.hasError) {
-      controller.errorText(import.error!.tr,
+      controller.errorText(import.localizationError,
           showBackButton: true, backToIdle: false);
       return;
     }
@@ -793,7 +799,7 @@ class _SetupCardanoMultisigForm with DisposableMixin, StreamStateController {
               ReceiptAddress(view: address.address, networkAddress: address));
     }, delay: APPConst.oneSecoundDuration);
     if (address.hasError) {
-      controller.errorText(address.error!.tr,
+      controller.errorText(address.localizationError,
           backToIdle: false, showBackButton: true);
       return;
     }

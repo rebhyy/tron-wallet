@@ -32,9 +32,9 @@ class _SuiConversionView extends StatefulWidget {
 }
 
 class __SuiKeyConversionViewState extends State<_SuiConversionView>
-    with SafeState<_SuiConversionView> {
+    with SafeState<_SuiConversionView>, ProgressMixin<_SuiConversionView> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+
   final GlobalKey<AppTextFieldState> keyController =
       GlobalKey<AppTextFieldState>(debugLabel: "__SuiKeyConversionViewState");
   String key = "";
@@ -64,7 +64,7 @@ class __SuiKeyConversionViewState extends State<_SuiConversionView>
       return ImportCustomKeys.fromPrivateKey(privateKey: key.$2, coin: coin);
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr, backToIdle: true);
+      progressKey.errorText(result.localizationError, backToIdle: true);
     } else {
       generatedKey = result.result;
       progressKey.success();
@@ -84,10 +84,9 @@ class __SuiKeyConversionViewState extends State<_SuiConversionView>
     return PopScope(
       canPop: generatedKey == null,
       onPopInvokedWithResult: onBackButton,
-      child: PageProgress(
-        key: progressKey,
-        backToIdle: APPConst.oneSecoundDuration,
-        child: (context) => Form(
+      child: StreamPageProgress(
+        controller: progressKey,
+        builder: (context) => Form(
           key: formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction,
           child: UnfocusableChild(

@@ -13,7 +13,9 @@ mixin UpdateNetworkProviderState<
     CL extends NetworkClient,
     T extends TokenCore,
     N extends NFTCore,
-    CHAIN extends Chain> on SafeState<W>, ProgressMixin<W> {
+    CHAIN extends Chain> on SafeState<W> {
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   bool useAuthenticated = false;
   ProviderAuthType auth = ProviderAuthType.header;
   List<ProviderAuthType> supportedAuth = [];
@@ -222,7 +224,7 @@ mixin UpdateNetworkProviderState<
       return validate(provider);
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr,
+      progressKey.errorText(result.localizationError,
           showBackButton: true, backToIdle: false);
       return;
     }
@@ -244,7 +246,7 @@ mixin UpdateNetworkProviderState<
       return await wallet.wallet.updateImportNetwork(updatedNetwork);
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr);
+      progressKey.errorText(result.localizationError);
     } else {
       progressKey.successText(
         "network_updated_successfully".tr,
@@ -272,6 +274,12 @@ mixin UpdateNetworkProviderState<
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ScaffoldPageView(
       appBar: AppBar(title: Text("network_update_node_provider".tr)),
@@ -280,11 +288,11 @@ mixin UpdateNetworkProviderState<
           onBackButton();
         },
         canPop: !inAddProvider,
-        child: PageProgress(
-          key: progressKey,
-          initialStatus: StreamWidgetStatus.progress,
-          backToIdle: APPConst.twoSecoundDuration,
-          child: (c) => UnfocusableChild(
+        child: StreamPageProgress(
+          controller: progressKey,
+          // initialStatus: StreamWidgetStatus.progress,
+          // backToIdle: APPConst.twoSecoundDuration,
+          builder: (c) => UnfocusableChild(
             child: CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(

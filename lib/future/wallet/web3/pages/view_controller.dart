@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
+
 import 'package:on_chain_wallet/future/wallet/web3/global/core/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
@@ -35,7 +36,9 @@ class Web3NetworkPageRequestControllerView<T extends Web3StateContoller>
       onPopInvokedWithResult: (didPop, result) {
         request.onPopRequestPage();
       },
-      child: PasswordCheckerView(
+      child: AccessWalletView<WalletCredentialResponseLogin,
+          WalletCredentialLogin>(
+        request: WalletCredentialLogin.instance,
         appbar: AppBar(
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,10 +53,9 @@ class Web3NetworkPageRequestControllerView<T extends Web3StateContoller>
             WidgetConstant.width8,
           ],
         ),
-        accsess: WalletAccsessType.unlock,
         subtitle: Web3ApplicationView(
             permission: request.authenticated, info: request.info),
-        onAccsess: (_, __, ___) {
+        onAccsess: (_) {
           return StateBuilder(
               controller: controller,
               builder: (controller) {
@@ -124,7 +126,9 @@ class Web3GlobalPageRequestControllerView<
       onPopInvokedWithResult: (didPop, result) {
         request.onPopRequestPage();
       },
-      child: PasswordCheckerView(
+      child: AccessWalletView<WalletCredentialResponseLogin,
+          WalletCredentialLogin>(
+        request: WalletCredentialLogin.instance,
         appbar: AppBar(
           centerTitle: false,
           title: Column(
@@ -136,10 +140,9 @@ class Web3GlobalPageRequestControllerView<
             ],
           ),
         ),
-        accsess: WalletAccsessType.unlock,
         subtitle: Web3ApplicationView(
             permission: request.authenticated, info: request.info),
-        onAccsess: (_, __, ___) {
+        onAccsess: (_) {
           return StateBuilder(
               controller: controller,
               builder: (controller) {

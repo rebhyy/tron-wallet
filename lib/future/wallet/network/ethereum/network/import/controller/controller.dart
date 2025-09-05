@@ -11,7 +11,8 @@ import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class EthereumAddNewChainFrom with DisposableMixin, StreamStateController {
-  final GlobalKey<PageProgressState> pageProgressKey = GlobalKey();
+  final StreamPageProgressController pageProgressKey =
+      StreamPageProgressController();
   final GlobalKey<AppTextFieldState> uriFieldKey = GlobalKey();
   final GlobalKey<AppTextFieldState> explorerFieldKey = GlobalKey();
   final GlobalKey<FormState> formKey = GlobalKey();
@@ -188,5 +189,11 @@ class EthereumAddNewChainFrom with DisposableMixin, StreamStateController {
         chainType: chainType,
         bip32CoinType: coinType);
     return params;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    pageProgressKey.dispose();
   }
 }

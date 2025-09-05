@@ -57,16 +57,11 @@ class BitcoinTransactionTransferTokenWidget extends StatelessWidget {
         builder: (context, field, value) => APPStreamBuilder(
           value: value.notifier,
           builder: (context, _) {
-            return ContainerWithBorder(
-              iconAlginment: CrossAxisAlignment.start,
-              onRemoveWidget: IconButton(
-                  onPressed: () => form.onRemoveRecipients(value),
-                  icon: Icon(Icons.remove_circle,
-                      color: context.colors.onPrimaryContainer)),
+            return CustomizedContainer(
+              onStackIcon: Icons.remove_circle,
+              onTapStackIcon: () => form.onRemoveRecipients(value),
               validate: value.isReady,
               validateText: value.status.error,
-              enableTap: false,
-              onRemove: () {},
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -99,19 +94,17 @@ class BitcoinTransactionTransferTokenWidget extends StatelessWidget {
                           symbolColor: context.primaryContainer)),
                   APPAnimated(
                     isActive: value.hasToken,
-                    onActive: (context) => ContainerWithBorder(
+                    onActive: (context) => CustomizedContainer(
                       backgroundColor: context.colors.onPrimaryContainer,
+                      reverseColor: context.colors.primaryContainer,
                       validate: value.token!.isReady,
-                      enableTap: false,
-                      onRemove: value.hasToken ? () {} : null,
-                      iconAlginment: CrossAxisAlignment.start,
-                      onRemoveWidget: IconButton(
-                          onPressed: () =>
-                              form.onRemoveTransferToken(value, value.token!),
-                          icon: Icon(Icons.remove_circle,
-                              color: context.colors.primaryContainer)),
-                      onRemoveIcon: Icon(Icons.remove_circle,
-                          color: context.colors.primaryContainer),
+                      // enableTap: false,
+                      onTapStackIcon: value.hasToken
+                          ? () {
+                              form.onRemoveTransferToken(value, value.token!);
+                            }
+                          : null,
+                      onStackIcon: Icons.remove_circle,
                       child: APPExpansionListTile(
                         title: CashTokenDetailsView(value.token!.cashToken,
                             balance: value.token!.viewAmount),

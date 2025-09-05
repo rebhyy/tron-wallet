@@ -24,7 +24,7 @@ import 'package:on_chain_wallet/future/wallet/webview/pages/web_view.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'account_no_adress.dart';
 import 'account_appbar.dart';
 import 'client_appbar.dart';

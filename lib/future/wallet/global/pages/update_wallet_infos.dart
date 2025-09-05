@@ -1,26 +1,23 @@
 import 'package:flutter/widgets.dart';
+import 'package:on_chain_wallet/app/constant/global/app.dart';
+import 'package:on_chain_wallet/app/dev/logging.dart';
+import 'package:on_chain_wallet/app/utils/method/utiils.dart';
+import 'package:on_chain_wallet/crypto/platform_methods/cross/methods.dart';
+import 'package:on_chain_wallet/crypto/types/credential.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/setting/setting.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/wallet/models/wallet/models/hd_wallet.dart';
 
 typedef OnUpdateWidget = void Function(WalletUpdateInfosData);
 
 class UpdateWalletInfosWidget extends StatefulWidget {
   const UpdateWalletInfosWidget(
-      {required this.name,
-      required this.locktime,
-      required this.requrmentPassword,
-      this.setupButtonTitle,
-      required this.exitsIds,
+      {this.setupButtonTitle,
       required this.onUpdate,
-      required this.protectWallet,
+      required this.wallet,
       super.key});
-  final String name;
-  final WalletLockTime locktime;
-  final bool requrmentPassword;
-  final bool protectWallet;
+  final MainWallet wallet;
   final String? setupButtonTitle;
-  final List<String> exitsIds;
   final OnUpdateWidget onUpdate;
 
   @override
@@ -29,14 +26,16 @@ class UpdateWalletInfosWidget extends StatefulWidget {
 }
 
 class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
-    with SafeState {
+    with SafeState<UpdateWalletInfosWidget> {
+  List<String> walletIds = [];
+  bool supportPlatformCredential = true;
   final GlobalKey<FormState> formKey =
       GlobalKey<FormState>(debugLabel: "SetupWalletPassword");
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
-  late String name = widget.name;
-  late bool reqPassword = widget.requrmentPassword;
-  late WalletLockTime locktime = widget.locktime;
-  late bool protectWallet = widget.protectWallet;
+  late String name = widget.wallet.name;
+  late bool reqPassword = widget.wallet.requiredPassword;
+  late WalletLockTime locktime = widget.wallet.locktime;
+  late bool protectWallet = widget.wallet.protectWallet;
+  late ShimmerAction<WalletPlatformCredential?> platformCredential;
 
   late final Map<WalletLockTime, Widget> lockTimeWidget = {
     for (final i in WalletLockTime.values) i: Text(i.viewName.tr)
@@ -60,7 +59,7 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
     if (v == null || v.trim().isEmpty || v.length < 3 || v.length > 15) {
       return "wallet_name_validator".tr;
     }
-    if (widget.exitsIds.contains(v)) {
+    if (walletIds.contains(v)) {
       return "wallet_name_validator2".tr;
     }
     return null;
@@ -72,12 +71,58 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
         name: name,
         lockTime: locktime,
         requirmentPassword: reqPassword,
-        protectWallet: protectWallet));
+        protectWallet: protectWallet,
+        platformCredential: platformCredential.object));
   }
 
   void onChangeLockTime(WalletLockTime? time) {
     if (time == null) return;
     locktime = time;
+  }
+
+  Future<void> togglePlatformCredential() async {
+    if (platformCredential.object != null) {
+      platformCredential = ShimmerAction(object: null);
+    } else {
+      Logg.error("called ?!");
+      platformCredential.setAction(false);
+      final credential = await MethodUtils.call(() async {
+        return await PlatformCryptoMethods.createPlatformCredential(
+            name: name,
+            appName: APPConst.name,
+            displayName: name,
+            accountId: widget.wallet.key,
+            reason: "authenticate".tr);
+      });
+      Logg.error("credential $credential");
+      if (credential.hasError) {
+        context.showAlert(credential.localizationError);
+      } else {
+        platformCredential = ShimmerAction(object: credential.result);
+      }
+      platformCredential.setAction(true);
+    }
+    updateState();
+  }
+
+  Future<void> init() async {
+    platformCredential =
+        ShimmerAction(object: widget.wallet.platformCredential);
+    walletIds = context.wallet.wallet.wallets.map((e) => e.name).toList();
+    walletIds.remove(widget.wallet.name);
+    if (platformCredential.object == null) {
+      supportPlatformCredential =
+          await PlatformCryptoMethods.supportPlatformCredential();
+    }
+
+    platformCredential.setAction(true);
+    updateState();
+  }
+
+  @override
+  void onInitOnce() {
+    super.onInitOnce();
+    init();
   }
 
   @override
@@ -88,18 +133,23 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PageTitleSubtitle(
-                title: "wallet_settings".tr,
-                body: Text("wallet_settings_desc".tr)),
             Text("wallet_name".tr, style: context.textTheme.titleMedium),
             Text("wallet_identifier_name".tr),
             WidgetConstant.height8,
             AppTextField(
-              initialValue: name,
-              label: "wallet_name".tr,
-              onChanged: onChangeName,
-              validator: onValidateWalletName,
-            ),
+                initialValue: name,
+                label: "wallet_name".tr,
+                onChanged: onChangeName,
+                validator: onValidateWalletName),
+            WidgetConstant.height20,
+            Text("automatic_loc".tr, style: context.textTheme.titleMedium),
+            Text("wallet_locktime_desc".tr),
+            WidgetConstant.height8,
+            AppDropDownBottom(
+                items: lockTimeWidget,
+                hint: "automatic_loc".tr,
+                value: locktime,
+                onChanged: onChangeLockTime),
             WidgetConstant.height20,
             AppCheckListTile(
               contentPadding: EdgeInsets.zero,
@@ -111,16 +161,6 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
               subtitle: Text("wallet_password_requirement_desc2".tr),
             ),
             WidgetConstant.height20,
-            Text("automatic_loc".tr, style: context.textTheme.titleMedium),
-            Text("wallet_locktime_desc".tr),
-            WidgetConstant.height8,
-            AppDropDownBottom(
-              items: lockTimeWidget,
-              hint: "automatic_loc".tr,
-              value: locktime,
-              onChanged: onChangeLockTime,
-            ),
-            WidgetConstant.height20,
             AppCheckListTile(
               contentPadding: EdgeInsets.zero,
               value: protectWallet,
@@ -129,6 +169,22 @@ class _UpdateWalletInfosWidgetState extends State<UpdateWalletInfosWidget>
                   style: context.textTheme.titleMedium),
               subtitle: Text("required_password_to_sign_transaction".tr),
             ),
+            ConditionalWidget(
+                enable: supportPlatformCredential,
+                onActive: (context) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          WidgetConstant.height20,
+                          AppCheckListTile(
+                            contentPadding: EdgeInsets.zero,
+                            value: platformCredential.object != null,
+                            onChanged: (_) => togglePlatformCredential(),
+                            title: Text("enable_device_authentication".tr,
+                                style: context.textTheme.titleMedium),
+                            subtitle:
+                                Text("enable_device_authentication_desc".tr),
+                          ),
+                        ])),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

@@ -2,7 +2,7 @@ import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/helper/helper.dart';
 import 'package:on_chain/tron/src/models/contract/transaction/transaction.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/params/core/request.dart';

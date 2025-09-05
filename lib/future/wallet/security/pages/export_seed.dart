@@ -1,22 +1,24 @@
+import 'package:blockchain_utils/bip/mnemonic/mnemonic.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/tools/secure_state/secure_state.dart';
-import 'package:on_chain_wallet/future/wallet/security/security.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/crypto/keys/keys.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class ExportSeedView extends StatelessWidget {
   const ExportSeedView({super.key});
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-        accsess: WalletAccsessType.seed,
-        onAccsess: (crendential, password, network) {
+    return AccessWalletView<WalletCredentialResponseMnemonic,
+            WalletCredentialMnemonic>(
+        request: WalletCredentialMnemonic(),
+        onAccsess: (credential) {
           return _ExportSeedView(
-              mnemonic: crendential.first as AccessMnemonicResponse,
-              password: password);
+              mnemonic: credential.credential, credential: credential.id);
         },
         title: "export_mnemonic".tr,
         subtitle: PageTitleSubtitle(
@@ -26,9 +28,9 @@ class ExportSeedView extends StatelessWidget {
 }
 
 class _ExportSeedView extends StatefulWidget {
-  const _ExportSeedView({required this.mnemonic, required this.password});
+  const _ExportSeedView({required this.mnemonic, required this.credential});
   final AccessMnemonicResponse mnemonic;
-  final String password;
+  final WalletCredentialResponseVerify credential;
 
   @override
   State<_ExportSeedView> createState() => _ExportSeedViewState();
@@ -36,47 +38,112 @@ class _ExportSeedView extends StatefulWidget {
 
 class _ExportSeedViewState extends State<_ExportSeedView>
     with SafeState<_ExportSeedView>, SecureState<_ExportSeedView> {
-  final GlobalKey<FormState> form =
-      GlobalKey<FormState>(debugLabel: "ExportSeedView");
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
-  late final String _mnemonic = widget.mnemonic.mnemonic.toStr();
-  late final List<String> mnemonicList = widget.mnemonic.mnemonic.toList();
+  List<_ViewMnemonicData> mnemonics = [];
+
+  List<_ViewMnemonicData> _buildMnemonics() {
+    List<_ViewMnemonicData> mnemonics = [];
+    final wallet = context.wallet.wallet.wallet;
+    mnemonics.add(_ViewMnemonicData(
+        name: wallet.name,
+        subwalletId: null,
+        mnemonic: widget.mnemonic.mnemonic,
+        createdAt: wallet.created.toOnlyDateStr()));
+    for (final i in widget.mnemonic.subWallets) {
+      final sWallet =
+          wallet.subWallets.firstWhereOrNull((e) => e.id == i.subWalletId);
+      // assert(sWallet != null, "wallet not found ${i.subWalletId}");
+      if (sWallet == null) continue;
+      mnemonics.add(_ViewMnemonicData(
+          name: sWallet.name,
+          subwalletId: sWallet.id,
+          mnemonic: i.mnemonic,
+          createdAt: sWallet.created.toOnlyDateStr()));
+    }
+    return mnemonics;
+  }
+
+  late _ViewMnemonicData mnemonic;
+
+  Map<_ViewMnemonicData, Widget> _buildItems() {
+    return {
+      for (final i in mnemonics)
+        i: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(i.name, style: context.textTheme.bodyMedium),
+          Text(i.createdAt, style: context.textTheme.bodySmall)
+        ])
+    };
+  }
+
+  Map<_ViewMnemonicData, Widget> items = {};
+  void onChangeMnemonic(final _ViewMnemonicData? mnemonic) {
+    if (mnemonic == null) return;
+    this.mnemonic = mnemonic;
+    updateState();
+  }
+
+  @override
+  void onInitOnce() {
+    super.onInitOnce();
+    mnemonics = _buildMnemonics();
+    mnemonic = mnemonics.first;
+    items = _buildItems();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      child: (c) => Center(
-        child: CustomScrollView(
-          shrinkWrap: true,
-          slivers: [
-            SliverConstraintsBoxView(
-              padding: WidgetConstant.paddingHorizontal20,
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    WidgetConstant.height20,
-                    PageTitleSubtitle(
-                        title: "export_mnemonic_desc".tr,
-                        body: LargeTextView([
-                          "export_mnemonic_desc2".tr,
-                          "mnemonic_security_des1".tr,
-                          "mnemonic_security_des2".tr,
-                          "mnemonic_security_des3".tr
-                        ])),
-                    SecureContentView(
-                        content: _mnemonic,
-                        password: widget.password,
+    return SensitiveContent(
+      sensitivity: ContentSensitivity.sensitive,
+      child: CustomScrollView(
+        shrinkWrap: true,
+        slivers: [
+          SliverConstraintsBoxView(
+            padding: WidgetConstant.paddingHorizontal20,
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  WidgetConstant.height20,
+                  PageTitleSubtitle(
+                      title: "export_mnemonic_desc".tr,
+                      body: LargeTextView([
+                        "export_mnemonic_desc2".tr,
+                        "mnemonic_security_des1".tr,
+                        "mnemonic_security_des2".tr,
+                        "mnemonic_security_des3".tr
+                      ])),
+                  AppDropDownBottom(
+                      items: items,
+                      isDense: false,
+                      isExpanded: true,
+                      value: mnemonic,
+                      onChanged: onChangeMnemonic),
+                  WidgetConstant.height8,
+                  APPAnimated(
+                    onActive: (context) => SecureContentView(
+                        key: ValueKey(mnemonic),
+                        content: mnemonic.mnmonicStr,
+                        credential: widget.credential,
                         backupType: WalletBackupTypes.mnemonic),
-                    WidgetConstant.height20,
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _ViewMnemonicData {
+  final String name;
+  final int? subwalletId;
+  final Mnemonic mnemonic;
+  final String mnmonicStr;
+  final String createdAt;
+  _ViewMnemonicData(
+      {required this.name,
+      required this.subwalletId,
+      required this.mnemonic,
+      required this.createdAt})
+      : mnmonicStr = mnemonic.toStr();
 }

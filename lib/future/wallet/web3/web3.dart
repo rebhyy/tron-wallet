@@ -7,6 +7,5 @@ export 'pages/chain_permission.dart';
 export 'pages/web3_request_page_builder.dart';
 export 'pages/daps.dart';
 export 'global/global.dart';
-export 'core/exception.dart';
 export 'core/state.dart';
 export 'types/types.dart';

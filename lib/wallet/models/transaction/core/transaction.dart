@@ -2,9 +2,9 @@ import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/helper/helper.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/constant/constant.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/ada.dart';
@@ -32,10 +32,9 @@ enum WalletTransactionType {
   final int value;
   const WalletTransactionType(this.value);
   static WalletTransactionType fromValue(int? value) {
-    return values.firstWhere(
-      (e) => e.value == value,
-      orElse: () => throw WalletExceptionConst.dataVerificationFailed,
-    );
+    return values.firstWhere((e) => e.value == value,
+        orElse: () => throw AppSerializationException(
+            objectName: "WalletTransactionType"));
   }
 }
 
@@ -119,11 +118,9 @@ enum WalletTransactionStatus {
   bool get isUnknown => this == unknown;
 
   static WalletTransactionStatus fromValue(int? value) {
-    return values.firstWhere(
-      (e) => e.value == value,
-      orElse: () => throw WalletExceptionConst.invalidData(
-          messsage: 'Invalid wallet transaction status'),
-    );
+    return values.firstWhere((e) => e.value == value,
+        orElse: () => throw AppSerializationException(
+            objectName: "WalletTransactionStatus"));
   }
 }
 
@@ -133,6 +130,7 @@ abstract class ChainTransaction with CborSerializable, Equatable {
   final DateTime time;
   final WalletTransactionAmount? totalOutput;
   final List<WalletTransactionOutput> outputs;
+  final List<WalletTransactionInput> inputs;
   final WalletWeb3ClientTransaction? web3Client;
   WalletTransactionStatus _status;
   WalletTransactionStatus get status => _status;
@@ -143,9 +141,11 @@ abstract class ChainTransaction with CborSerializable, Equatable {
       this.web3Client,
       required WalletTransactionAmount? totalOutput,
       List<WalletTransactionOutput> outputs = const [],
+      List<WalletTransactionInput> inputs = const [],
       required WalletTransactionStatus status,
       this.type = WalletTransactionType.send})
       : outputs = outputs.immutable,
+        inputs = inputs.immutable,
         _status = status,
         time = time ?? DateTime.now(),
         totalOutput = (totalOutput?.amount.isZero ?? true) ? null : totalOutput;
@@ -207,8 +207,7 @@ abstract class ChainTransaction with CborSerializable, Equatable {
       _ => throw WalletExceptionConst.networkDoesNotExist,
     };
     if (transaction is! T) {
-      throw WalletException.invalidArgruments(
-          ["$T,${transaction.runtimeType}"]);
+      throw WalletExceptionConst.internalError("ChainTransaction");
     }
     return transaction;
   }
@@ -224,14 +223,15 @@ abstract class ChainTransaction with CborSerializable, Equatable {
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborSerializable.fromDynamic([
-          txId,
-          time,
-          totalOutput?.toCbor(),
-          CborSerializable.fromDynamic(outputs.map((e) => e.toCbor()).toList()),
-          web3Client?.toCbor(),
-          type.value,
-          status.value
+        CborListValue<CborObject>.definite([
+          CborStringValue(txId),
+          CborEpochFloatValue(time),
+          totalOutput?.toCbor() ?? const CborNullValue(),
+          CborListValue.definite(outputs.map((e) => e.toCbor()).toList()),
+          web3Client?.toCbor() ?? const CborNullValue(),
+          CborIntValue(type.value),
+          CborIntValue(status.value),
+          CborListValue.definite(inputs.map((e) => e.toCbor()).toList()),
         ]),
         network.tag);
   }
@@ -239,7 +239,7 @@ abstract class ChainTransaction with CborSerializable, Equatable {
   NetworkType get network;
 
   @override
-  List get variabels => [txId];
+  List get variabels => [txId, type];
 
   String get storageIdentifier => switch (type) {
         WalletTransactionType.send || WalletTransactionType.web3Tx => txId,
@@ -257,14 +257,42 @@ enum WalletTransactionOutputType {
 
   static WalletTransactionOutputType fromTag(List<int>? tag) {
     return values.firstWhere((e) => BytesUtils.bytesEqual(tag, e.tag),
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: 'invalid transaction output tag'));
+        orElse: () => throw AppSerializationException(
+            objectName: "WalletTransactionOutputType"));
+  }
+}
+
+enum WalletTransactionInputType {
+  operation(CborTagsConst.transactionInputOperation);
+
+  const WalletTransactionInputType(this.tag);
+  final List<int> tag;
+
+  static WalletTransactionInputType fromTag(List<int>? tag) {
+    return values.firstWhere((e) => BytesUtils.bytesEqual(tag, e.tag),
+        orElse: () => throw AppSerializationException(
+            objectName: "WalletTransactionOutputType"));
   }
 }
 
 abstract class WalletTransactionOutput with CborSerializable {
   final WalletTransactionOutputType type;
   const WalletTransactionOutput({required this.type});
+}
+
+abstract class WalletTransactionInput with CborSerializable {
+  final WalletTransactionInputType type;
+  const WalletTransactionInput({required this.type});
+}
+
+abstract class WalletTransactionOperationInput<NETWORKADDRESS>
+    extends WalletTransactionInput {
+  String get addressStr;
+  final String operation;
+  NETWORKADDRESS get address;
+
+  const WalletTransactionOperationInput({required this.operation})
+      : super(type: WalletTransactionInputType.operation);
 }
 
 abstract class WalletTransactionOperationOutput
@@ -297,8 +325,8 @@ enum WalletTransactionAmountType {
 
   static WalletTransactionAmountType fromTag(List<int>? tag) {
     return values.firstWhere((e) => BytesUtils.bytesEqual(tag, e.tag),
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: 'invalid transaction amount tag'));
+        orElse: () => throw AppSerializationException(
+            objectName: "WalletTransactionAmountType"));
   }
 }
 
@@ -329,10 +357,7 @@ abstract class WalletTransactionAmount<AMOUNT extends BalanceCore,
             bytes: bytes, cborHex: cborHex, object: object),
     };
     if (amount is! WalletTransactionAmount<AMOUNT, TOKEN>) {
-      throw WalletException.invalidArgruments([
-        amount.runtimeType.toString(),
-        "${WalletTransactionAmount<AMOUNT, TOKEN>}"
-      ]);
+      throw WalletExceptionConst.internalError("WalletTransactionAmount");
     }
     return amount;
   }

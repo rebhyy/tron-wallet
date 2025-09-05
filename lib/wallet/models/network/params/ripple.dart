@@ -1,5 +1,5 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/ripple.dart';
@@ -18,8 +18,8 @@ enum RippleKeyScheme {
   const RippleKeyScheme({required this.value, required this.name});
   static RippleKeyScheme fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "RippleKeyScheme not found $value"));
+        orElse: () =>
+            throw AppSerializationException(objectName: "RippleKeyScheme"));
   }
 
   EllipticCurveTypes get curve {

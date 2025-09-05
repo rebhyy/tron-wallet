@@ -1,6 +1,7 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_wallet/app/constant/global/serialization.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/euqatable/equatable.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
@@ -14,12 +15,14 @@ enum ProviderAuthType {
   const ProviderAuthType(this.tag);
   static ProviderAuthType fromName(String? name) {
     return values.firstWhere((e) => e.name == name,
-        orElse: () => throw WalletExceptionConst.invalidProviderInformation);
+        orElse: () =>
+            throw AppSerializationException(objectName: "ProviderAuthType"));
   }
 
   static ProviderAuthType fromTag(List<int>? tag) {
     return values.firstWhere((e) => BytesUtils.bytesEqual(tag, e.tag),
-        orElse: () => throw WalletExceptionConst.invalidProviderInformation);
+        orElse: () =>
+            throw AppSerializationException(objectName: "ProviderAuthType"));
   }
 
   bool get isHeader => this == ProviderAuthType.header;
@@ -48,7 +51,7 @@ abstract class ProviderAuthenticated with CborSerializable, Equatable {
 
   T cast<T extends ProviderAuthenticated>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", "$runtimeType"]);
+      throw AppExceptionConst.internalError("ProviderAuthenticated");
     }
     return this as T;
   }
@@ -64,8 +67,8 @@ class BasicProviderAuthenticated extends ProviderAuthenticated {
 
   factory BasicProviderAuthenticated.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, ProviderAuthType.header.tag);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: ProviderAuthType.header.tag);
     return BasicProviderAuthenticated(
         type: ProviderAuthType.fromName(cbor.elementAs(0)),
         key: cbor.elementAs(1),
@@ -109,8 +112,8 @@ class DigestProviderAuthenticated extends ProviderAuthenticated {
 
   factory DigestProviderAuthenticated.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, ProviderAuthType.digest.tag);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: ProviderAuthType.digest.tag);
     return DigestProviderAuthenticated(
         password: values.elementAs(0), username: values.elementAs(1));
   }

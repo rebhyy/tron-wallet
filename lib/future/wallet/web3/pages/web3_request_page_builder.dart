@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
 import 'package:on_chain_wallet/future/wallet/network/aptos/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/types/types.dart';
@@ -15,7 +15,7 @@ import 'package:on_chain_wallet/future/wallet/network/substrate/web3/types/types
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/appbar_action.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/client_info.dart';
@@ -92,7 +92,9 @@ class _Web3StatePageBuilderState extends State<Web3StatePageBuilder>
       onPopInvokedWithResult: (didPop, result) {
         request.onPopRequestPage();
       },
-      child: PasswordCheckerView(
+      child: AccessWalletView<WalletCredentialResponseLogin,
+          WalletCredentialLogin>(
+        request: WalletCredentialLogin.instance,
         appbar: AppBar(
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,10 +109,9 @@ class _Web3StatePageBuilderState extends State<Web3StatePageBuilder>
             WidgetConstant.width8,
           ],
         ),
-        accsess: WalletAccsessType.unlock,
         subtitle: Web3ApplicationView(
             permission: request.authenticated, info: request.info),
-        onAccsess: (_, __, ___) {
+        onAccsess: (_) {
           final bool hasAccount = controller.accounts.isNotEmpty;
           return StreamWeb3PageProgress(
               controller: controller.pageKey,

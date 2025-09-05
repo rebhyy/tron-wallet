@@ -4,7 +4,7 @@ import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
 import 'package:on_chain_bridge/web/api/api.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/exception.dart';
 import 'package:on_chain_wallet/app/http/isolate/exception/exception.dart';
 import 'package:on_chain_wallet/app/http/isolate/models/mode.dart';
 import 'package:on_chain_wallet/app/http/models/models.dart';
@@ -122,7 +122,7 @@ class _WorkerConnection {
     try {
       wasm = await _loadWasm(isJs);
       moudle = await _loadModuleScript(isJs);
-    } catch (e) {
+    } catch (_) {
       throw FailedHttpIsolateInitialization.failed;
     }
     final worker = await _buildWorker();
@@ -140,7 +140,8 @@ class _WorkerConnection {
       "module": moudle,
       "wasm": wasm,
       "isWasm": !isJs,
-      "isHttp": true
+      "isHttp": true,
+      "key": "",
     }.jsify()!);
     final result = await completer.future.timeout(const Duration(seconds: 20));
     worker.removeEventListener("message", workerListener);
@@ -188,8 +189,8 @@ class _WorkerConnection {
     final toJs = request.toJson().jsify();
     if (toJs == null) {
       Future.delayed(Duration.zero, () {
-        _requests[id]?.error(WalletExceptionConst.castingFailed(
-            messsage: "jsify object failed."));
+        _requests[id]
+            ?.error(ApiProviderExceptionConst.serverUnexpectedResponse);
       });
       return;
     }

@@ -4,7 +4,7 @@ import 'package:blockchain_utils/helper/helper.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/methods/methods.dart';

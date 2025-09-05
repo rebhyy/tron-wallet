@@ -5,9 +5,8 @@ import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/control
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/controllers/signer.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/cosmos/cosmos.dart';
 import 'fee.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'memo.dart';
 
 abstract class CosmosTransactionStateController2

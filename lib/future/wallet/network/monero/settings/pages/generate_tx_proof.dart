@@ -5,8 +5,8 @@ import 'package:on_chain_wallet/crypto/requets/messages.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/account/state.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/monero/monero.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class MoneroGenerateTxProofView extends StatelessWidget {
   const MoneroGenerateTxProofView({super.key});
@@ -15,10 +15,11 @@ class MoneroGenerateTxProofView extends StatelessWidget {
   Widget build(BuildContext context) {
     final MoneroWalletTransactionProof? requestProof =
         context.getNullArgruments();
-    return PasswordCheckerView(
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       title: "generate_transaction_proof".tr,
-      accsess: WalletAccsessType.unlock,
-      onAccsess: (credential, password, network) {
+      onAccsess: (_) {
         return NetworkAccountControllerView<MoneroClient, IMoneroAddress,
                 MoneroChain>(
             addressRequired: true,
@@ -97,7 +98,7 @@ class _MoneroGenerateTxProofViewState
                 txKeys: isOutputRequest ? widget.txOutput!.txKeys : null),
             encryptedPart: selectedAccount.addrDetails.toCbor().encode()));
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr,
+      progressKey.errorText(result.localizationError,
           backToIdle: false, showBackButton: true);
       return;
     }
@@ -121,10 +122,9 @@ class _MoneroGenerateTxProofViewState
 
   @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      child: (context) {
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (context) {
         return CustomScrollView(slivers: [
           SliverConstraintsBoxView(
             padding: WidgetConstant.paddingHorizontal20,

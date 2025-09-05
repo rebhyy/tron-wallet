@@ -8,7 +8,7 @@ class RPCURL {
   factory RPCURL({required String url, ProviderAuthenticated? auth}) {
     final Uri? uri = Uri.tryParse(url);
     if (uri == null) {
-      throw WalletException.error("invalid_url");
+      throw ApiProviderExceptionConst.invalidRequestUrl;
     }
     return RPCURL._(url, auth);
   }

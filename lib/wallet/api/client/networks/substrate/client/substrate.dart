@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/app/error/exception.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/substrate/methods/metadata.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/substrate/models/models/models.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/substrate.dart';
@@ -54,7 +53,7 @@ class SubstrateClient extends NetworkClient<
     final blockHash = await provider
         .request(SubstrateRequestChainGetBlockHash(number: atNumber));
     if (blockHash == null) {
-      throw UnimplementedError();
+      throw ApiProviderExceptionConst.serverUnexpectedResponse;
     }
     return SubstrateBlockHash.hash(blockHash);
   }
@@ -143,7 +142,7 @@ class SubstrateClient extends NetworkClient<
     final genesis = await provider
         .request(const SubstrateRequestChainGetBlockHash(number: 0));
     if (genesis == null) {
-      throw UnimplementedError();
+      throw ApiProviderExceptionConst.serverUnexpectedResponse;
     }
     return SubstrateBlockHash.hash(genesis);
   }
@@ -290,11 +289,11 @@ class SubstrateClient extends NetworkClient<
               onDone: () {},
               onError: (e) {
                 if (completer.isCompleted) return;
-                if (e is WalletException) {
-                  completer.completeError(WalletException(e.message));
+                if (e is ApiProviderException) {
+                  completer.completeError(e);
                 } else {
-                  completer.completeError(
-                      WalletException("transaction_confirmation_failed"));
+                  completer.completeError(ApiProviderException.message(
+                      "transaction_confirmation_failed"));
                 }
               });
       return await completer.future;
@@ -311,7 +310,7 @@ class SubstrateClient extends NetworkClient<
     final blockHash = await provider
         .request(SubstrateRequestChainGetBlockHash<String?>(number: blockId));
     if (blockHash == null) {
-      throw TypeError();
+      throw Exception();
     }
     final block = await provider
         .request(SubstrateRequestChainGetBlock(atBlockHash: blockHash));
@@ -329,7 +328,9 @@ class SubstrateClient extends NetworkClient<
     } on RPCError {
       rethrow;
     } catch (e) {
-      throw WalletException("transaction_confirmation_failed");
+      appLogger.error(
+          runtime: runtimeType, functionName: "_lockupBlock", msg: e);
+      throw ApiProviderException.message("transaction_confirmation_failed");
     }
   }
 
@@ -364,19 +365,19 @@ class SubstrateClient extends NetworkClient<
             controller.add(result);
             closeController();
           } else if (count <= 0) {
-            controller
-                .addError(WalletException("transaction_confirmation_failed"));
+            controller.addError(ApiProviderException.message(
+                "transaction_confirmation_failed"));
             closeController();
           }
-        } on WalletException catch (e) {
+        } on ApiProviderException catch (e) {
           controller.addError(e);
           closeController();
           return;
         } catch (_) {
           retry--;
           if (retry <= 0) {
-            controller
-                .addError(WalletException("transaction_confirmation_failed"));
+            controller.addError(ApiProviderException.message(
+                "transaction_confirmation_failed"));
             closeController();
             return;
           }
@@ -410,7 +411,7 @@ class SubstrateClient extends NetworkClient<
   Future<bool> initSwapClient() async {
     final init = await this.init();
     if (!init) {
-      throw WalletException('network_client_initialize_failed');
+      throw ApiProviderExceptionConst.initializeClientFailed;
     }
     return true;
   }
@@ -419,7 +420,7 @@ class SubstrateClient extends NetworkClient<
   Future<SwapPolkadotAccountAssetBalance> getAccountsAssetBalance(
       PolkadotSwapAsset asset, BaseSubstrateAddress account) async {
     if (!asset.type.isNative) {
-      throw WalletException("invalid_swap_asset");
+      throw ApiProviderExceptionConst.unexpectedRequestData;
     }
     return SwapPolkadotAccountAssetBalance(
         address: account, balance: await getBalance(account), asset: asset);

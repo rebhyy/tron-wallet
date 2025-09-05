@@ -113,10 +113,9 @@ class _NumberWriteViewState extends State<NumberWriteView> with SafeState {
               keyboardType: TextInputType.numberWithOptions(
                   decimal: widget.allowDecimal, signed: widget.allowSign),
               inputFormatters: [
-                BigRetionalRangeTextInputFormatter(
-                    max: widget.max,
-                    min: widget.min,
-                    allowDecimal: widget.allowDecimal),
+                BigRetionalTextInputFormatter(
+                    allowDecimal: widget.allowDecimal,
+                    allowSign: widget.min?.isNegative ?? true),
               ],
               validator: widget.customForm ?? validator,
               suffixIcon: PasteTextIcon(onPaste: onPaste, isSensitive: false),

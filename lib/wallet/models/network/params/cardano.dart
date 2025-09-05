@@ -15,8 +15,10 @@ class CardanoNetworkParams extends NetworkCoinParams<CardanoAPIProvider> {
 
   factory CardanoNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.cardanoNetworkParams);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.cardanoNetworkParams);
 
     return CardanoNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),

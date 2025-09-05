@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/operat
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class LiveFormWidgeCashTokenRemain<T extends Object> extends StatelessWidget {
   final BitcoinTransactionTransferOperation controller;

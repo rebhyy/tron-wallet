@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 typedef CHAINSTREAMBUILER<T extends Chain> = Widget Function(
     BuildContext context, T chain, ChainNotify? lastNotify);

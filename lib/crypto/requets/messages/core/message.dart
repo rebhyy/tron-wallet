@@ -21,6 +21,7 @@ enum CryptoRequestMethod {
   decryptChacha(CryptoKeyConst.decryptChacha),
   generateMnemonic(CryptoKeyConst.generateToneMenemonic),
   tonMnemonicToPrivateKey(CryptoKeyConst.tonMnemonicToPrivateKey),
+  tonMnemonicValidate(CryptoKeyConst.tonMnemonicValidate),
   generateMoneroMnemonic(CryptoKeyConst.generateMoneroMnemonic),
   moneroMnemonicToPrivateKey(CryptoKeyConst.moneroMnemonicToPrivateKey),
   generateMasterKey(CryptoKeyConst.generateMasterKey),
@@ -28,12 +29,10 @@ enum CryptoRequestMethod {
   createMasterKey(CryptoKeyConst.createMasterKey),
   createWallet(CryptoKeyConst.createWallet),
   decodeBackup(CryptoKeyConst.decodeBackup),
-  encodeBackup(CryptoKeyConst.encodeBackup),
   generateBip39Mnemonic(CryptoKeyConst.generateBip39Mnemonic),
   walletKey(CryptoKeyConst.walletKey),
   randomGenerator(CryptoKeyConst.randomGenerator),
   jwt(CryptoKeyConst.jwt),
-  // hexToBytes(CryptoKeyConst.hexToBytes),
   hashing(CryptoKeyConst.hashing),
   symkey(CryptoKeyConst.generateSymKey),
   x25519(CryptoKeyConst.x25519);
@@ -45,7 +44,8 @@ enum CryptoRequestMethod {
     return values.firstWhere(
         (e) => BytesUtils.bytesEqual(
             e._tag, tag?.sublist(CryptoArgsType.tagLength)),
-        orElse: () => throw WalletExceptionConst.invalidRequest);
+        orElse: () =>
+            throw AppSerializationException(objectName: "CryptoRequestMethod"));
   }
 }
 
@@ -64,7 +64,8 @@ enum NoneEncryptedCryptoRequestMethod {
     return values.firstWhere(
         (e) => BytesUtils.bytesEqual(
             e._tag, tag?.sublist(CryptoArgsType.tagLength)),
-        orElse: () => throw WalletExceptionConst.invalidRequest);
+        orElse: () => throw AppSerializationException(
+            objectName: "NoneEncryptedCryptoRequestMethod"));
   }
 }
 
@@ -78,7 +79,8 @@ enum StreamIsolateMethod {
     return values.firstWhere(
         (e) => BytesUtils.bytesEqual(
             e._tag, tag?.sublist(CryptoArgsType.tagLength)),
-        orElse: () => throw WalletExceptionConst.invalidRequest);
+        orElse: () =>
+            throw AppSerializationException(objectName: "StreamIsolateMethod"));
   }
 }
 
@@ -94,14 +96,19 @@ enum WalletRequestMethod {
   updateWalletKeys(CryptoKeyConst.updateWalletKeys),
   removeWalletKeys(CryptoKeyConst.removeWalletKeys),
   walletBackup(CryptoKeyConst.walletBackup),
+  encodeBackup(CryptoKeyConst.encodeBackup),
   sign(CryptoKeyConst.sign),
-  moneroOutputUnlocker(CryptoKeyConst.moneroOutputUnlocker);
+  moneroOutputUnlocker(CryptoKeyConst.moneroOutputUnlocker),
+  importSubWallet(CryptoKeyConst.importSubWallet),
+  removeSubWallet(CryptoKeyConst.removeSubWallet),
+  changeWalletPassword(CryptoKeyConst.changeWalletPassword);
 
   final List<int> tag;
   const WalletRequestMethod(this.tag);
   static WalletRequestMethod fromTag(List<int>? tag) {
     return values.firstWhere((e) => BytesUtils.bytesEqual(e.tag, tag),
-        orElse: () => throw WalletExceptionConst.invalidRequest);
+        orElse: () =>
+            throw AppSerializationException(objectName: "StreamIsolateMethod"));
   }
 }
 
@@ -131,6 +138,8 @@ abstract class CryptoRequest<T, A extends CborMessageResponseArgs>
         break;
       case CryptoRequestMethod.tonMnemonicToPrivateKey:
         args = TonMnemonicToPrivateKeyMessage.deserialize(object: decode);
+      case CryptoRequestMethod.tonMnemonicValidate:
+        args = TonMnemonicValidateMessage.deserialize(object: decode);
         break;
       case CryptoRequestMethod.generateMoneroMnemonic:
         args = MoneroMenmonicGenerateMessage.deserialize(object: decode);
@@ -152,9 +161,6 @@ abstract class CryptoRequest<T, A extends CborMessageResponseArgs>
         break;
       case CryptoRequestMethod.decodeBackup:
         args = CryptoRequestDecodeBackup.deserialize(object: decode);
-        break;
-      case CryptoRequestMethod.encodeBackup:
-        args = CryptoRequestEncodeBackup.deserialize(object: decode);
         break;
       case CryptoRequestMethod.generateBip39Mnemonic:
         args = CryptoRequestGenerateBip39Mnemonic.deserialize(object: decode);
@@ -180,8 +186,7 @@ abstract class CryptoRequest<T, A extends CborMessageResponseArgs>
         break;
     }
     if (args is! CryptoRequest<T, A>) {
-      throw WalletExceptionConst.invalidArgruments(
-          "${CryptoRequest<T, A>}", "${args.runtimeType}");
+      throw AppCryptoExceptionConst.internalError("CryptoRequest");
     }
     return args;
   }
@@ -238,10 +243,21 @@ abstract class WalletRequest<T, A extends CborMessageResponseArgs>
       case WalletRequestMethod.moneroOutputUnlocker:
         args = WalletRequestMoneroOutputUnlocker.deserialize(object: decode);
         break;
+      case WalletRequestMethod.importSubWallet:
+        args = WalletRequestImportSubWallet.deserialize(object: decode);
+        break;
+      case WalletRequestMethod.removeSubWallet:
+        args = WalletRequestRemoveSubWallet.deserialize(object: decode);
+        break;
+      case WalletRequestMethod.encodeBackup:
+        args = WalletRequestBackupKey.deserialize(object: decode);
+        break;
+      case WalletRequestMethod.changeWalletPassword:
+        args = WalletRequestChangePassword.deserialize(object: decode);
+        break;
     }
     if (args is! WalletRequest<T, A>) {
-      throw WalletExceptionConst.invalidArgruments(
-          "${WalletRequest<T, A>}", "${args.runtimeType}");
+      throw AppCryptoExceptionConst.internalError("WalletRequest");
     }
     return args;
   }
@@ -281,8 +297,7 @@ abstract class NoneEncryptedCryptoRequest<T, A extends CborMessageResponseArgs>
         break;
     }
     if (args is! NoneEncryptedCryptoRequest<T, A>) {
-      throw WalletExceptionConst.invalidArgruments(
-          "${NoneEncryptedCryptoRequest<T, A>}", "${args.runtimeType}");
+      throw AppCryptoExceptionConst.internalError("NoneEncryptedCryptoRequest");
     }
     return args;
   }
@@ -315,8 +330,7 @@ abstract class IsolateStreamRequest<T, S>
         break;
     }
     if (args is! IsolateStreamRequest<T, S>) {
-      throw WalletExceptionConst.invalidArgruments(
-          "${IsolateStreamRequest<T, S>}", "${args.runtimeType}");
+      throw AppCryptoExceptionConst.internalError("IsolateStreamRequest");
     }
     return args;
   }
@@ -336,7 +350,7 @@ abstract class IsolateStreamRequest<T, S>
   Stream<MessageArgsStreamResponse> getIsolateResult(
       {required String streamId, List<int>? encryptedPart}) {
     if (_streamController == null) {
-      throw WalletException("stream_closed_desc");
+      throw AppCryptoException("stream_closed_desc");
     }
     return _streamController!.stream.transform(
         StreamTransformer<S, MessageArgsStreamResponse>.fromHandlers(
@@ -350,7 +364,7 @@ abstract class IsolateStreamRequest<T, S>
   @override
   Stream<T> result({List<int>? encryptedPart}) {
     if (_streamController == null) {
-      throw WalletException("stream_closed_desc");
+      throw AppCryptoException("stream_closed_desc");
     }
     return _streamController!.stream.transform(
         StreamTransformer<S, T>.fromHandlers(

@@ -6,9 +6,8 @@ import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/permission_view.dart';
 import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
-import 'package:on_chain_wallet/wc/core/types/exception.dart';
 import 'package:on_chain_wallet/wc/wallet/core/wallet.dart';
 import 'package:on_chain_wallet/wc/wc.dart';
 
@@ -27,7 +26,9 @@ class WalletConnectView extends StatefulWidget {
 }
 
 class _WalletConnectViewState extends State<WalletConnectView>
-    with SafeState<WalletConnectView>, ProgressMixin {
+    with SafeState<WalletConnectView> {
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   late WalletProvider wallet;
   late Web3WalletConnectHandler walletConnect;
   WcRpcSocketStatus get status => walletConnect.connectionStatus.value;
@@ -138,15 +139,20 @@ class _WalletConnectViewState extends State<WalletConnectView>
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('wallet_connect_management'.tr)),
-      body: PageProgress(
-          key: progressKey,
-          initialStatus: StreamWidgetStatus.progress,
+      body: StreamPageProgress(
+          controller: progressKey,
           initialWidget:
               ProgressWithTextView(text: "loading_sessions_please_wait".tr),
-          child: (context) {
+          builder: (context) {
             return CustomScrollView(
               slivers: [
                 APPStreamBuilder(
@@ -314,7 +320,7 @@ class _ConnectPairingViewState extends State<_ConnectPairingView>
     try {
       WalletConnectUtils.parseUri(Uri.parse(v));
       return null;
-    } on WalletConnectException catch (e) {
+    } on AppException catch (e) {
       return e.message.tr;
     } catch (e) {
       return "invalid_pairing_url".tr;
@@ -335,7 +341,7 @@ class _ConnectPairingViewState extends State<_ConnectPairingView>
         () => widget.state.connect(pairUrl: url, cancelable: cancelable));
     if (result.isCancel) return;
     if (result.hasError) {
-      error = result.error!.tr;
+      error = result.localizationError;
       pairingStatus = _PairingStatus.idle;
       fieldKey.currentState?.clear();
       updateState();

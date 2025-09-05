@@ -3,12 +3,10 @@ import 'dart:async';
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/bitcoin/core/core.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/bitcoin/methods/script_hash_balance.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/bitcoin/bitcoin.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/transaction.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
@@ -81,7 +79,7 @@ class BitcoinElectrumClient extends BitcoinClient<IBitcoinAddress> {
       if (!network.chainType.isMainnet) {
         return BigRational.parseDecimal('1.1');
       }
-      throw WalletException("Failed to fetch network fee rate.");
+      throw ApiProviderExceptionConst.serverUnexpectedResponse;
     }
     return BigRational(fee.medium) / BigRational.from(1024);
   }
@@ -107,8 +105,7 @@ class BitcoinElectrumClient extends BitcoinClient<IBitcoinAddress> {
 
   @override
   Future<BigInt> getBalance(BitcoinBaseAddress address) async {
-    return provider.request(
-        ElectrumGetScriptHashSumBalance(scriptHash: address.pubKeyHash()));
+    return getAccountBalance(address);
   }
 
   @override
@@ -124,7 +121,19 @@ class BitcoinElectrumClient extends BitcoinClient<IBitcoinAddress> {
 
   @override
   Future<BigInt> getAccountBalance(BitcoinBaseAddress address) async {
-    return await provider.request(
-        ElectrumGetScriptHashSumBalance(scriptHash: address.pubKeyHash()));
+    final utxos = await readUtxos(
+        UtxoAddressDetails.watchOnly(address), network.coinParam.isBCH);
+    return utxos.sumOfUtxosValue();
+  }
+
+  @override
+  Future<ElectrumVerbosTxResponse?> getTransactionData(String txId) async {
+    try {
+      final r =
+          await provider.request(ElectrumRequestGetVerboseTransaction(txId));
+      return r;
+    } catch (_) {
+      return null;
+    }
   }
 }

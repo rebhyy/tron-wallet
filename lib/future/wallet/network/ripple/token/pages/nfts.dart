@@ -39,8 +39,8 @@ class _MonitorRippleNFTsView extends StatefulWidget {
 class ___MonitorRippleNFTsViewState extends State<_MonitorRippleNFTsView>
     with SafeState {
   IXRPAddress get address => widget.account.address;
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>(debugLabel: "_MonitorRippleNFTsViewState");
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   final Set<RippleNFToken> nfts = {};
   final ScrollController controller = ScrollController();
   void fetchingTokens() async {
@@ -51,7 +51,7 @@ class ___MonitorRippleNFTsViewState extends State<_MonitorRippleNFTsView>
     });
 
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr, backToIdle: false);
+      progressKey.errorText(result.localizationError, backToIdle: false);
     } else {
       final rippleNfts = result.result.map((e) => RippleNFToken(
           flags: e.flags,
@@ -94,14 +94,18 @@ class ___MonitorRippleNFTsViewState extends State<_MonitorRippleNFTsView>
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      initialStatus: PageProgressStatus.progress,
-      backToIdle: APPConst.oneSecoundDuration,
+    return StreamPageProgress(
+      controller: progressKey,
       initialWidget:
           ProgressWithTextView(text: "fetching_account_token_please_wait".tr),
-      child: (c) {
+      builder: (c) {
         return EmptyItemWidgetView(
           isEmpty: nfts.isEmpty,
           itemBuilder: () => ConstraintsBoxView(

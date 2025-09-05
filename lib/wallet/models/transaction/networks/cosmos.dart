@@ -1,7 +1,7 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 

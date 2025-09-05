@@ -7,7 +7,7 @@ import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/account/state.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/monero/monero.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/networks/monero/monero.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
 
@@ -44,8 +44,8 @@ class _MoneroAccountSyncViewState
   MoneroChain get account => widget.chain;
   @override
   MoneroClient get client => widget.client;
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   late _SyncRequest defaultTracker;
 
   final StreamValue<void> onProgressUpdated = StreamValue(null);
@@ -74,7 +74,7 @@ class _MoneroAccountSyncViewState
       return await account.removeSyncRequest(requestId);
     }, delay: APPConst.oneSecoundDuration);
     if (r.hasError) {
-      progressKey.errorText(r.error!.tr,
+      progressKey.errorText(r.localizationError,
           backToIdle: false, showBackButton: true);
       return;
     }
@@ -191,25 +191,29 @@ class _MoneroAccountSyncViewState
     List<_SyncRequest> requests = [];
     final tracker = account.defaultTracker;
 
-    requests.add(createViewRequest(
-        startHeight: tracker.startHeight,
-        endHeight: currentHeight ?? tracker.endHeight,
-        addresses: tracker.accounts,
-        failedOffsets: tracker.failedOffsets,
-        currentHeight: tracker.currentHeight,
-        status: tracker.status.name.tr,
-        progressOffsets: tracker.offsets));
+    requests.add(Logg.def(
+        () => createViewRequest(
+            startHeight: tracker.startHeight,
+            endHeight: currentHeight ?? tracker.endHeight,
+            addresses: tracker.accounts,
+            failedOffsets: tracker.failedOffsets,
+            currentHeight: tracker.currentHeight,
+            status: tracker.status.name.tr,
+            progressOffsets: tracker.offsets),
+        'load'));
     for (final i in tracker.requestOffsets) {
-      requests.add(createViewRequest(
-          startHeight: i.startHeight,
-          endHeight: i.endHeight,
-          addresses: i.accounts,
-          failedOffsets: i.failedOffsets,
-          currentHeight: i.currentHeight,
-          status: i.status.name.tr,
-          progressOffsets: i.currentOffsets,
-          created: i.created,
-          requestId: i.requestId));
+      requests.add(Logg.def(
+          () => createViewRequest(
+              startHeight: i.startHeight,
+              endHeight: i.endHeight,
+              addresses: i.accounts,
+              failedOffsets: i.failedOffsets,
+              currentHeight: i.currentHeight,
+              status: i.status.name.tr,
+              progressOffsets: i.currentOffsets,
+              created: i.created,
+              requestId: i.requestId),
+          'load2'));
     }
     this.requests = requests;
     buildRequestsItems();
@@ -232,7 +236,7 @@ class _MoneroAccountSyncViewState
     if (blockId.hasResult) {
       currentHeight = blockId.result;
     }
-    buildRequests(init: true);
+    Logg.def(() => buildRequests(init: true), "load");
     allowRefresh = true;
     progressKey.backToIdle();
     updateState();
@@ -258,7 +262,7 @@ class _MoneroAccountSyncViewState
   @override
   void safeDispose() {
     super.safeDispose();
-
+    progressKey.dispose();
     listener?.cancel();
     listener = null;
     onProgressUpdated.dispose();
@@ -273,13 +277,11 @@ class _MoneroAccountSyncViewState
         onTrackerUpdated();
       },
       notificationPredicate: (notification) => allowRefresh,
-      child: PageProgress(
-        key: progressKey,
-        initialStatus: StreamWidgetStatus.progress,
-        backToIdle: APPConst.oneSecoundDuration,
+      child: StreamPageProgress(
+        controller: progressKey,
         initialWidget:
             ProgressWithTextView(text: "fetching_current_block_data".tr),
-        child: (context) => CustomScrollView(
+        builder: (context) => CustomScrollView(
           slivers: [
             SliverConstraintsBoxView(
                 padding: WidgetConstant.padding20,

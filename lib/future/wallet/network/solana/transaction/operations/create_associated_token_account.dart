@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/controllers/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/widgets/create_associated_token_account.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 
 class SolanaTransactionCreateAssociatedTokenAccountOperation

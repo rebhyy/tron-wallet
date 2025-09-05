@@ -11,7 +11,7 @@ import 'package:on_chain_wallet/app/models/models/currencies.dart';
 import 'package:on_chain_wallet/future/tools/frame_tracker/desktop_frame_tracker.dart';
 import 'package:on_chain_wallet/future/wallet/controller/tabs/tabs.dart';
 import 'package:on_chain_wallet/repository/core/repository.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/status.dart';
+import 'package:on_chain_wallet/wallet/models/others/models/wallet.dart';
 import 'wallet/ui_wallet.dart';
 import 'wallet/cross/cross.dart'
     if (dart.library.js_interop) 'wallet/cross/web.dart'
@@ -105,7 +105,7 @@ class WalletProvider extends StateController
         return await wallet.init();
       });
       if (init.hasError) {
-        _status = APPStatus.error(init.error!.tr);
+        _status = APPStatus.error(init.localizationError);
       } else {
         _status = APPStatus.ready;
       }
@@ -154,9 +154,14 @@ class WalletProvider extends StateController
     wallet.dispose();
   }
 
+  void onAppHover() {
+    wallet.onWalletIntraction();
+  }
+
   @override
   void ready() {
     super.ready();
+    FocusManager.instance.addListener(onAppHover);
     currency.changeCurrency(appSetting.currency);
     _onWalletStatus = wallet.status.stream.listen(onWalletEvent);
     _initWallet();

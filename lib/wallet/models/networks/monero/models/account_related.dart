@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/crypto/isolate/types/types.dart';
 import 'package:on_chain_wallet/crypto/worker.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/monero.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
 
@@ -18,7 +18,8 @@ enum MoneroBlockTrackingStatus {
   const MoneroBlockTrackingStatus(this.value);
   static MoneroBlockTrackingStatus fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () => throw AppSerializationException(
+            objectName: "MoneroBlockTrackingStatus"));
   }
 
   bool get isComplete => this == complete;
@@ -34,7 +35,8 @@ enum MoneroParsingBlockStatus {
   const MoneroParsingBlockStatus(this.value);
   static MoneroParsingBlockStatus fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () => throw AppSerializationException(
+            objectName: "MoneroParsingBlockStatus"));
   }
 
   bool get isFailed => this == failed;
@@ -57,7 +59,7 @@ class MoneroBlockTrackingFailed with CborSerializable, Equatable {
   factory MoneroBlockTrackingFailed(
       {required int startHeight, required int endHeight}) {
     if (startHeight.isNegative || startHeight > endHeight) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw WalletExceptionConst.internalError("MoneroBlockTrackingFailed");
     }
     return MoneroBlockTrackingFailed._(
         startHeight: startHeight, endHeight: endHeight);
@@ -95,7 +97,8 @@ enum MoneroBlockTrackerType {
   const MoneroBlockTrackerType(this.tag);
   static MoneroBlockTrackerType fromTag(List<int>? tag) {
     return values.firstWhere((e) => BytesUtils.bytesEqual(e.tag, tag),
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () => throw AppSerializationException(
+            objectName: "MoneroBlockTrackerType"));
   }
 
   bool get isDefaultTracker => this == defaultTracker;
@@ -119,7 +122,7 @@ abstract class MoneroBlockTrackingInfo with CborSerializable, Equatable {
   }
   T cast<T extends MoneroBlockTrackingInfo>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", "$runtimeType"]);
+      throw WalletExceptionConst.internalError("MoneroBlockTrackingInfo");
     }
     return this as T;
   }
@@ -143,7 +146,12 @@ class MoneroDefaultBlockTrackingInfo extends MoneroBlockTrackingInfo {
     assert(_currentHeight == response.currentHeight, "invalid start height");
     final total = response.currentHeight + response.total;
     assert(total <= endHeight, "invalid response $total $endHeight");
-    _currentHeight += response.total;
+    if (total <= endHeight) {
+      _currentHeight += response.total;
+    } else {
+      _currentHeight = endHeight;
+    }
+
     assert(_currentHeight <= endHeight, "invalid possition");
     if (_currentHeight == endHeight) {
       _status = MoneroBlockTrackingStatus.complete;
@@ -182,7 +190,8 @@ class MoneroDefaultBlockTrackingInfo extends MoneroBlockTrackingInfo {
       required MoneroBlockTrackingStatus status,
       required int? requestId}) {
     if (startHeight.isNegative || startHeight > endHeight) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw WalletExceptionConst.internalError(
+          "MoneroDefaultBlockTrackingInfo");
     }
     return MoneroDefaultBlockTrackingInfo._(
         startHeight: startHeight,
@@ -282,7 +291,8 @@ class MoneroRequestBlockTrackingInfo extends MoneroBlockTrackingInfo {
     required List<MoneroSyncAccountsInfos> accounts,
   }) {
     if (startHeight.isNegative || startHeight > endHeight || accounts.isEmpty) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw WalletExceptionConst.internalError(
+          "MoneroRequestBlockTrackingInfo");
     }
     return MoneroRequestBlockTrackingInfo._(
         accounts: accounts,
@@ -376,8 +386,8 @@ enum MoneroAccountBlocksTrackerStatus {
   const MoneroAccountBlocksTrackerStatus(this.value);
   static MoneroAccountBlocksTrackerStatus fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "block tracker status does not exists."));
+        orElse: () => throw AppSerializationException(
+            objectName: "MoneroAccountBlocksTrackerStatus"));
   }
 }
 
@@ -501,11 +511,10 @@ class MoneroAccountBlocksTracker with CborSerializable {
     });
   }
 
-  static List<MoneroDefaultBlockTrackingInfo> _buildOffsets({
-    required int currentHeight,
-    required int endHeight,
-    required int? requestId,
-  }) {
+  static List<MoneroDefaultBlockTrackingInfo> _buildOffsets(
+      {required int currentHeight,
+      required int endHeight,
+      required int? requestId}) {
     if (currentHeight >= endHeight) return [];
 
     const int minBlockPerOffset = 2000;
@@ -565,7 +574,7 @@ class MoneroAccountBlocksTracker with CborSerializable {
     _checkStatus();
   }
 
-  void _updateOffset(MoneroSyncBlocksResponse offset) async {
+  void _updateOffset(MoneroSyncBlocksResponse offset) {
     if (offset.offset.requestId != null) {
       final request = _requestOffsets
           .firstWhereNullable((e) => e.requestId == offset.offset.requestId);
@@ -637,7 +646,9 @@ class MoneroAccountBlocksTracker with CborSerializable {
 
   void addAccountPendingTxes(MoneroViewPrimaryAccountDetails account,
       Iterable<MoneroAccountIndexTxes> txes) {
-    getAccountInfo(account)._addTx(txes);
+    final acc = getAccountInfo(account);
+    assert(acc != null, "account not found");
+    acc?._addTx(txes);
   }
 
   ///
@@ -651,17 +662,17 @@ class MoneroAccountBlocksTracker with CborSerializable {
     }
   }
 
-  MoneroSyncAccountsInfos getAccountInfo(
+  MoneroSyncAccountsInfos? getAccountInfo(
       MoneroViewPrimaryAccountDetails primaryAccount) {
-    return _accounts.firstWhere(
-      (e) => e.primaryAccount == primaryAccount,
-      orElse: () => throw WalletExceptionConst.accountDoesNotFound,
-    );
+    return _accounts
+        .firstWhereOrNull((e) => e.primaryAccount == primaryAccount);
   }
 
   void removeAccountPendingTxes(MoneroViewPrimaryAccountDetails account,
       Iterable<MoneroAccountIndexTxes> txes) {
-    getAccountInfo(account)._removeTx(txes);
+    final acc = getAccountInfo(account);
+    assert(acc != null, "account not found.");
+    acc?._removeTx(txes);
   }
 
   void addAccount(MoneroViewAccountDetails account) {
@@ -876,6 +887,13 @@ class MoneroViewPrimaryAccountDetails with CborSerializable, Equatable {
       coinType: network.coin);
   late final primaryAddress = MoneroAccountAddress(account.primaryAddress,
       network: network, type: XmrAddressType.primaryAddress);
+  final Map<MoneroAccountIndex, MoneroAddress> _cachedAddresses = {};
+  MoneroAddress getAddress(MoneroAccountIndex index) {
+    final addr = _cachedAddresses[index] ??=
+        MoneroAddress(account.subaddress(index.minor, majorIndex: index.major));
+    return addr;
+  }
+
   MoneroViewPrimaryAccountDetails._(
       {required List<int> viewPrivateKey,
       required List<int> spendPublicKey,
@@ -1031,7 +1049,8 @@ enum MoneroUnlockPaymentRequestStatus {
   final int value;
   static MoneroUnlockPaymentRequestStatus fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () => throw AppSerializationException(
+            objectName: "MoneroUnlockPaymentRequestStatus"));
   }
 
   bool get hasPayment => this == MoneroUnlockPaymentRequestStatus.success;
@@ -1048,7 +1067,8 @@ enum MoneroUnlockPaymentRequestOutputStatus {
   final int value;
   static MoneroUnlockPaymentRequestOutputStatus fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () => throw AppSerializationException(
+            objectName: "MoneroUnlockPaymentRequestOutputStatus"));
   }
 
   bool get isUnspent => this == unspent;
@@ -1167,7 +1187,7 @@ class MoneroOutputDetails with CborSerializable, Equatable {
     assert(
         _globalIndex == null ||
             _globalIndex == outputIndeces[lockedOutput.realIndex],
-        "must be updated. not changed.");
+        "must updated. not changed.");
     _globalIndex = outputIndeces[lockedOutput.realIndex];
     _checkUpdate();
   }
@@ -1191,7 +1211,7 @@ class MoneroOutputDetails with CborSerializable, Equatable {
   List get variabels => [keyImage, lockedOutput.realIndex];
   MoneroLockedPayment toLockedPayment() {
     if (needUpdate) {
-      throw const WalletException("output_is_not_ready_for_spending");
+      throw const WalletException.error("output_is_not_ready_for_spending");
     }
     return MoneroLockedPayment(
         output: MoneroLockedOutput(
@@ -1254,8 +1274,7 @@ class MoneroAddressUtxos with CborSerializable {
       {Map<MoneroAddress, List<MoneroOutputDetails>> utxos = const {}}) {
     for (final i in utxos.entries) {
       if (i.key.isSubaddress) {
-        throw WalletExceptionConst.invalidData(
-            messsage: 'monero subaddress not allowed');
+        throw WalletExceptionConst.internalError("MoneroAddressUtxos");
       }
     }
     return MoneroAddressUtxos._(
@@ -1308,6 +1327,7 @@ class MoneroAddressUtxos with CborSerializable {
 
   void updateUtxos(MoneroAccountPendingTxes utxo) {
     final primaryAddress = utxo.primaryAddress.primaryAddress;
+    assert(_utxos.containsKey(primaryAddress), "account not found.");
     final existsUtxos = <MoneroOutputDetails>[
       ..._utxos[primaryAddress] ?? {},
       ...utxo.responses.map((e) => e.output).whereType<MoneroOutputDetails>()
@@ -1323,15 +1343,15 @@ class MoneroAddressUtxos with CborSerializable {
     return _utxos[primaryAddress.primaryAddress]?.toList() ?? [];
   }
 
-  void addNewAccount(MoneroViewAccountDetails primaryAddress) {
-    _utxos[primaryAddress.viewKey.primaryAddress] ??= <MoneroOutputDetails>{};
+  void addNewAccount(MoneroViewAccountDetails acc) {
+    _utxos[acc.viewKey.primaryAddress] ??= <MoneroOutputDetails>{};
   }
 
-  void removeAccount(MoneroViewAccountDetails primaryAddress) {
-    final utxos = _utxos[primaryAddress.viewKey.primaryAddress] ?? {};
+  void removeAccount(MoneroViewAccountDetails acc) {
+    final utxos = _utxos[acc.viewKey.primaryAddress] ?? {};
     if (utxos.isEmpty) return;
-    _utxos[primaryAddress.viewKey.primaryAddress] =
-        utxos.where((e) => e.index != primaryAddress.index).toSet();
+    _utxos[acc.viewKey.primaryAddress] =
+        utxos.where((e) => e.index != acc.index).toSet();
   }
 
   BigInt getAddressBalance(MoneroViewAccountDetails address) {
@@ -1745,12 +1765,13 @@ class MoneroSyncAccountsInfos with CborSerializable, Equatable {
   }
 
   List<MoneroSyncAccountInfo> getAddresses() {
-    return _indexes
-        .map((e) => MoneroSyncAccountInfo(
-            address: MoneroAddress(primaryAccount.account
-                .subaddress(e.index.minor, majorIndex: e.index.major)),
-            startHeight: e.startHeight))
-        .toList();
+    return Logg.def(
+        () => _indexes
+            .map((e) => MoneroSyncAccountInfo(
+                address: primaryAccount.getAddress(e.index),
+                startHeight: e.startHeight))
+            .toList(),
+        'acc');
   }
 
   MoneroAccountKeys getAccountKeys() {
@@ -1932,8 +1953,8 @@ enum MoneroSyncBlockResponseType {
   final List<int> tag;
   static MoneroSyncBlockResponseType fromTag(List<int>? tag) {
     return values.firstWhere((e) => BytesUtils.bytesEqual(e.tag, tag),
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "Invalid sync block data."));
+        orElse: () => throw AppSerializationException(
+            objectName: "MoneroSyncBlockResponseType"));
   }
 }
 
@@ -1963,7 +1984,7 @@ abstract class MoneroSyncBlocksResponse with CborSerializable {
 
   T cast<T extends MoneroSyncBlocksResponse>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", "$runtimeType"]);
+      throw WalletExceptionConst.internalError("MoneroSyncBlocksResponse");
     }
     return this as T;
   }

@@ -4,15 +4,14 @@ import 'package:on_chain/tron/src/models/contract/base_contract/base_contract.da
 import 'package:on_chain/tron/src/models/contract/transaction/any.dart';
 import 'package:on_chain/tron/src/models/contract/transaction/transaction_contract.dart';
 import 'package:on_chain/tron/src/models/contract/transaction/transaction_raw.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/crypto/utils/tron/tron.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/controllers/memo.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/tron/client/tron.dart';
 import 'fee.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 import 'provider.dart';
 import 'signer.dart';
@@ -178,15 +177,15 @@ abstract class TronTransactionStateController2<
       await account.updateAddressBalance(address, tokens: false);
     }
     if (address.accountResource == null || address.accountInfo == null) {
-      throw WalletException("account_not_found".tr);
+      throw AppException("account_not_found");
     }
     final permission = checkAccountPermission(
         address: address, transactionType: transactionType);
     if (!permission) {
       if (!address.multiSigAccount) {
-        throw WalletException("multi_sig_account_does_not_supported".tr);
+        throw AppException("multi_sig_account_does_not_supported");
       } else {
-        throw WalletException("tron_account_permission_not_access_desc".tr);
+        throw AppException("tron_account_permission_not_access_desc");
       }
     }
   }

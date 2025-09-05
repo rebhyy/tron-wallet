@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:blockchain_utils/exception/exception/rpc_error.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ton/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/ton.dart';
@@ -12,6 +12,7 @@ import 'package:on_chain_wallet/wallet/constant/networks/ton.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/params/params.dart';
 import 'package:ton_dart/ton_dart.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class TonClient extends NetworkClient<TonWalletTransaction, TonAPIProvider,
     TonNetworkToken, TonAddress> with HttpImpl {

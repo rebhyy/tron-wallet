@@ -57,7 +57,7 @@ final class MoneroMnemonicToPrivateKeyMessage
 }
 
 class MoneroMenmonicGenerateMessage
-    extends CryptoRequest<String, MessageArgsOneBytes> {
+    extends CryptoRequest<Mnemonic, MessageArgsOneBytes> {
   final MoneroWordsNum wordsNum;
   final MoneroLanguages language;
   const MoneroMenmonicGenerateMessage(
@@ -92,12 +92,12 @@ class MoneroMenmonicGenerateMessage
   }
 
   @override
-  String parsResult(MessageArgsOneBytes result) {
-    return StringUtils.decode(result.keyOne);
+  Mnemonic parsResult(MessageArgsOneBytes result) {
+    return Mnemonic.fromString(StringUtils.decode(result.keyOne));
   }
 
   @override
-  String result() {
-    return MoneroMnemonicGenerator(language).fromWordsNumber(wordsNum).toStr();
+  Mnemonic result() {
+    return MoneroMnemonicGenerator(language).fromWordsNumber(wordsNum);
   }
 }

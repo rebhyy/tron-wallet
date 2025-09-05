@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:on_chain_bridge/models/models.dart';
-import 'package:on_chain_bridge/models/size/models/size.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
@@ -11,9 +9,7 @@ import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 void main() async {
-  runZonedGuarded(_runApplication, (error, stack) {
-    Logg.error("Guarded $error $stack");
-  });
+  await _runApplication();
 }
 
 class APPHTTPConfig extends HttpOverrides {
@@ -39,7 +35,7 @@ Future<void> _configDesktop(APPSetting setting) async {
 }
 
 Future<APPSetting> _readSetting() async {
-  final config = await PlatformInterface.instance.init();
+  final config = await PlatformInterface.instance.init(APPConst.applicationId);
   final query =
       await PlatformInterface.instance.readDb(APPDatabaseConst.appSettingQuery);
   return APPSetting.deserialize(config, bytes: query?.data);
@@ -82,9 +78,13 @@ class MyBTC extends StatelessWidget {
               return MediaQuery(
                   data: context.mediaQuery
                       .copyWith(textScaler: const TextScaler.linear(1.0)),
-                  child: maxWidth == null
-                      ? child!
-                      : ConstraintsBoxView(maxWidth: maxWidth, child: child!));
+                  child: Listener(
+                    onPointerMove: (e) => m.onAppHover(),
+                    onPointerDown: (e) => m.onAppHover(),
+                    child: maxWidth == null
+                        ? child!
+                        : ConstraintsBoxView(maxWidth: maxWidth, child: child!),
+                  ));
             },
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,

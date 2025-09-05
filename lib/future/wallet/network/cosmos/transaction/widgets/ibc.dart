@@ -12,7 +12,7 @@ import 'package:on_chain_wallet/future/wallet/transaction/pages/fee.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/pages/live_form_widget.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/pages/send_transaction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 import 'transfer.dart';
 

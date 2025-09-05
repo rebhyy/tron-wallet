@@ -1,5 +1,5 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
 import 'package:on_chain_wallet/wallet/models/network/params/solana.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';

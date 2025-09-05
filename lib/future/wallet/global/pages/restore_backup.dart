@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/backup/backup.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
 enum _Pages { restore, content }
@@ -17,8 +16,8 @@ class RestoreBackupView extends StatefulWidget {
 }
 
 class _RestoreBackupViewState extends State<RestoreBackupView> with SafeState {
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>(debugLabel: "_RestoreBackupViewState");
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController();
   final GlobalKey<FormState> form =
       GlobalKey(debugLabel: "_RestoreBackupViewState_2");
   bool showContet = false;
@@ -70,7 +69,7 @@ class _RestoreBackupViewState extends State<RestoreBackupView> with SafeState {
     final result = await MethodUtils.call(() async => await wallet.wallet
         .restoreWalletBackup(password: password, backup: backup));
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr);
+      progressKey.errorText(result.localizationError);
     } else {
       final keyType = result.result.type;
       bool isCorrectKey = true;
@@ -97,11 +96,16 @@ class _RestoreBackupViewState extends State<RestoreBackupView> with SafeState {
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.twoSecoundDuration,
-      child: (c) => ConstraintsBoxView(
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (c) => ConstraintsBoxView(
         padding: WidgetConstant.paddingHorizontal20,
         child: Column(
           children: [

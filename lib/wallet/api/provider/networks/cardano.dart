@@ -30,8 +30,10 @@ class CardanoAPIProvider extends APIProvider {
 
   factory CardanoAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.cardanoApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.cardanoApiServiceProvider);
     final int? protocolId = values.elementAs(1);
     return CardanoAPIProvider._(
         uri: values.elementAs(0),

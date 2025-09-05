@@ -32,7 +32,7 @@ final class PublicKeysView {
 
   T cast<T extends PublicKeysView>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", runtimeType.toString()]);
+      throw AppCryptoExceptionConst.internalError("PublicKeysView");
     }
     return this as T;
   }
@@ -113,7 +113,7 @@ final class PrivateKeysView {
 
   T cast<T extends PrivateKeysView>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", runtimeType.toString()]);
+      throw AppCryptoExceptionConst.internalError("PublicKeysView");
     }
     return this as T;
   }

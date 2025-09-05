@@ -14,6 +14,6 @@ class QuickCryptoValidator {
         return hex;
       }
     }
-    throw WalletException("invalid_hex_bytes_string");
+    throw AppCryptoExceptionConst.invalidHexBytes;
   }
 }

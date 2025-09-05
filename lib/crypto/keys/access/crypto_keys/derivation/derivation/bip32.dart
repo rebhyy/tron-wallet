@@ -18,6 +18,9 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
   @override
   final CryptoCoins currencyCoin;
 
+  @override
+  final int? subId;
+
   Bip32AddressIndex._({
     required this.purpose,
     required this.coin,
@@ -28,24 +31,26 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
     required this.seedGeneration,
     this.importedKeyId,
     this.keyName,
+    this.subId,
   })  : hdPath = _toPath(
             [purpose, coin, accountLevel, changeLevel, addressIndex],
             importedKeyId: importedKeyId),
         super._();
 
   factory Bip32AddressIndex.deserialize({List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.cborTagValue(
+    final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: obj, tags: CryptoKeyConst.accoutKeyIndex);
     return Bip32AddressIndex._(
-        purpose: cbor.elementAs(0),
-        coin: cbor.elementAs(1),
-        accountLevel: cbor.elementAs(2),
-        changeLevel: cbor.elementAs(3),
-        addressIndex: cbor.elementAs(4),
-        currencyCoin: CustomCoins.getSerializationCoin(cbor.elementAs(5)),
-        seedGeneration: SeedTypes.fromValue(cbor.elementAs(6)),
-        importedKeyId: cbor.elementAs(7),
-        keyName: cbor.elementAs(8));
+        purpose: values.valueAs(0),
+        coin: values.valueAs(1),
+        accountLevel: values.valueAs(2),
+        changeLevel: values.valueAs(3),
+        addressIndex: values.valueAs(4),
+        currencyCoin: CustomCoins.getSerializationCoin(values.valueAs(5)),
+        seedGeneration: SeedTypes.fromValue(values.valueAs(6)),
+        importedKeyId: values.valueAs(7),
+        keyName: values.valueAs(8),
+        subId: values.valueAs(9));
   }
   factory Bip32AddressIndex.byronLegacy(
       {required int firstIndex,
@@ -62,6 +67,7 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
         seedGeneration: SeedTypes.byronLegacySeed,
         keyName: keyName);
   }
+
   factory Bip32AddressIndex(
       {int? purpose,
       int? coin,
@@ -73,7 +79,7 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
       String? keyName}) {
     if (currencyCoin.proposal == SubstratePropoosal.substrate ||
         currencyCoin.conf.type == EllipticCurveTypes.sr25519) {
-      throw WalletExceptionConst.invalidCoin;
+      throw AppCryptoExceptionConst.invalidCoin;
     }
     return Bip32AddressIndex._(
         purpose: purpose,
@@ -92,10 +98,6 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
       int? accountLevel,
       int? changeLevel,
       int? addressIndex,
-      String? path,
-      SeedTypes? seedGeneration,
-      CryptoCoins? currencyCoin,
-      String? importedKeyId,
       String? keyName}) {
     return Bip32AddressIndex._(
         purpose: purpose ?? this.purpose,
@@ -103,10 +105,11 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
         accountLevel: accountLevel ?? this.accountLevel,
         changeLevel: changeLevel ?? this.changeLevel,
         addressIndex: addressIndex ?? this.addressIndex,
-        seedGeneration: seedGeneration ?? this.seedGeneration,
-        currencyCoin: currencyCoin ?? this.currencyCoin,
-        importedKeyId: importedKeyId ?? this.importedKeyId,
-        keyName: keyName ?? this.keyName);
+        seedGeneration: seedGeneration,
+        currencyCoin: currencyCoin,
+        importedKeyId: importedKeyId,
+        keyName: keyName ?? this.keyName,
+        subId: subId);
   }
 
   factory Bip32AddressIndex.fromPath(
@@ -115,7 +118,7 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
       required SeedTypes seedGeneration}) {
     final indexes = Bip32PathParser.parse(path).elems;
     if (indexes.length > 5) {
-      throw WalletException("unsupported_hd_wallet_index");
+      throw AppCryptoException("unsupported_hd_wallet_index");
     }
     return Bip32AddressIndex(
         purpose: indexes.elementAtOrNull(0)?.index,
@@ -140,7 +143,8 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
           currencyCoin.toCbor(),
           seedGeneration.value,
           importedKeyId,
-          keyName
+          keyName,
+          subId
         ]),
         CryptoKeyConst.accoutKeyIndex);
   }
@@ -154,7 +158,8 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
         addressIndex,
         currencyCoin.conf.type,
         seedGeneration.name,
-        importedKeyId
+        importedKeyId,
+        subId
       ];
 
   static String? _toPath(List<int?> indexses, {String? importedKeyId}) {
@@ -218,6 +223,37 @@ final class Bip32AddressIndex extends AddressDerivationIndex {
 
   @override
   AddressDerivationIndex asImportedKey(String importKeyId) {
-    return copyWith(importedKeyId: importKeyId);
+    if (subId != null) {
+      throw AppCryptoExceptionConst.invalidDerivationKey;
+    }
+    return Bip32AddressIndex._(
+        purpose: purpose,
+        coin: coin,
+        accountLevel: accountLevel,
+        changeLevel: changeLevel,
+        addressIndex: addressIndex,
+        currencyCoin: currencyCoin,
+        seedGeneration: seedGeneration,
+        subId: subId,
+        importedKeyId: importKeyId,
+        keyName: keyName);
+  }
+
+  @override
+  Bip32AddressIndex asSubWalletKey(int subId) {
+    if (importedKeyId != null) {
+      throw AppCryptoExceptionConst.invalidDerivationKey;
+    }
+    return Bip32AddressIndex._(
+        purpose: purpose,
+        coin: coin,
+        accountLevel: accountLevel,
+        changeLevel: changeLevel,
+        addressIndex: addressIndex,
+        currencyCoin: currencyCoin,
+        seedGeneration: seedGeneration,
+        subId: subId,
+        importedKeyId: importedKeyId,
+        keyName: keyName);
   }
 }

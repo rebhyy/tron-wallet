@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/wallet/requests/personal_sign.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';

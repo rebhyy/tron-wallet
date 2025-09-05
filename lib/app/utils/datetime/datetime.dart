@@ -13,8 +13,8 @@ class DateTimeUtils {
     final dtMillis = DateTime.fromMillisecondsSinceEpoch(epoch, isUtc: true);
     final dtMicros = DateTime.fromMicrosecondsSinceEpoch(epoch, isUtc: true);
     final now = DateTime.now().year;
-    final min = minYear ?? now - 1;
-    final max = maxYear ?? now + 1;
+    final min = minYear ?? now - 20;
+    final max = maxYear ?? now + 20;
     bool inRange(DateTime dt) => dt.year >= min && dt.year <= max;
     if (inRange(dtMicros)) return dtMicros.toLocal();
     if (inRange(dtMillis)) return dtMillis.toLocal();

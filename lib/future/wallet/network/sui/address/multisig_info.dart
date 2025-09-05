@@ -3,20 +3,22 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/wallet/api/client/client.dart';
 import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class SuiMultisigAccountInfoView extends StatelessWidget {
   const SuiMultisigAccountInfoView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-      accsess: WalletAccsessType.unlock,
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       title: "multisig_address_infos".tr,
-      onAccsess: (credential, password, network) {
-        return NetworkAccountControllerView<SuiClient?, ISuiAddress, SuiChain>(
+      onAccsess: (_) {
+        return NetworkAccountControllerView<SuiClient?, ISuiAddress?, SuiChain>(
           addressRequired: true,
           clientRequired: false,
           childBulder: (wallet, account, client, address, onAccountChanged) {
@@ -38,7 +40,9 @@ class _SuiMultisigAccountInfoView extends StatefulWidget {
 }
 
 class __SuiMultisigAccountInfoViewState
-    extends SuiAccountState<_SuiMultisigAccountInfoView> with ProgressMixin {
+    extends SuiAccountState<_SuiMultisigAccountInfoView> {
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   @override
   SuiChain get account => widget.account;
   List<_SuiMultisigAccountInfo> keyInfos = [];
@@ -71,14 +75,18 @@ class __SuiMultisigAccountInfoViewState
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      initialStatus: PageProgressStatus.progress,
-      backToIdle: APPConst.oneSecoundDuration,
-      key: progressKey,
+    return StreamPageProgress(
+      controller: progressKey,
       initialWidget:
           ProgressWithTextView(text: "retrieve_account_informations".tr),
-      child: (context) {
+      builder: (context) {
         return CustomScrollView(slivers: [
           SliverConstraintsBoxView(
               padding: WidgetConstant.paddingHorizontal20,

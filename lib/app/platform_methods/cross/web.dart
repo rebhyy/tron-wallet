@@ -1,8 +1,7 @@
-// ignore: avoid_web_libraries_in_flutter
-
-import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_bridge/web/web.dart';
+import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 
 Future<String> writeTOFile(String data, String fileName,
     {bool validate = true}) async {
@@ -24,7 +23,7 @@ Future<List<int>> loadAssetBuffer(String assetPath, {String? package}) async {
   }
   final data = await jsWindow.fetch_(assetPath);
   if (!data.ok) {
-    throw const GenericException("file_does_not_exist");
+    throw AppExceptionConst.fileDoesNotExists;
   }
   final buffer = await data.arrayBuffer_();
   return buffer.asUint8List();
@@ -37,7 +36,7 @@ Future<String> loadAssetText(String assetPath, {String? package}) async {
   }
   final data = await jsWindow.fetch_(assetPath);
   if (!data.ok) {
-    throw const GenericException("file_does_not_exist");
+    throw AppExceptionConst.fileDoesNotExists;
   }
   return await data.text_();
 }

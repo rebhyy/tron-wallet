@@ -12,8 +12,6 @@ IoHTTPServiceWorker getHTTPWorker() => IoHTTPServiceWorker();
 
 class IoHTTPServiceWorker extends HTTPServiceWorker {
   final connector = _WorkerConnector();
-  // final ServicesHTTPCaller caller = ServicesHTTPCaller();
-
   @override
   Future<HTTPCallerResponse> send(HTTPWorkerMessage request) async {
     final isolate = await connector.getConnector();
@@ -80,7 +78,7 @@ class _WorkerConnection {
             _IoEncryptedInitialRequest(sendPort: initPort.sendPort));
       } on Object {
         initPort.close();
-        throw Exception();
+        throw FailedHttpIsolateInitialization.failed;
       }
 
       final result = await connection.future;
@@ -88,7 +86,7 @@ class _WorkerConnection {
           onDone: () => onDone(null, connectorId),
           onError: (e) => onDone(e, connectorId));
       return result;
-    } catch (e) {
+    } catch (_) {
       throw FailedHttpIsolateInitialization.failed;
     }
   }

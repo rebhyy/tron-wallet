@@ -2,8 +2,9 @@ import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
+import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/aptos/permission/models/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/bitcoin.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin_cash/permission/models/account.dart';
@@ -125,14 +126,13 @@ abstract class Web3ChainAuthenticated<CHAINACCOUNT extends Web3ChainAccount>
         Web3BitcoinChainAuthenticated.deserialize(object: tag),
       NetworkType.bitcoinCash =>
         Web3BitcoinCashChainAuthenticated.deserialize(object: tag),
-      _ => throw WalletExceptionConst.invalidData(
-          messsage: "unsuported web3 network")
+      _ => throw Web3RequestExceptionConst.networkDoesNotExists
     } as Web3ChainAuthenticated<CHAINACCOUNT>;
   }
 
   T cast<T extends Web3ChainAuthenticated>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", runtimeType.toString()]);
+      throw WalletExceptionConst.internalError("Web3ChainAuthenticated");
     }
     return this as T;
   }

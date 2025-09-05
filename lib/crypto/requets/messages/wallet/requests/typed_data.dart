@@ -57,9 +57,9 @@ final class WalletRequestEthereumTypedDataSign
   }
 
   @override
-  Future<MessageArgsOneBytes> getResult(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final signature = sign(wallet: wallet, index: index, message: message);
+  Future<MessageArgsOneBytes> getResult(WalletInMemory wallet) async {
+    final signature =
+        sign(wallet: wallet.masterKey, index: index, message: message);
     return MessageArgsOneBytes(keyOne: signature);
   }
 
@@ -69,9 +69,9 @@ final class WalletRequestEthereumTypedDataSign
   }
 
   @override
-  Future<String> result(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final signature = sign(wallet: wallet, index: index, message: message);
+  Future<String> result(WalletInMemory wallet) async {
+    final signature =
+        sign(wallet: wallet.masterKey, index: index, message: message);
     return BytesUtils.toHexString(signature, prefix: "0x");
   }
 }

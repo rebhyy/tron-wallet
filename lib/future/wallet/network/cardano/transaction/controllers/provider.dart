@@ -12,7 +12,6 @@ mixin ADATransactionApiController on DisposableMixin {
 
   Future<List<CardanoAccountUtxo>> getAccountUtxos(
       ADAChain account, ICardanoAddress address) async {
-    // BlockFrostProviderUtils.;
     final utxos = await account.getAddressUtxos(address);
     return utxos
         .map((e) =>

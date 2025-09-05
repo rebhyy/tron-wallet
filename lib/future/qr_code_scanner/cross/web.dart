@@ -3,7 +3,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 
 import 'package:on_chain_wallet/future/qr_code_scanner/state/barcode_scanner.dart';
@@ -23,8 +22,8 @@ class _WebBarcodeScannerViewState extends State<BarcodeScannerView>
   bool hasVideo = false;
   String? barcde;
   final GlobalKey globalKey = GlobalKey();
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
 
   MediaStream? stream;
   HTMLVideoElement? videoElement;
@@ -87,7 +86,7 @@ class _WebBarcodeScannerViewState extends State<BarcodeScannerView>
         progressKey.errorText("barcode_scanner_not_supported_browser".tr,
             backToIdle: false);
       } else {
-        progressKey.errorText(result.error!.tr, backToIdle: false);
+        progressKey.errorText(result.localizationError, backToIdle: false);
       }
     } else {
       id = result.result.$1.id ?? id;
@@ -109,6 +108,7 @@ class _WebBarcodeScannerViewState extends State<BarcodeScannerView>
   }
 
   void _dispose() {
+    progressKey.dispose();
     onData?.cancel();
     videoElement?.srcObject = null;
     stream?.stop();
@@ -133,13 +133,11 @@ class _WebBarcodeScannerViewState extends State<BarcodeScannerView>
                     padding: WidgetConstant.padding20,
                     child: Container(
                       key: globalKey,
-                      child: PageProgress(
-                        backToIdle: APPConst.milliseconds100,
-                        initialStatus: StreamWidgetStatus.progress,
+                      child: StreamPageProgress(
                         initialWidget: ProgressWithTextView(
                             text: "getting_scanner_ready".tr),
-                        key: progressKey,
-                        child: (c) => HtmlElementView(viewType: id),
+                        controller: progressKey,
+                        builder: (c) => HtmlElementView(viewType: id),
                       ),
                     ),
                   ),

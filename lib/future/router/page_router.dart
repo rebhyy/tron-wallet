@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/future.dart';
-import 'package:on_chain_wallet/future/wallet/setup/pages/setup_wallet.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/pages/transaction_state_builder.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 class PageRouter {
   ///TransactionStateBuilder
@@ -16,7 +15,7 @@ class PageRouter {
 
   static const String bitcoinTransaction = "/bitcoin/transaction";
   static const String rippleTransfer = "/ripple/transfer";
-  static const String rippleAddToken = "/ripple/import_token";
+  // static const String rippleAddToken = "/ripple/import_token";
   static const String rippleAddNfts = "/ripple/import_nfts";
   static const String rippleTransaction = "/ripple/transaction";
   static const String rippleMultisigAddress = "/ripple/setup_multisig_address";
@@ -82,6 +81,7 @@ class PageRouter {
   static const String bitcoinCashMultisigAccountInfo =
       "/bitcoinCash/multisig_account_info";
   static const String createWallet = "/create_wallet";
+  static const String createSubWallet = "/create_sub_wallet";
   static const String setup = "/setup";
   static const String home = "/";
 
@@ -182,8 +182,8 @@ class PageRouter {
         return const ManageAccountTokenView();
       case transaction:
         return const TransactionStateBuilder();
-      case setup:
-        return const SetupWallet();
+      // case setup:
+      //   return const SetupWallet();
       case suiMultisigAddress:
         return const SetupSuiMultisigAddress();
       case setupBitcoinMultsig:
@@ -210,8 +210,6 @@ class PageRouter {
         return const ManageImportedKeysView();
       case setupGenericAddress:
         return const NetworkGenericAddressDerivationView();
-      case rippleAddToken:
-        return const MonitorRippleTokenView();
       case rippleAddNfts:
         return const MonitorRippleNFTsView();
       case rippleMultisigAddress:
@@ -276,6 +274,8 @@ class PageRouter {
         return const AccountPublicKeyView();
       case createWallet:
         return const WalletSetupPageWidget();
+      case createSubWallet:
+        return const SubWalletSetupPageView();
       case barcodeScanner:
         return const BarcodeScannerView();
       case updateEthereumProvider:
@@ -402,6 +402,26 @@ class PageRouter {
         return suiMultisigAccountInfo;
       case NetworkType.aptos:
         return aptosMultisigAccountInfo;
+      default:
+        return null;
+    }
+  }
+
+  static String? multisigAddressDerivation(NetworkType type) {
+    switch (type) {
+      case NetworkType.cardano:
+        return cardanoMultisigAddress;
+      case NetworkType.bitcoinAndForked:
+      case NetworkType.bitcoinCash:
+        return setupBitcoinMultsig;
+      case NetworkType.sui:
+        return suiMultisigAddress;
+      case NetworkType.aptos:
+        return aptosMultisigAddress;
+      case NetworkType.xrpl:
+        return rippleMultisigAddress;
+      case NetworkType.tron:
+        return tronMultiSigAddress;
       default:
         return null;
     }

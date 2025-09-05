@@ -3,7 +3,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 typedef HASPERMISSION<ACCOUNT> = bool Function(ACCOUNT);
 typedef OnChangeCurrentChain<CHAIN> = void Function(CHAIN?);

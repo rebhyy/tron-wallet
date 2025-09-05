@@ -7,7 +7,8 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/controller/extension/models/models.dart';
 import 'package:on_chain_wallet/future/wallet/controller/wallet/cross/web.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
+
 import 'package:on_chain_wallet/future/wallet/swap/pages/pages/swap.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/client_info.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/permission_view.dart';
@@ -67,11 +68,11 @@ class _AppbarExtentionWidget extends StatelessWidget {
                         context.openDialogPage(
                           "",
                           child: (context) {
-                            return PasswordCheckerView(
-                              accsess: WalletAccsessType.unlock,
-                              onWalletAccess: (password) async {
-                                return null;
-                              },
+                            return AccessWalletView<
+                                WalletCredentialResponseLogin,
+                                WalletCredentialLogin>(
+                              request: WalletCredentialLogin.instance,
+                              onWalletAccess: (_) {},
                             );
                           },
                         );
@@ -191,11 +192,11 @@ class _AppbarWebWidget extends StatelessWidget {
                         context.openDialogPage(
                           "",
                           child: (context) {
-                            return PasswordCheckerView(
-                              accsess: WalletAccsessType.unlock,
-                              onWalletAccess: (password) async {
-                                return null;
-                              },
+                            return AccessWalletView<
+                                WalletCredentialResponseLogin,
+                                WalletCredentialLogin>(
+                              request: WalletCredentialLogin.instance,
+                              onWalletAccess: (_) {},
                             );
                           },
                         );

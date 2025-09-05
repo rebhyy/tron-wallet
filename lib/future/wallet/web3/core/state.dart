@@ -5,10 +5,8 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
-import 'package:on_chain_wallet/future/wallet/web3/core/exception.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/widgets/parogress.dart';
-import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 
 mixin Web3StatePageController<WEB3REQUEST extends Web3Request>
@@ -216,14 +214,7 @@ abstract class Web3StateController<
           functionName: "acceptRequest",
           msg: e,
           trace: s);
-    } on Web3InternalError catch (e, s) {
-      pageKey.error(error: e, showBackButton: true);
-      appLogger.error(
-          runtime: runtimeType,
-          functionName: "acceptRequest",
-          msg: e,
-          trace: s);
-    } on WalletException catch (e, s) {
+    } on AppException catch (e, s) {
       pageKey.error(error: e, showBackButton: true);
       appLogger.error(
           runtime: runtimeType,
@@ -231,10 +222,6 @@ abstract class Web3StateController<
           msg: e,
           trace: s);
     } catch (e, s) {
-      if (e == WalletExceptionConst.rejectSigning) {
-        pageKey.error(error: e, showBackButton: true);
-        return;
-      }
       final exception = Web3RequestExceptionConst.fromException(e);
       pageKey.errorResponse(error: exception);
       request.error(e);

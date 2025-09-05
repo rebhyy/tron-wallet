@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/crypto/isolate/cross/exception.dart';
 import 'package:on_chain_wallet/crypto/isolate/types/types.dart';
+import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/messages.dart';
 import '../cross/cross.dart'
     if (dart.library.js_interop) '../cross/web/web.dart'
@@ -179,9 +180,7 @@ abstract class IsolateCryptoWoker {
             sendStreamMessage(message: msg, mode: mode);
           }, onDone: () {
             final msg = MessageArgsStream.close(streamId);
-            sendStreamMessage(message: msg, mode: mode).catchError((e) {
-              throw e;
-            });
+            sendStreamMessage(message: msg, mode: mode);
             message.close();
           });
           return SyncRequestController(
@@ -203,12 +202,12 @@ abstract class IsolateCryptoWoker {
 
   Future<T> walletArgs<T, A extends CborMessageResponseArgs>({
     required WalletArgsCompleter<T, A> message,
-    required List<int> encryptedMasterKey,
-    required List<int> key,
+    required WalletInMemoryData masterKey,
+    required List<int> memoryKey,
     Duration? timeout,
   }) async {
-    final args = WalletArgs.fromStorage(
-        args: message, encryptedMasterKey: encryptedMasterKey, key: key);
+    final args =
+        WalletArgs(args: message, masterKey: masterKey, memoryKey: memoryKey);
     return _call(
         onIsolate: () async {
           final A response = await sendRequest(message: args, timeout: timeout);

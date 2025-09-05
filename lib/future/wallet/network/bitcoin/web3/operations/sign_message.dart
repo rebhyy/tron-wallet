@@ -9,7 +9,7 @@ import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/types/types.d
 import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/constant/constants/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/params/models/sign_message.dart';
 

@@ -7,8 +7,7 @@ import 'package:on_chain_wallet/future/wallet/network/substrate/account/state.da
 import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/metadata/forms/metadata.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/substrate/client/substrate.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 
 class SubstrateMetadataRuntimeApiView extends StatelessWidget {
@@ -53,7 +52,8 @@ class SubstrateMetadataRuntimeApiWidget extends StatefulWidget {
 class _SubstrateMetadataRuntimeApiWidgetState
     extends SubstrateAccountState<SubstrateMetadataRuntimeApiWidget> {
   late final List<RuntimeApiInfo> apis;
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   _APIPage page = _APIPage.select;
   _RuntimeLookupFields? field;
   @override
@@ -128,7 +128,7 @@ class _SubstrateMetadataRuntimeApiWidgetState
           inputs: field.forms.map((e) => e.getResult()).toList());
     });
     if (r.hasError) {
-      progressKey.errorText(r.error!.tr,
+      progressKey.errorText(r.localizationError,
           backToIdle: false, showBackButton: true);
     } else {
       _result = r.result;
@@ -144,6 +144,12 @@ class _SubstrateMetadataRuntimeApiWidgetState
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Form(
       key: formState,
@@ -151,13 +157,11 @@ class _SubstrateMetadataRuntimeApiWidgetState
       onPopInvokedWithResult: (_, __) {
         onBackButton();
       },
-      child: PageProgress(
-        key: progressKey,
-        backToIdle: APPConst.oneSecoundDuration,
-        initialStatus: StreamWidgetStatus.progress,
+      child: StreamPageProgress(
+        controller: progressKey,
         initialWidget:
             ProgressWithTextView(text: 'retrieving_data_please_wait'.tr),
-        child: (context) => UnfocusableChild(
+        builder: (context) => UnfocusableChild(
           child: CustomScrollView(
             controller: widget.scrollController,
             slivers: [

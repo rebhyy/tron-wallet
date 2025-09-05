@@ -31,7 +31,6 @@ class _UpdateMoneroProvider extends StatefulWidget {
 class _UpdateMoneroProviderState extends State<_UpdateMoneroProvider>
     with
         SafeState<_UpdateMoneroProvider>,
-        ProgressMixin<_UpdateMoneroProvider>,
         UpdateNetworkProviderState<
             _UpdateMoneroProvider,
             MoneroAPIProvider,
@@ -75,7 +74,7 @@ class _UpdateMoneroProviderState extends State<_UpdateMoneroProvider>
         provider: provider, network: network.toNetwork());
     final init = await client.validateNetworkGenesis();
     if (!init) {
-      throw WalletException("network_genesis_hash_validator");
+      throw AppException("network_genesis_hash_validator");
     }
     return provider;
   }

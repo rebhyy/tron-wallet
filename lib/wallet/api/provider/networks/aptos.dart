@@ -1,9 +1,9 @@
 import 'package:blockchain_utils/cbor/core/cbor.dart';
 import 'package:blockchain_utils/cbor/types/cbor_tag.dart';
 import 'package:blockchain_utils/cbor/types/list.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/api/services/models/models.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
@@ -18,19 +18,10 @@ enum AptosAPIProviderType {
   const AptosAPIProviderType(this.value);
   static AptosAPIProviderType fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "AptosAPIProviderType not found."));
+        orElse: () => throw AppSerializationException(
+            objectName: "AptosAPIProviderType"));
   }
 }
-
-// abstract class AptosAPIProvider extends APIProvider {
-//   final AptosAPIProviderType type;
-//   const AptosAPIProvider(
-//       {required super.protocol,
-//       required super.identifier,
-//       required super.auth,
-//       required this.type});
-// }
 
 class AptosAPIProvider extends APIProvider {
   final AptosAPIProviderType type;
@@ -46,8 +37,10 @@ class AptosAPIProvider extends APIProvider {
 
   factory AptosAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.aptosApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.aptosApiServiceProvider);
     return AptosAPIProvider(
         fullNodeUri: values.elementAs(0),
         auth: values.elemetMybeAs<ProviderAuthenticated, CborTagValue>(

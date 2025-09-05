@@ -45,8 +45,8 @@ class _UpdateTokenDetailsViewState extends State<UpdateTokenDetailsView>
 
   final GlobalKey<FormState> formKey =
       GlobalKey(debugLabel: "_UpdateTokenDetailsViewState");
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController();
   APPToken get token => widget.token;
   late String tokenName = token.name;
   late String tokenSymbol = token.symbol;
@@ -152,7 +152,8 @@ class _UpdateTokenDetailsViewState extends State<UpdateTokenDetailsView>
           return await wallet.currency.getCoinPrice(apiId);
         });
         if (result.hasError || result.result == null) {
-          progressKey.errorText(result.error?.tr ?? "invalid_api_id".tr,
+          progressKey.errorText(
+              result.localizationErrorOrNull ?? "invalid_api_id".tr,
               backToIdle: true);
           return;
         }
@@ -177,7 +178,7 @@ class _UpdateTokenDetailsViewState extends State<UpdateTokenDetailsView>
               updatedToken: updateToken,
               address: widget.address));
       if (update.hasError) {
-        progressKey.errorText(update.error!.tr,
+        progressKey.errorText(update.localizationError,
             backToIdle: false, showBackButton: true);
         return;
       }
@@ -196,18 +197,22 @@ class _UpdateTokenDetailsViewState extends State<UpdateTokenDetailsView>
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("update_token".tr)),
       body: Form(
         key: formKey,
-        child: PageProgress(
-          key: progressKey,
-          backToIdle: APPConst.oneSecoundDuration,
-          initialStatus: StreamWidgetStatus.idle,
+        child: StreamPageProgress(
+          controller: progressKey,
           initialWidget:
               ProgressWithTextView(text: "retrieving_token_information".tr),
-          child: (c) => CustomScrollView(
+          builder: (c) => CustomScrollView(
             controller: widget.scrollController,
             slivers: [
               SliverConstraintsBoxView(

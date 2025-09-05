@@ -4,8 +4,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/channel_id/account_channel_ids.dart';
-import 'package:on_chain_wallet/wallet/constant/constant.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 typedef ONSELECTCHANNELID = void Function(BuildContext, String);
 
@@ -27,8 +26,10 @@ class CosmosPickChannelIdView extends StatefulWidget {
 }
 
 class _CosmosPickChannelIdViewState
-    extends CosmosAccountState<CosmosPickChannelIdView> with ProgressMixin {
+    extends CosmosAccountState<CosmosPickChannelIdView> {
   final GlobalKey<FormState> formKey = GlobalKey();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   bool checkConnection = true;
   CW20Token? sourceToken;
   CW20Token? destionationToken;
@@ -113,7 +114,7 @@ class _CosmosPickChannelIdViewState
       return await client.getTransferChannel(channelId);
     });
     if (r.hasError) {
-      progressKey.errorText(r.error!.tr,
+      progressKey.errorText(r.localizationError,
           backToIdle: false, showBackButton: true);
       return null;
     }
@@ -162,6 +163,7 @@ class _CosmosPickChannelIdViewState
   @override
   void safeDispose() {
     super.safeDispose();
+    progressKey.dispose();
 
     sourceToken?.streamBalance.dispose();
     destionationToken?.streamBalance.dispose();
@@ -177,11 +179,9 @@ class _CosmosPickChannelIdViewState
       body: Form(
         key: formKey,
         autovalidateMode: AutovalidateMode.onUserInteraction,
-        child: PageProgress(
-          key: progressKey,
-          backToIdle: APPConst.oneSecoundDuration,
-          initialStatus: StreamWidgetStatus.progress,
-          child: (context) {
+        child: StreamPageProgress(
+          controller: progressKey,
+          builder: (context) {
             return CustomScrollView(
               controller: widget.controller,
               slivers: [

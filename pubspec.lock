@@ -45,10 +45,10 @@ packages:
     dependency: "direct main"
     description:
       name: bitcoin_base
-      sha256: "7a5667b96f5550dd81f73517b0b431987a9e51a17d756955f2a9e1e2626dc8e7"
+      sha256: abc80891f654cc09c246d09eb9ad4331e061f8f9c796eab367545a8f61da909f
       url: "https://pub.dev"
     source: hosted
-    version: "6.8.0"
+    version: "6.9.0"
   blockchain_utils:
     dependency: "direct main"
     description:
@@ -389,7 +389,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "4c29089310c4fec7989abacd10199a8fdfd01aff"
+      resolved-ref: "5589f958e71eb29bf679537100e57bddee15d12d"
       url: "https://github.com/mrtnetwork/onchain_bridge.git"
     source: git
     version: "0.0.2"
@@ -398,7 +398,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: b1305e5479a418e58a3036f268800d1295e4c1ce
+      resolved-ref: "8f1b0c12c19b97607417535b4c5b1457e1e4e4f6"
       url: "https://github.com/mrtnetwork/onchain_swap.git"
     source: git
     version: "0.2.0"
@@ -627,10 +627,10 @@ packages:
     dependency: transitive
     description:
       name: watcher
-      sha256: "0b7fd4a0bbc4b92641dbf20adfd7e3fd1398fe17102d94b674234563e110088a"
+      sha256: "5bf046f41320ac97a469d506261797f35254fa61c641741ef32dacda98b7d39c"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.2"
+    version: "1.1.3"
   web:
     dependency: transitive
     description:
@@ -675,10 +675,10 @@ packages:
     dependency: "direct main"
     description:
       name: xrpl_dart
-      sha256: "0e776341077304802da4e73d193960484b5ce90ea5b224117813d3aa117f1fb4"
+      sha256: "34ffc1dd55d2745119f25967003d096c074945255c4bfb916e6e815f922794cc"
       url: "https://pub.dev"
     source: hosted
-    version: "7.1.0"
+    version: "7.2.0"
   yaml:
     dependency: transitive
     description:

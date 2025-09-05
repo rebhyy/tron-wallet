@@ -1,8 +1,9 @@
-export 'pages/extra_options.dart';
 export 'pages/mnemonic_view.dart';
-export 'pages/generate_mnemonic.dart';
-export 'pages/setup_password.dart';
-export 'pages/setup_wallet.dart';
 export 'pages/verify_mnemonic.dart';
-export 'pages/enter_mnemonic.dart';
-export 'pages/wallet_setting.dart';
+export 'pages/setup.dart';
+export 'pages/terms.dart';
+export 'pages/backup.dart';
+export 'pages/exists_mnemonic.dart';
+export 'pages/generate_mnemonic.dart';
+export 'controller/form.dart';
+export 'controller/setup_wallet.dart';

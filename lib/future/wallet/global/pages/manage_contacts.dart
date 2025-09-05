@@ -3,8 +3,7 @@ import 'package:on_chain_wallet/future/state_managment/extension/extension.dart'
 import 'package:on_chain_wallet/future/wallet/account/pages/account_controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/add_to_contact_list.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 import 'chain_stream.dart';
 

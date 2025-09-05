@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 
@@ -214,6 +214,7 @@ class SuccessTransactionTextView extends StatelessWidget {
         allowNotify: [DefaultChainNotify.transaction],
         builder: (context, account, _) {
           final status = transaction?.status;
+          Logg.error("Status $status");
           return _ProgressWithTextView(
               text: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,

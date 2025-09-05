@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/contr
 import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/widgets/transfer_token.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/client/ethereum.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/ethereum.dart';

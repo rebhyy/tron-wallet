@@ -56,10 +56,6 @@ class WebsocketIO implements PlatformWebScoket {
       final socket =
           await WebSocket.connect(url, protocols: protocols).timeout(timeout);
       return WebsocketIO._(socket);
-    } on WebSocketException catch (e) {
-      throw ApiProviderException.error(e.message);
-    } on TlsException catch (e) {
-      throw ApiProviderException.error(e.message);
     } catch (e) {
       throw ApiProviderException.fromException(message: e);
     }

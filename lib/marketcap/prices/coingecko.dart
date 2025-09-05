@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 
 class CoingeckoCoinInfo {
@@ -52,15 +52,12 @@ class CoingeckoPriceHandler {
         (key, value) => MapEntry(key, CoingeckoCoinInfo.fromJson(value, key))));
   }
   final Map<String, IntegerBalance> _caches = {};
-  IntegerBalance? getPrice({
-    required Currency baseCurrency,
-    required String amount,
-    // required String? coingeckoId,
-    // required int? tokenDecimals,
-    required APPToken token,
-  }) {
+  IntegerBalance? getPrice(
+      {required Currency baseCurrency,
+      required String amount,
+      required APPToken token}) {
     final String? coingeckoId = token.market?.apiId;
-    if (coingeckoId == null || token is! Token || amount.startsWith("-")) {
+    if (coingeckoId == null || amount.startsWith("-")) {
       return null;
     }
     if (coingeckoId == baseCurrency.coingeckoId) {
@@ -79,18 +76,33 @@ class CoingeckoPriceHandler {
 
   IntegerBalance _getPrice(
       {required BigRational basePrice,
-      required Token token,
+      required APPToken token,
       required String amount,
       required Currency baseCurrency}) {
-    return IntegerBalance.convertRational(
+    return IntegerBalance.convertRational2(
         basePrice: basePrice,
-        token: token,
+        // token: token,
         amount: amount,
         newToken: baseCurrency.toToken(),
         decimalPlaces: baseCurrency.decimal,
         allowNegative: false,
         immutable: true);
   }
+
+  // IntegerBalance _getDecimalPrice(
+  //     {required BigRational basePrice,
+  //     required NonDecimalToken token,
+  //     required String amount,
+  //     required Currency baseCurrency}) {
+  //   return IntegerBalance.convertRational(
+  //       basePrice: basePrice,
+  //       token: token,
+  //       amount: amount,
+  //       newToken: baseCurrency.toToken(),
+  //       decimalPlaces: baseCurrency.decimal,
+  //       allowNegative: false,
+  //       immutable: true);
+  // }
 
   void addCoin(CoingeckoCoinInfo newCoin) {
     _coins[newCoin.id] = newCoin;

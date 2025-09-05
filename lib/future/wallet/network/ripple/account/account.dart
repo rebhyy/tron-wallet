@@ -41,18 +41,6 @@ class _RippleServicesView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!account.address.multiSigAccount) ...[
-                AppListTile(
-                  title: Text("multi_sig_addr".tr),
-                  subtitle: Text("establishing_multi_sig_addr".tr),
-                  trailing: const Icon(Icons.arrow_forward),
-                  onTap: () {
-                    context.to(PageRouter.rippleMultisigAddress,
-                        argruments: account);
-                  },
-                ),
-                WidgetConstant.divider
-              ],
               AppListTile(
                 title: Text("trust_set".tr),
                 subtitle: Text("tust_line_desc".tr),

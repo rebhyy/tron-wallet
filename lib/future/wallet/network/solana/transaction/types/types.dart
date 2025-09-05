@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:on_chain/solana/solana.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/synchronized/basic_lock.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
@@ -138,30 +138,6 @@ enum SolanaAccountOwnerTypes {
   bool get isUnknown => this == SolanaAccountOwnerTypes.unknow;
 }
 
-// class SolanaTransferDestinationInfo {
-//   final bool isOnCurve;
-//   final SolanaAccountOwnerTypes ownedBy;
-//   final bool executable;
-//   final SolAddress owner;
-//   final String ownerTag;
-//   const SolanaTransferDestinationInfo._(
-//       {required this.isOnCurve,
-//       required this.ownedBy,
-//       required this.executable,
-//       required this.owner,
-//       required this.ownerTag});
-//   factory SolanaTransferDestinationInfo(
-//       {required SolanaAccountInfo account, required SolAddress address}) {
-//     final ownedBy = SolanaAccountOwnerTypes.fromAddress(account.owner);
-//     return SolanaTransferDestinationInfo._(
-//         isOnCurve: address.isOnCurve,
-//         ownedBy: ownedBy,
-//         executable: account.executable,
-//         owner: account.owner,
-//         ownerTag: ownedBy.isUnknown ? account.owner.address : ownedBy.value);
-//   }
-// }
-
 enum SolanaAccountStatus {
   unknown,
   initialized,
@@ -213,11 +189,11 @@ class SolanaTransferDetails extends TransferOutputDetails<SolAddress> {
               status = SolanaAccountStatus.uninitialized;
               if (!isPubKey) {
                 status = SolanaAccountStatus.error;
-                throw WalletException("solana_spl_token_required_public_key");
+                throw AppException("solana_spl_token_required_public_key");
               }
             } else if (exist.mint != token.mint) {
               status = SolanaAccountStatus.error;
-              throw WalletException(
+              throw AppException(
                   "spl_token_invalid_associated_account_address");
             }
           } else {

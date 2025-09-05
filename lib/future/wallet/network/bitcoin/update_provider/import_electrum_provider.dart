@@ -34,7 +34,6 @@ class _ImportElectrumProvider extends StatefulWidget {
 class __ImportElectrumProviderState extends State<_ImportElectrumProvider>
     with
         SafeState<_ImportElectrumProvider>,
-        ProgressMixin<_ImportElectrumProvider>,
         UpdateNetworkProviderState<
             _ImportElectrumProvider,
             BaseBitcoinAPIProvider,
@@ -88,7 +87,7 @@ class __ImportElectrumProviderState extends State<_ImportElectrumProvider>
         network: network.toNetwork());
     final init = await client.onInit();
     if (!init) {
-      throw WalletException("network_genesis_hash_validator");
+      throw AppException("network_genesis_hash_validator");
     }
     return provider;
   }

@@ -3,63 +3,68 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/core/message.dart';
-import 'package:on_chain_wallet/crypto/requets/messages/models/models/generate_master_key.dart';
 import 'package:on_chain_wallet/crypto/utils/crypto/utils.dart';
 
-class CryptoRequestGenerateMasterKey extends CryptoRequest<
-    CryptoGenerateMasterKeyResponse, MessageArgsThreeBytes> {
+class CryptoRequestGenerateMasterKey
+    extends CryptoRequest<EncryptedMasterKey, MessageArgsOneBytes> {
   final List<int> walletData;
   final int version;
-  final List<int>? key;
-  final List<int>? newKey;
-  final List<int>? keyString;
-  final List<int>? keyChecksum;
+  final List<int>? newKeyString;
+  final List<int> keyString;
+  final List<int> keyChecksum;
+  final List<int> memoryKey;
   CryptoRequestGenerateMasterKey._({
     required this.version,
     required List<int> walletData,
-    List<int>? key,
-    List<int>? keyString,
-    List<int>? keyChecksum,
-    List<int>? newKey,
+    required List<int> keyString,
+    required List<int> keyChecksum,
+    required List<int> memoryKey,
+    List<int>? newKeyString,
   })  : walletData = walletData.asImmutableBytes,
-        key = key?.asImmutableBytes,
-        newKey = newKey?.asImmutableBytes,
-        keyString = keyString?.asImmutableBytes,
-        keyChecksum = keyChecksum?.asImmutableBytes;
+        newKeyString = newKeyString?.asImmutableBytes,
+        keyString = keyString.asImmutableBytes,
+        keyChecksum = keyChecksum.asImmutableBytes,
+        memoryKey = memoryKey.asImmutableBytes;
   factory CryptoRequestGenerateMasterKey.fromStorage(
       {required String storageData,
-      required List<int> key,
-      List<int>? newKey}) {
+      required String key,
+      String? newKey,
+      required List<int> checksum,
+      required List<int> memoryKey}) {
     try {
       final dataBytes = List<int>.unmodifiable(
           StringUtils.encode(storageData, type: StringEncoding.base64));
       final CborListValue values =
           CborSerializable.decode(cborBytes: dataBytes);
       return CryptoRequestGenerateMasterKey._(
-          version: values.elementAs(0),
-          walletData: values.elementAs(1),
-          key: key,
-          newKey: newKey);
+          version: values.valueAs(0),
+          walletData: values.valueAs(1),
+          keyString: StringUtils.encode(key),
+          newKeyString: newKey == null ? null : StringUtils.encode(newKey),
+          keyChecksum: checksum,
+          memoryKey: memoryKey);
     } catch (e) {
       throw WalletExceptionConst.incorrectWalletData;
     }
   }
+
   factory CryptoRequestGenerateMasterKey.fromStorageWithStringKey(
       {required String storageData,
       required String key,
       required List<int> checksum,
-      List<int>? newKey}) {
+      required List<int> memoryKey,
+      String? newKey}) {
     try {
-      final dataBytes = List<int>.unmodifiable(
-          StringUtils.encode(storageData, type: StringEncoding.base64));
-      final CborListValue values =
-          CborSerializable.decode(cborBytes: dataBytes);
+      final CborListValue values = CborSerializable.decode(
+          cborBytes:
+              StringUtils.encode(storageData, type: StringEncoding.base64));
       return CryptoRequestGenerateMasterKey._(
-          version: values.elementAs(0),
-          walletData: values.elementAs(1),
-          newKey: newKey,
+          version: values.valueAs(0),
+          walletData: values.valueAs(1),
+          newKeyString: newKey == null ? null : StringUtils.encode(newKey),
           keyString: StringUtils.encode(key),
-          keyChecksum: checksum);
+          keyChecksum: checksum,
+          memoryKey: memoryKey);
     } catch (e) {
       throw WalletExceptionConst.incorrectWalletData;
     }
@@ -73,100 +78,40 @@ class CryptoRequestGenerateMasterKey extends CryptoRequest<
         hex: hex,
         tags: CryptoRequestMethod.generateMasterKey.tag);
     return CryptoRequestGenerateMasterKey._(
-      version: values.elementAs(0),
-      walletData: values.elementAs(1),
-      key: values.elementAs(2),
-      newKey: values.elementAs(3),
-      keyString: values.elementAs(4),
-      keyChecksum: values.elementAs(5),
-    );
+        version: values.valueAs(0),
+        walletData: values.valueAs(1),
+        newKeyString: values.valueAs(2),
+        keyString: values.valueAs(3),
+        keyChecksum: values.valueAs(4),
+        memoryKey: values.valueAs(5));
   }
 
   /// encrypted master key, storage encrypted wallet
-  static (EncryptedMasterKey, List<int>) generateMasterKey(
+  static EncryptedMasterKey generateMasterKey(
       {required List<int> key,
       required List<int> walletData,
-      required List<int>? newKey}) {
+      required List<int>? newKey,
+      required List<int> memoryKey,
+      required List<int> rawKey}) {
     final nonce = WorkerCryptoUtils.generateNonce(key);
     final decrypt = WorkerCryptoUtils.decryptChacha(
         key: key, nonce: nonce, data: walletData);
     if (decrypt == null) {
-      throw WalletExceptionConst.incorrectPassword;
+      throw WalletExceptionConst.authFailed;
     }
     final masterKey = WalletMasterKeys.deserialize(bytes: decrypt);
-    return masterKey.encrypt(key: newKey ?? key);
+    return masterKey.encrypt_(
+        key: newKey ?? key, memoryKey: memoryKey, rawKey: rawKey);
   }
 
   @override
-  MessageArgsThreeBytes getResult() {
-    final List<int> walletKey = key ??
-        WorkerCryptoUtils.hashKey(key: keyString!, checksum: keyChecksum!);
-    final data = generateMasterKey(
-        key: walletKey, walletData: walletData, newKey: newKey);
-    return MessageArgsThreeBytes(
-        keyOne: data.$1.toCbor().encode(),
-        keyTwo: data.$2,
-        keyThree: walletKey);
+  MessageArgsOneBytes getResult() {
+    return MessageArgsOneBytes(keyOne: result().toCbor().encode());
   }
 
-  // static (EncryptedMasterKey, List<int>) encryptedMasterKey(
-  //     {required WalletMasterKeys masterKey, required List<int> key}) {
-  //   final memoryStorageBytes =
-  //       _toMemoryStorage(walletData: masterKey.toCbor().encode(), key: key);
-  //   // final bip32 = Bip32Slip10Secp256k1.fromSeed(masterKey.seed);
-  //   final encryptedMasterKey = EncryptedMasterKey(
-  //       // checksum: bip32.publicKey.fingerPrint.toHex(),
-  //       keyBytes: memoryStorageBytes,
-  //       customKeys: masterKey.customKeys
-  //           .map((e) => EncryptedCustomKey(
-  //               publicKey: e.publicKey,
-  //               coin: e.coin,
-  //               id: e.checksum,
-  //               created: e.created,
-  //               name: e.name,
-  //               keyType: e.keyType))
-  //           .toList());
-  //   final storageBytes = _toStorage(masterKey: masterKey, key: key);
-  //   return (encryptedMasterKey, storageBytes);
-  // }
-
-  // static List<int> _toStorage(
-  //     {required WalletMasterKeys masterKey,
-  //     required List<int> key,
-  //     int version = 1}) {
-  //   final List<int> nonce = WorkerCryptoUtils.generateNonce(key);
-  //   final encrypt = WorkerCryptoUtils.encryptChacha(
-  //       key: key, nonce: nonce, data: masterKey.toCbor().encode());
-  //   final toCbor = CborListValue.dynamicLength([
-  //     CborIntValue(version),
-  //     CborBytesValue(encrypt),
-  //   ]);
-  //   return toCbor.encode();
-  // }
-
-  // static List<int> _toMemoryStorage({
-  //   required List<int> walletData,
-  //   required List<int> key,
-  //   int version = 1,
-  // }) {
-  //   final List<int> nonce = QuickCrypto.generateRandom(12);
-  //   final List<int> encrypt = WorkerCryptoUtils.encryptChacha(
-  //       key: key, nonce: nonce, data: walletData);
-  //   final toCbor = CborListValue.dynamicLength([
-  //     CborIntValue(version),
-  //     CborBytesValue(nonce),
-  //     CborBytesValue(encrypt)
-  //   ]);
-  //   return toCbor.encode();
-  // }
-
   @override
-  CryptoGenerateMasterKeyResponse parsResult(MessageArgsThreeBytes result) {
-    return CryptoGenerateMasterKeyResponse(
-        masterKey: EncryptedMasterKey.deserialize(bytes: result.keyOne),
-        storageData:
-            StringUtils.decode(result.keyTwo, type: StringEncoding.base64),
-        walletKey: result.keyThree);
+  EncryptedMasterKey parsResult(MessageArgsOneBytes result) {
+    return EncryptedMasterKey.deserialize(bytes: result.keyOne);
   }
 
   @override
@@ -175,14 +120,10 @@ class CryptoRequestGenerateMasterKey extends CryptoRequest<
         CborSerializable.fromDynamic([
           version,
           CborBytesValue(walletData),
-          key == null ? const CborNullValue() : CborBytesValue(key!),
-          newKey == null ? const CborNullValue() : CborBytesValue(newKey!),
-          keyString == null
-              ? const CborNullValue()
-              : CborBytesValue(keyString!),
-          keyChecksum == null
-              ? const CborNullValue()
-              : CborBytesValue(keyChecksum!),
+          newKeyString,
+          CborBytesValue(keyString),
+          CborBytesValue(keyChecksum),
+          CborBytesValue(memoryKey),
         ]),
         method.tag);
   }
@@ -191,14 +132,28 @@ class CryptoRequestGenerateMasterKey extends CryptoRequest<
   CryptoRequestMethod get method => CryptoRequestMethod.generateMasterKey;
 
   @override
-  CryptoGenerateMasterKeyResponse result() {
-    final List<int> walletKey = key ??
-        WorkerCryptoUtils.hashKey(key: keyString!, checksum: keyChecksum!);
-    final data = generateMasterKey(
-        key: walletKey, walletData: walletData, newKey: newKey);
-    return CryptoGenerateMasterKeyResponse(
-        masterKey: data.$1,
-        storageData: StringUtils.decode(data.$2, type: StringEncoding.base64),
-        walletKey: walletKey);
+  EncryptedMasterKey result() {
+    List<int>? walletKey;
+    List<int>? newKey;
+    if (version == 1) {
+      walletKey =
+          WorkerCryptoUtils.hashKeyOld(key: keyString, checksum: keyChecksum);
+      assert(newKeyString == null);
+      newKey =
+          WorkerCryptoUtils.hashKeyNew(key: keyString, checksum: keyChecksum);
+    } else {
+      walletKey =
+          WorkerCryptoUtils.hashKeyNew(key: keyString, checksum: keyChecksum);
+    }
+    if (newKeyString != null) {
+      newKey = WorkerCryptoUtils.hashKeyNew(
+          key: newKeyString!, checksum: keyChecksum);
+    }
+    return generateMasterKey(
+        key: walletKey,
+        walletData: walletData,
+        newKey: newKey,
+        memoryKey: memoryKey,
+        rawKey: newKeyString ?? keyString);
   }
 }

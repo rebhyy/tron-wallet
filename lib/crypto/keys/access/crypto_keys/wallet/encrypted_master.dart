@@ -1,22 +1,34 @@
 part of 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 
 final class EncryptedMasterKey with CborSerializable {
-  final List<int> masterKey;
+  final WalletInMemoryData masterKey;
+  final List<int> storageData;
+
+  String storageDataB64() {
+    return StringUtils.decode(storageData, type: StringEncoding.base64);
+  }
+
+  ///  StringUtils.decode(result.keyTwo, type: StringEncoding.base64)
   final List<EncryptedCustomKey> customKeys;
-  final List<List<int>> subWallets;
+  final List<EncryptedSubWallet> subWallets;
   EncryptedMasterKey.__({
-    required List<int> keyBytes,
+    required this.masterKey,
     required List<EncryptedCustomKey> customKeys,
-    List<List<int>> subWallets = const [],
-  })  : masterKey = keyBytes.asImmutableBytes,
-        customKeys = customKeys.immutable,
-        subWallets = subWallets.map((e) => e.asImmutableBytes).toImutableList;
+    required List<int> storageData,
+    List<EncryptedSubWallet> subWallets = const [],
+  })  : customKeys = customKeys.immutable,
+        subWallets = subWallets.toImutableList,
+        storageData = storageData.asImmutableBytes;
   factory EncryptedMasterKey._(
-      {required List<int> keyBytes,
+      {required WalletInMemoryData masterKey,
+      required List<int> storageData,
       required List<EncryptedCustomKey> customKeys,
-      required List<List<int>> subWallets}) {
+      required List<EncryptedSubWallet> subWallets}) {
     return EncryptedMasterKey.__(
-        keyBytes: keyBytes, customKeys: customKeys, subWallets: subWallets);
+        masterKey: masterKey,
+        customKeys: customKeys,
+        subWallets: subWallets,
+        storageData: storageData);
   }
   factory EncryptedMasterKey.deserialize({List<int>? bytes, CborObject? obj}) {
     final CborListValue values = CborSerializable.cborTagValue(
@@ -25,26 +37,48 @@ final class EncryptedMasterKey with CborSerializable {
         .elementAsListOf<CborTagValue>(1)
         .map((e) => EncryptedCustomKey.deserialize(obj: e))
         .toList();
-    final List<List<int>> subWallets = values
-        .elementAsListOf<CborBytesValue>(2, emyptyOnNull: true)
-        .map((e) => e.value)
+    final List<EncryptedSubWallet> subWallets = values
+        .elementAsListOf<CborTagValue>(2, emyptyOnNull: true)
+        .map((e) => EncryptedSubWallet.deserialize(obj: e))
         .toList();
     return EncryptedMasterKey._(
-        keyBytes: values.elementAs(0),
+        masterKey: WalletInMemoryData.deserialize(
+            obj: values.indexAs<CborTagValue>(0)),
         customKeys: customKeys,
-        subWallets: subWallets);
+        subWallets: subWallets,
+        storageData: values.valueAs(3));
   }
 
   @override
   CborTagValue toCbor() {
     return CborTagValue(
-        CborSerializable.fromDynamic([
-          CborBytesValue(masterKey),
-          CborSerializable.fromDynamic(
-              customKeys.map((e) => e.toCbor()).toList()),
-          CborSerializable.fromDynamic(
-              subWallets.map((e) => CborBytesValue(e)).toList()),
+        CborListValue<CborObject>.definite([
+          masterKey.toCbor(),
+          CborListValue.definite(customKeys.map((e) => e.toCbor()).toList()),
+          CborListValue.definite(subWallets.map((e) => e.toCbor()).toList()),
+          CborBytesValue(storageData)
         ]),
         CryptoKeyConst.encryptedMasterKey);
+  }
+}
+
+final class EncryptedSubWallet with CborSerializable {
+  final int id;
+  final SubWalletType type;
+  const EncryptedSubWallet._({required this.id, required this.type});
+  factory EncryptedSubWallet.deserialize({List<int>? bytes, CborObject? obj}) {
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CryptoKeyConst.encryptedSubWallet);
+    return EncryptedSubWallet._(
+        id: values.valueAs(0),
+        type: SubWalletType.fromValue(values.valueAs(1)));
+  }
+
+  @override
+  CborTagValue toCbor() {
+    return CborTagValue(
+        CborListValue<CborObject>.definite(
+            [CborIntValue(id), CborBytesValue(type.tags)]),
+        CryptoKeyConst.encryptedSubWallet);
   }
 }

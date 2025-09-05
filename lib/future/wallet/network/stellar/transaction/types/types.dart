@@ -165,10 +165,10 @@ class TransactionTimeBound {
   factory TransactionTimeBound(
       {required TransactiomTimeBoundType type, DateTime? time}) {
     if (type.isManual && time == null) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppExceptionConst.internalError("TransactionTimeBound");
     }
     if (!type.isManual && time != null) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppExceptionConst.internalError("TransactionTimeBound");
     }
     return TransactionTimeBound._(type: type, time: time);
   }

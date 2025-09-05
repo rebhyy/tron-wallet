@@ -25,11 +25,14 @@ mixin JSExtensionBackgroudHandler on JSExtensionBackgroudStorageHandler {
       {required Web3ClientInfo info, required MainWallet wallet}) async {
     final permission =
         await _readWeb3Permission(wallet: wallet, identifier: info.identifier);
-    Web3ApplicationAuthentication? toPermission =
-        MethodUtils.nullOnException(() {
+    Web3ApplicationAuthentication? toPermission = () {
       if (permission == null) return null;
-      return Web3ApplicationAuthentication.deserialize(bytes: permission);
-    });
+      try {
+        return Web3ApplicationAuthentication.deserialize(bytes: permission);
+      } catch (_) {
+        return null;
+      }
+    }();
     if (toPermission == null) {
       final token = generateKey();
       final permission =
@@ -201,14 +204,16 @@ mixin JSExtensionBackgroudHandler on JSExtensionBackgroudStorageHandler {
         default:
           throw Web3RequestExceptionConst.internalError;
       }
-    } on Web3RequestException catch (e) {
+    } on Web3RequestException catch (e, s) {
+      Logg.error("got error $e $s");
       return WalletEvent(
           clientId: event.clientId,
           data: e.toResponseMessage().toCbor().encode(),
           requestId: event.requestId,
           type: WalletEventTypes.exception,
           target: WalletEventTarget.background);
-    } catch (e) {
+    } catch (e, s) {
+      Logg.error("got error $e $s");
       return WalletEvent(
           clientId: event.clientId,
           data: Web3RequestExceptionConst.internalError

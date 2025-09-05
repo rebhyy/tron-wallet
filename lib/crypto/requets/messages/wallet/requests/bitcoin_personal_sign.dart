@@ -97,10 +97,9 @@ final class WalletRequestBitcoinSignMessage extends WalletRequest<
   }
 
   @override
-  Future<MessageArgsTwoBytes> getResult(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
+  Future<MessageArgsTwoBytes> getResult(WalletInMemory wallet) async {
     return sign(
-        wallet: wallet,
+        wallet: wallet.masterKey,
         index: index,
         message: message,
         mode: mode,
@@ -117,9 +116,9 @@ final class WalletRequestBitcoinSignMessage extends WalletRequest<
 
   @override
   Future<CryptoBitcoinPersonalSignResponse> result(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
+      WalletInMemory wallet) async {
     final signature = sign(
-        wallet: wallet,
+        wallet: wallet.masterKey,
         index: index,
         message: message,
         mode: mode,

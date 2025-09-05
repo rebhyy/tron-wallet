@@ -3,7 +3,7 @@ import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:on_chain/sui/src/address/address/address.dart';
 import 'package:on_chain/sui/src/rpc/models/types/types.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/types/message.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/types/account.dart';

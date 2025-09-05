@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/app/live_listener/live.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/signing.dart';
 import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
 import 'package:on_chain_wallet/future/future.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
@@ -86,7 +86,7 @@ mixin RippleTransactionSignerController on DisposableMixin {
             }
           }
           if (threshHold < multiSigAddress.multiSignatureAccount.threshold) {
-            throw WalletExceptionConst.privateKeyIsNotAvailable;
+            throw AppCryptoExceptionConst.privateKeyIsNotAvailable;
           }
           transaction.setMultiSigSignature(signerSignatures);
           return XRPSignedTransaction(

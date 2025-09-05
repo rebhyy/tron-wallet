@@ -4,8 +4,8 @@ mixin WalletsStoragesManger {
   Future<List<int>?> _queryStorage(
       {int storage = APPDatabaseConst.hdWalletStorage,
       int storageId = APPDatabaseConst.defaultStorageId,
-      String? key,
-      String? keyA,
+      required String key,
+      required String keyA,
       String tableName = APPDatabaseConst.mainTableName}) async {
     final params = ITableReadStructA(
         storage: storage,
@@ -50,6 +50,27 @@ mixin WalletsStoragesManger {
     await AppNativeMethods.platform.writeDb(params);
   }
 
+  Future<void> _insertMainTableWalletStorage(
+      {required List<int> value, required String key}) async {
+    final params = ITableInsertOrUpdateStructA(
+        storage: APPDatabaseConst.hdWalletStorage,
+        storageId: APPDatabaseConst.defaultStorageId,
+        data: value,
+        tableName: APPDatabaseConst.mainTableName,
+        key: key,
+        keyA: '');
+    await AppNativeMethods.platform.writeDb(params);
+  }
+
+  Future<List<int>?> _readMainTableWalletStorage({required String key}) async {
+    return await _queryStorage(
+        storage: APPDatabaseConst.hdWalletStorage,
+        storageId: APPDatabaseConst.defaultStorageId,
+        tableName: APPDatabaseConst.mainTableName,
+        key: key,
+        keyA: '');
+  }
+
   Future<void> _removeStorage(
       {int storage = APPDatabaseConst.hdWalletStorage,
       int storageId = APPDatabaseConst.defaultStorageId,
@@ -68,7 +89,9 @@ mixin WalletsStoragesManger {
   Future<HDWallets> _readWallet() async {
     final data = await _queryStorage(
         storageId: APPDatabaseConst.defaultStorageId,
-        storage: APPDatabaseConst.hdWalletStorage);
+        storage: APPDatabaseConst.hdWalletStorage,
+        key: '',
+        keyA: '');
     if (data == null) {
       return HDWallets.init();
     }
@@ -102,7 +125,8 @@ mixin WalletsStoragesManger {
         storage: APPDatabaseConst.web3AuthStorage,
         storageId: APPDatabaseConst.defaultStorageId,
         tableName: wallet.key,
-        key: identifier);
+        key: identifier,
+        keyA: '');
   }
 
   Future<List<List<int>>> _readWeb3ApplicationActivities(

@@ -21,10 +21,10 @@ class AccountTokensView<TOKEN extends TokenCore, ACCOUNT extends ChainAccount>
 
   @override
   Widget build(BuildContext context) {
-    final tokens = address.tokens.whereType<TOKEN>().toList();
     return ChainStreamBuilder(
         allowNotify: [DefaultChainNotify.token],
         builder: (context, chain, lastNotify) {
+          final tokens = address.tokens.whereType<TOKEN>().toList();
           return AccountTabbarScrollWidget(slivers: [
             EmptyItemSliverWidgetView(
                 isEmpty: tokens.isEmpty,

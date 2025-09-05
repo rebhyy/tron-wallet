@@ -1,5 +1,4 @@
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/string.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
@@ -38,7 +37,7 @@ mixin ADATransactionFeeController
           ADATransactionFee(
               type: TxFeeTypes.normal,
               fee: IntegerBalance.zero(network.token),
-              error: fee.error!.tr)
+              error: fee.localizationError)
         ]);
         return;
       }

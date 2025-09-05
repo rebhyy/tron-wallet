@@ -1,4 +1,3 @@
-import 'package:blockchain_utils/utils/numbers/rational/big_rational.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/text_field/input_formaters.dart';
@@ -65,8 +64,7 @@ class SetupSwapAmoutView extends StatelessWidget {
                       autocorrect: false,
                       canRequestFocus: controller.walletPage.inSwap,
                       inputFormatters: [
-                        BigRetionalRangeTextInputFormatter(
-                            min: BigRational.zero,
+                        BigRetionalTextInputFormatter(
                             allowSign: false,
                             allowDecimal: true,
                             maxScale: sourceAsset?.token.decimal),

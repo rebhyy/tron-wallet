@@ -47,6 +47,14 @@ final class MultiSigAddressIndex extends AddressDerivationIndex {
   @override
   CryptoPrivateKeyData _derive(CryptoPrivateKeyData masterKey,
       {Bip44Levels maxLevel = Bip44Levels.addressIndex}) {
-    throw WalletExceptionConst.multiSigDerivationNotSuported;
+    throw AppCryptoExceptionConst.multiSigDerivationNotSuported;
+  }
+
+  @override
+  int? get subId => null;
+
+  @override
+  AddressDerivationIndex asSubWalletKey(int subId) {
+    throw WalletExceptionConst.featureUnavailableForMultiSignature;
   }
 }

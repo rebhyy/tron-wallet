@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/network/import/controller/form.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/pages/import_network.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/web3/types/types.dart';
@@ -18,7 +18,7 @@ class Web3CosmosImportNetworkStateController extends Web3CosmosStateController<
   Future<Web3RequestResponseData<bool>> getResponse() async {
     final networkParams = await form.createNetwork();
     if (networkParams == null) {
-      throw WalletException("some_required_field_not_filled");
+      throw AppException("some_required_field_not_filled");
     }
     await walletProvider.wallet
         .updateImportNetwork(WalletCosmosNetwork(-1, networkParams));

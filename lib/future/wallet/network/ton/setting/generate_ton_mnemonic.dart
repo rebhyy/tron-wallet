@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/setup/setup.dart';
 import 'package:blockchain_utils/utils/compare/compare.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/crypto/worker.dart';
@@ -51,7 +50,9 @@ class _GenerateTonMnemonicView extends StatefulWidget {
 }
 
 class __GenerateTonMnemonicViewState extends State<_GenerateTonMnemonicView>
-    with SafeState<_GenerateTonMnemonicView> {
+    with
+        SafeState<_GenerateTonMnemonicView>,
+        ProgressMixin<_GenerateTonMnemonicView> {
   bool hasPassword = false;
   bool validateTonMnemonic = true;
   bool showKeys = false;
@@ -64,7 +65,6 @@ class __GenerateTonMnemonicViewState extends State<_GenerateTonMnemonicView>
       GlobalKey<NumberTextFieldState>(
           debugLabel: "__GenerateTonMnemonicViewState_2");
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
   _MnemonicOption option = _MnemonicOption.import;
   _MnemonicPage? page;
   String mnemonic = "";
@@ -159,9 +159,9 @@ class __GenerateTonMnemonicViewState extends State<_GenerateTonMnemonicView>
         .cryptoIsolateRequest(TonMenmonicGenerateMessage(
             password: password, wordsNum: wordsNum)));
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr);
+      progressKey.errorText(result.localizationError);
     } else {
-      mnemonic = result.result;
+      mnemonic = result.result.toStr();
       mnemonicList = CryptoKeyUtils.normalizeMnemonic(mnemonic);
       page = _MnemonicPage.viewMnemonic;
       progressKey.success();
@@ -182,7 +182,7 @@ class __GenerateTonMnemonicViewState extends State<_GenerateTonMnemonicView>
       final result = await MethodUtils.call(
           () async => CryptoKeyUtils.validateMnemonicWords(mnemonicList));
       if (result.hasError) {
-        progressKey.errorText(result.error!.tr);
+        progressKey.errorText(result.localizationError);
       } else {
         progressKey.progressText("generating_private_key".tr);
         final key = await MethodUtils.call<ImportCustomKeys>(
@@ -196,7 +196,7 @@ class __GenerateTonMnemonicViewState extends State<_GenerateTonMnemonicView>
           },
         );
         if (key.hasError) {
-          progressKey.errorText(key.error?.tr ?? "");
+          progressKey.errorText(key.localizationError);
         } else {
           keyPair = key.result;
           page = _MnemonicPage.importKey;
@@ -241,10 +241,9 @@ class __GenerateTonMnemonicViewState extends State<_GenerateTonMnemonicView>
       },
       child: Form(
         key: formKey,
-        child: PageProgress(
-          key: progressKey,
-          backToIdle: APPConst.oneSecoundDuration,
-          child: (context) {
+        child: StreamPageProgress(
+          controller: progressKey,
+          builder: (context) {
             return UnfocusableChild(
               child: CustomScrollView(
                 slivers: [

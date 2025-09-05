@@ -52,21 +52,19 @@ final class WalletRequestMoneroOutputUnlocker
   WalletRequestMethod get method => WalletRequestMethod.moneroOutputUnlocker;
 
   @override
-  Future<MessageArgsOneBytes> getResult(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final response = await result(wallet: wallet, key: key);
+  Future<MessageArgsOneBytes> getResult(WalletInMemory wallet) async {
+    final response = await result(wallet);
     return MessageArgsOneBytes(keyOne: response.toCbor().encode());
   }
 
   @override
-  Future<MoneroBatchProcessTxesResponse> result(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
+  Future<MoneroBatchProcessTxesResponse> result(WalletInMemory wallet) async {
     final client = APIUtils.buildMoneroClient(
         provider: provider, network: null, isolate: APPIsolate.current);
     final txids =
         requests.expand((e) => e.indexes.expand((e) => e.txes)).toList();
     final txInfos = await client.getTxesByTxIds(txIds: txids);
-    final List<MoneroPrivateKeyData> keys = wallet
+    final List<MoneroPrivateKeyData> keys = wallet.masterKey
         .readKeys(requests
             .map((e) => AccessCryptoPrivateKeyRequest(index: e.accountIndex))
             .toList())

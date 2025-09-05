@@ -9,8 +9,7 @@ import 'package:on_chain_wallet/future/wallet/network/substrate/web3/pages/sign_
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/substrate/client/substrate.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/constant/constants/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/substrate/params/models/transaction.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';

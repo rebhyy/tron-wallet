@@ -10,7 +10,7 @@ import 'package:on_chain_wallet/future/wallet/network/bitcoin/web3/types/types.d
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/bitcoin/core/core.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/bitcoin.dart';
@@ -104,7 +104,7 @@ class Web3BitcoinSignTransactionStateController
           }
         }
         final inputWithAccount = BitcoinPsbtInputWithAccount(
-            owner: address?.toUtxoRequest(),
+            owner: address?.toUtxoRequest,
             input: psbtInput.txInput,
             index: i,
             address: _getReceiptAddress(accountAddress ?? psbtAddress)!,

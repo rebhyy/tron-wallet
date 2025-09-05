@@ -11,8 +11,7 @@ import 'package:on_chain_wallet/future/wallet/network/ripple/web3/types/types.da
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/ripple/client/ripple.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 

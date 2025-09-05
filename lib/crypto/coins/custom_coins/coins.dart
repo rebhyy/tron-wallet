@@ -1,6 +1,8 @@
 import 'package:blockchain_utils/bip/bip/bip.dart';
 import 'package:blockchain_utils/bip/ecc/curve/elliptic_curve_types.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/utils/utils.dart';
 import 'conf.dart';
 
 class CustomCoins extends BipCoins {
@@ -27,7 +29,7 @@ class CustomCoins extends BipCoins {
       String serializationStr) {
     final parts = serializationStr.split("#");
     if (parts.length != 2) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppSerializationException(objectName: "getSerializationCoin");
     }
     return getCoin(name: parts[1], proposal: parts[0]);
   }
@@ -43,11 +45,8 @@ class CustomCoins extends BipCoins {
         coin = CryptoCoins.getCoin(name, CustomProposal.fromName(proposal));
         break;
     }
-    if (coin == null) {
-      throw WalletExceptionConst.coinNotFound;
-    }
-    if (coin is! T) {
-      throw WalletExceptionConst.invalidCoin;
+    if (coin == null || coin is! T) {
+      throw AppCryptoExceptionConst.invalidCoin;
     }
     return coin;
   }
@@ -73,11 +72,7 @@ class CustomCoins extends BipCoins {
   }
 
   static CustomCoins? fromName(String name) {
-    try {
-      return values.firstWhere((element) => element.name == name);
-    } on StateError {
-      return null;
-    }
+    return values.firstWhereOrNull((element) => element.name == name);
   }
 
   static List<CustomCoins> _fromCurve(EllipticCurveTypes type) {

@@ -12,8 +12,7 @@ import 'package:on_chain_wallet/future/wallet/network/aptos/web3/pages/send_tran
 import 'package:on_chain_wallet/future/wallet/network/aptos/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/aptos/aptos.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/aptos/params/models/transaction.dart';
 
 class Web3AptosSignTransactionStateController

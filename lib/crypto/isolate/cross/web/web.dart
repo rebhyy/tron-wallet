@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
 import 'package:blockchain_utils/crypto/crypto/chacha20poly1305/chacha20poly1305.dart';
+import 'package:blockchain_utils/crypto/crypto/x25519/x25519.dart';
 import 'package:blockchain_utils/crypto/quick_crypto.dart';
 import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_bridge/web/api/window/window.dart';

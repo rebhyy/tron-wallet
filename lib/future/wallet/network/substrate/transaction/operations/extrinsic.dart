@@ -9,8 +9,7 @@ import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/cont
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/widgets/extrinsic.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/substrate/client/substrate.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 
 class _ExtrinsicConstants {

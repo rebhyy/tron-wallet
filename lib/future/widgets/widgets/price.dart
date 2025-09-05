@@ -226,7 +226,7 @@ class MarketPriceView extends StatelessWidget {
       this.symbolColor,
       this.style,
       this.disableTooltip = false});
-  final IntegerBalance? balance;
+  final BalanceCore? balance;
   final TextStyle? style;
   final Color? symbolColor;
   final bool disableTooltip;
@@ -234,7 +234,6 @@ class MarketPriceView extends StatelessWidget {
   Widget build(BuildContext context) {
     final wallet = context.wallet;
     final balance = this.balance;
-
     if (balance == null || balance.isZero) return WidgetConstant.sizedBox;
     final market = wallet.currency.amount(balance.price, balance.token);
     if (market == null || market.isZero) return WidgetConstant.sizedBox;

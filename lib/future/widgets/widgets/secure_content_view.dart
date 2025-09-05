@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/constant/global/app.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/security/pages/secure_backup.dart';
-import 'package:on_chain_wallet/wallet/models/backup/models/wallet.dart';
+import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
+import 'package:on_chain_wallet/wallet/models/wallet/models/backup.dart';
 import 'animated/widgets/animated_switcher.dart';
 import 'barcode/widgets/barcode_view.dart';
 import 'conditional_widget.dart';
@@ -18,11 +19,11 @@ class SecureContentView extends StatefulWidget {
       this.backupType,
       this.showButtonTitle,
       this.contentName,
-      this.password,
+      this.credential,
       super.key});
   final String content;
   final WalletBackupTypes? backupType;
-  final String? password;
+  final WalletCredentialResponseVerify? credential;
   final String? showButtonTitle;
   final String? contentName;
   final bool showBarcode;
@@ -58,7 +59,7 @@ class _SecureContentView2State extends State<SecureContentView>
         ContainerWithBorder(
           onRemove: () {},
           enableTap: false,
-          onRemoveWidget: Row(
+          onRemoveWidget: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CopyTextIcon(
@@ -66,13 +67,14 @@ class _SecureContentView2State extends State<SecureContentView>
                   color: context.onPrimaryContainer,
                   isSensitive: widget.isSensitive),
               ConditionalWidget(
-                  enable: widget.backupType != null && widget.password != null,
+                  enable:
+                      widget.backupType != null && widget.credential != null,
                   onActive: (context) => IconButton(
                       onPressed: () {
                         context.openSliverDialog(
                             widget: (ctx) => GenerateBackupView(
                                 data: widget.content,
-                                password: widget.password!,
+                                credential: widget.credential!,
                                 type: widget.backupType!),
                             label: "backup_mnemonic".tr);
                       },
@@ -87,24 +89,28 @@ class _SecureContentView2State extends State<SecureContentView>
               )
             ],
           ),
-          child: Stack(
-            children: [
-              AnimatedOpacity(
-                opacity: opacity,
-                duration: APPConst.animationDuraion,
-                child: SelectableText(widget.content,
-                    style: context.onPrimaryTextTheme.bodyMedium),
-              ),
-              Positioned.fill(
-                child: APPAnimatedSwitcher(enable: show, widgets: {
-                  true: (context) => WidgetConstant.sizedBox,
-                  false: (context) => FilledButton.icon(
-                      onPressed: showContent,
-                      icon: const Icon(Icons.remove_red_eye),
-                      label: Text(widget.showButtonTitle ?? "show_content".tr))
-                }),
-              )
-            ],
+          child: ConstrainedBox(
+            constraints: WidgetConstant.constraintsMinHeight60,
+            child: Stack(
+              children: [
+                AnimatedOpacity(
+                  opacity: opacity,
+                  duration: APPConst.animationDuraion,
+                  child: SelectableText(widget.content,
+                      style: context.onPrimaryTextTheme.bodyMedium),
+                ),
+                Positioned.fill(
+                  child: APPAnimatedSwitcher(enable: show, widgets: {
+                    true: (context) => WidgetConstant.sizedBox,
+                    false: (context) => FilledButton.icon(
+                        onPressed: showContent,
+                        icon: const Icon(Icons.remove_red_eye),
+                        label:
+                            Text(widget.showButtonTitle ?? "show_content".tr))
+                  }),
+                )
+              ],
+            ),
           ),
         ),
       ],

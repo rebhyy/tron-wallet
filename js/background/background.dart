@@ -125,7 +125,7 @@ external JSFunction get _onContentListener;
 
 void main() async {
   final platform = AppNativeMethods.platform as WebPlatformInterface;
-  await platform.init(upgradableDatebase: false);
+  await platform.init(APPConst.applicationId, upgradableDatebase: false);
   final handler = _JSBackgroundHandler._(platform.database);
   extension.runtime.onInstalled
       .addListener((OnInstalledDetails details) {}.toJS);

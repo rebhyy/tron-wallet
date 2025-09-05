@@ -6,8 +6,7 @@ import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
-import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 
 class Web3RequestTransactionResponseData<RESPONSE,
@@ -157,14 +156,7 @@ abstract class Web3TransactionStateController<
           functionName: "acceptRequest",
           msg: e,
           trace: s);
-    } on Web3InternalError catch (e, s) {
-      pageKey.error(error: e, showBackButton: true);
-      appLogger.error(
-          runtime: runtimeType,
-          functionName: "acceptRequest",
-          msg: e,
-          trace: s);
-    } on WalletException catch (e, s) {
+    } on AppException catch (e, s) {
       pageKey.error(error: e, showBackButton: true);
       appLogger.error(
           runtime: runtimeType,
@@ -172,10 +164,6 @@ abstract class Web3TransactionStateController<
           msg: e,
           trace: s);
     } catch (e, s) {
-      if (e == WalletExceptionConst.rejectSigning) {
-        pageKey.error(error: e, showBackButton: true);
-        return;
-      }
       appLogger.error(
           runtime: runtimeType,
           functionName: "acceptRequest",

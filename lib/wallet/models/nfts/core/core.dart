@@ -32,7 +32,7 @@ abstract class NFTCore with CborSerializable {
       NFTType.ripple => RippleNFToken.deserialize(bytes: bytes, obj: obj),
     };
     if (nft is! T) {
-      throw WalletException.invalidArgruments(["$T", "${nft.runtimeType}"]);
+      throw WalletExceptionConst.internalError("NFTCore");
     }
     return nft;
   }

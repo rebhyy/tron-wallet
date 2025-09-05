@@ -37,8 +37,10 @@ class TonAPIProvider extends APIProvider {
 
   factory TonAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.tonApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.tonApiServiceProvider);
     final int? protocolId = values.elementAs(1);
     final TonApiType apiType =
         TonApiType.fromValue(values.elementAs<String>(2));

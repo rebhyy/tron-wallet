@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
@@ -87,8 +87,7 @@ abstract class SubstrateWalletTransactionOutput
       WalletTransactionOutputType.operation =>
         SubstrateWalletTransactionOperationOutput.deserialize(network,
             bytes: bytes, cborHex: cborHex, object: object),
-      _ => throw WalletExceptionConst.invalidData(
-          messsage: 'invalid bitcoin tx output')
+      _ => throw WalletExceptionConst.invalidWalletTransactionData
     };
   }
 }

@@ -151,17 +151,17 @@ class TonUtils {
           password: password ?? "", validateTonMnemonic: validateTonMnemonic);
       return TonPrivateKey.fromBytes(seed);
     } catch (e) {
-      throw WalletExceptionConst.invalidMnemonic;
+      throw AppCryptoExceptionConst.invalidMnemonic;
     }
   }
 
-  static String generateTonMnemonic({String? password, required int wordsNum}) {
+  static Mnemonic generateTonMnemonic(
+      {String? password, required int wordsNum}) {
     try {
       return TonMnemonicGenerator()
-          .fromWordsNumber(wordsNum, password: password ?? "")
-          .toStr();
+          .fromWordsNumber(wordsNum, password: password ?? "");
     } catch (e) {
-      throw WalletExceptionConst.invalidMnemonic;
+      throw AppCryptoExceptionConst.invalidMnemonic;
     }
   }
 
@@ -182,7 +182,7 @@ class TonUtils {
         return beginCell().storeUint32(0).storeBytesTail(toBytes).endCell();
       }
     }
-    throw WalletException("Invalid hex string.");
+    throw AppCryptoExceptionConst.invalidHexBytes;
   }
 
   static Cell toCell(String v) {

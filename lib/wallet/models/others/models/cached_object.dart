@@ -2,6 +2,8 @@ import 'package:on_chain_wallet/app/core.dart';
 
 typedef ONFETCHCACHEDOBJECT<T extends Object?> = Future<T> Function();
 
+typedef ONFETCHEDCACHEDOBJECT<T extends Object?> = T Function();
+
 class CachedObject<T extends Object?> with Equatable {
   final _lock = SynchronizedLock();
   final Duration interval;
@@ -35,4 +37,24 @@ class CachedObject<T extends Object?> with Equatable {
 
   @override
   List get variabels => [interval, value];
+}
+
+class OnceRunner<T extends Object?> {
+  final SynchronizedLock _lock = SynchronizedLock();
+  bool _isReady = false;
+  OnceRunner();
+
+  Future<T> get(
+      {required ONFETCHCACHEDOBJECT<T> onFetch,
+      required ONFETCHEDCACHEDOBJECT<T> onFetched,
+      Duration? cachedTimeout}) async {
+    if (_isReady) return onFetched();
+    return await _lock.synchronized(() async {
+      final fetch = _isReady;
+      if (fetch) return onFetched();
+      final result = await onFetch();
+      _isReady = true;
+      return result;
+    });
+  }
 }

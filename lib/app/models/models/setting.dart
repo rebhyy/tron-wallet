@@ -52,7 +52,7 @@ class APPWalletSetting with CborSerializable {
 }
 
 class APPSetting with CborSerializable {
-  const APPSetting._(
+  const APPSetting(
       {required this.appColor,
       required this.appBrightness,
       required this.currency,
@@ -74,7 +74,7 @@ class APPSetting with CborSerializable {
       Currency? currency,
       WidgetRect? size,
       APPWalletSetting? walletSetting}) {
-    return APPSetting._(
+    return APPSetting(
         appColor: appColor ?? this.appColor,
         appBrightness: appBrightness ?? this.appBrightness,
         currency: currency ?? this.currency,
@@ -88,7 +88,7 @@ class APPSetting with CborSerializable {
     List<int>? bytes,
   }) {
     if (bytes == null) {
-      return APPSetting._(
+      return APPSetting(
           appColor: null,
           appBrightness: null,
           currency: Currency.USD,
@@ -107,7 +107,7 @@ class APPSetting with CborSerializable {
           cbor.elemetMybeAs<APPWalletSetting, CborTagValue>(
                   4, (e) => APPWalletSetting.deserialize(object: e)) ??
               APPWalletSetting();
-      return APPSetting._(
+      return APPSetting(
           appColor: colorHex,
           appBrightness: brightnessName,
           currency: currency,
@@ -116,7 +116,7 @@ class APPSetting with CborSerializable {
           walletSetting: walletSetting);
     } catch (e) {
       assert(false, 'setting deserialization failed. $e');
-      return APPSetting._(
+      return APPSetting(
           appColor: null,
           appBrightness: null,
           currency: Currency.USD,

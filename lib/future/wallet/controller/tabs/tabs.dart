@@ -8,8 +8,8 @@ import 'package:on_chain_wallet/future/wallet/swap/controller/controller/control
 import 'package:on_chain_wallet/future/wallet/webview/controller/controller/controller.dart';
 import 'package:on_chain_wallet/marketcap/prices/live_currency.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/status.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
+import 'package:on_chain_wallet/wallet/models/others/models/wallet.dart';
 
 enum WalletPage {
   wallet,

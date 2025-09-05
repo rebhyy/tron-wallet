@@ -6,10 +6,11 @@ import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/methods/meth
 import 'package:on_chain_wallet/wallet/api/provider/networks/ethereum.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:on_chain/solidity/address/core.dart';
 import 'package:on_chain_swap/on_chain_swap.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class EthereumClient extends NetworkClient<
     EthWalletTransaction,
@@ -203,7 +204,7 @@ class EthereumClient extends NetworkClient<
       final receipt = await completer.future.timeout(timeout);
       return receipt;
     } on TimeoutException {
-      throw WalletException("transaction_confirmation_failed");
+      throw ApiProviderException.message("transaction_confirmation_failed");
     } finally {
       timer?.cancel();
       timer = null;
@@ -214,7 +215,7 @@ class EthereumClient extends NetworkClient<
   Future<SwapEthereumAccountAssetBalance> getAccountsAssetBalance(
       ETHSwapAsset asset, ETHAddress account) async {
     if (asset.isContract && asset.contractAddress == null) {
-      throw WalletException("invalid_swap_asset");
+      throw ApiProviderExceptionConst.unexpectedRequestData;
     }
 
     return SwapEthereumAccountAssetBalance(
@@ -261,7 +262,7 @@ class EthereumClient extends NetworkClient<
   Future<bool> initSwapClient() async {
     final init = await this.init();
     if (!init) {
-      throw WalletException('network_client_initialize_failed');
+      throw ApiProviderExceptionConst.initializeClientFailed;
     }
     return true;
   }

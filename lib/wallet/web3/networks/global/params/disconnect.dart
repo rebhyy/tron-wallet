@@ -2,7 +2,7 @@ import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/global/methods/methods.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 class Web3DisconnectApplication
     extends Web3GlobalRequestParams<List<NetworkType>> {

@@ -24,14 +24,16 @@ void _send(String message) {
 late _WebIsolateInitialData _cryptoHandler;
 bool _init = false;
 
-String _readKey() {
+String _readKey(String key) {
   if (_init) return "";
   try {
     _init = true;
-    final key = QuickCrypto.generateRandom(32);
-    _cryptoHandler = _WebIsolateInitialData(key: key);
+    final k = X25519Keypair.generate();
+    final sharedKey =
+        X25519.scalarMult(k.privateKey, BytesUtils.fromHexString(key));
+    _cryptoHandler = _WebIsolateInitialData(key: sharedKey);
 
-    return BytesUtils.toHexString(key);
+    return k.publicKeyHex();
   } finally {
     cryptoJsActivation = null;
   }

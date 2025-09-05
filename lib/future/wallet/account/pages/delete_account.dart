@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class DeleteAccountView extends StatelessWidget {
   const DeleteAccountView({super.key});
@@ -12,10 +12,11 @@ class DeleteAccountView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Chain account = context.getArgruments();
-    return PasswordCheckerView(
-        accsess: WalletAccsessType.verify,
-        onAccsess: (crendential, password, network) {
-          return _DeleteAccountView(password: password, account: account);
+    return AccessWalletView<WalletCredentialResponseVerify,
+            WalletCredentialVerify>(
+        request: WalletCredentialVerify(),
+        onAccsess: (credential) {
+          return _DeleteAccountView(account: account);
         },
         title: "remove_account".tr,
         subtitle: PageTitleSubtitle(
@@ -24,8 +25,7 @@ class DeleteAccountView extends StatelessWidget {
 }
 
 class _DeleteAccountView extends StatefulWidget {
-  const _DeleteAccountView({required this.password, required this.account});
-  final String password;
+  const _DeleteAccountView({required this.account});
   final Chain account;
 
   @override
@@ -34,7 +34,8 @@ class _DeleteAccountView extends StatefulWidget {
 
 class __DeleteAccountViewState extends State<_DeleteAccountView>
     with SafeState<_DeleteAccountView> {
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController();
   bool deleted = false;
 
   void deleteAccount(bool? accept) async {
@@ -43,18 +44,23 @@ class __DeleteAccountViewState extends State<_DeleteAccountView>
     final result = await MethodUtils.call(
         () async => await widget.account.removeAccount(widget.account.address));
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr);
+      progressKey.errorText(result.localizationError);
     } else {
       progressKey.successText("account_deleted".tr, backToIdle: false);
     }
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      child: (c) => ConstraintsBoxView(
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (c) => ConstraintsBoxView(
         padding: WidgetConstant.padding20,
         child: AnimatedSwitcher(
           duration: APPConst.animationDuraion,

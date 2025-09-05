@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/future/wallet/network/solana/transaction/control
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class SolanaTransactionTransferOperation
     extends SolanaTransactionTransferStateController2 {

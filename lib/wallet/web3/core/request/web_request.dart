@@ -1,7 +1,6 @@
 import 'dart:async';
-
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/exception/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/types/message.dart';

@@ -35,24 +35,26 @@ class _SetupTronMultisigAddressView extends StatefulWidget {
 }
 
 class __SetupTronMultisigAddressViewState
-    extends State<_SetupTronMultisigAddressView> with SafeState {
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+    extends State<_SetupTronMultisigAddressView>
+    with SafeState<_SetupTronMultisigAddressView> {
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController();
   ReceiptAddress<TronAddress>? address;
   WalletTronNetwork get network => widget.account.network;
-  final Map<PermissionKeys, TronMultiSigSignerDetais?> signers = {};
-
-  void onSelectAddress(ReceiptAddress<TronAddress>? multiSigAddr) {
-    address = multiSigAddr;
-    setState(() {});
-  }
-
   TronAccountInfo? account;
-
   List<AccountPermission> get permissions => account!.permissions;
   AccountPermission? permission;
   List<TransactionContractType>? operations;
   bool get isReady =>
       permission != null && sumOfWeight >= permission!.threshold;
+  BigInt sumOfWeight = BigInt.zero;
+  final Map<PermissionKeys, TronMultiSigSignerDetais?> signers = {};
+
+  void onSelectAddress(ReceiptAddress<TronAddress>? multiSigAddr) {
+    address = multiSigAddr;
+    updateState();
+  }
+
   void onSelectPermission(AccountPermission? select) {
     if (select == null) return;
     permission = select;
@@ -67,17 +69,23 @@ class __SetupTronMultisigAddressViewState
     for (final i in permission!.keys) {
       signers[i] = null;
     }
-    setState(() {});
+    updateState();
   }
 
-  BigInt sumOfWeight = BigInt.zero;
+  void onRemoveSigner(PermissionKeys signer) {
+    signers[signer] = null;
+    updateState();
+  }
 
-  void onAddSigner(ITronAddress? acc, PermissionKeys signer) {
+  Future<void> onAddSigner(PermissionKeys signer) async {
     try {
-      if (acc == null) {
+      if (signers[signer] != null) {
         signers[signer] = null;
         return;
       }
+      final acc = await context.selectOrSwitchAccount<ITronAddress>(
+          account: widget.account, showMultiSig: false);
+      if (acc == null) return;
       if (acc.multiSigAccount) {
         context.showAlert("unavailable_multi_sig_public_key".tr);
         return;
@@ -106,25 +114,25 @@ class __SetupTronMultisigAddressViewState
     }
   }
 
-  void onAccountInformation() async {
+  Future<void> onAccountInformation() async {
     if (address == null) return;
     progressKey.progressText("retrieving_account_information".tr);
     final result = await MethodUtils.call(() async {
       return await widget.client.getAccount(address!.networkAddress);
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!);
+      progressKey.errorText(result.localizationError);
     } else {
       account = result.result;
       if (account == null) {
         progressKey.errorText("account_not_found".tr);
       } else {
-        progressKey.success();
+        progressKey.backToIdle();
       }
     }
   }
 
-  void onGenerateAddress() async {
+  Future<void> onGenerateAddress() async {
     progressKey.progressText("setup_address".tr);
     final wallet = context.watch<WalletProvider>(StateConst.main).wallet;
 
@@ -143,12 +151,12 @@ class __SetupTronMultisigAddressViewState
       return newAccountParams;
     });
     if (accountParams.hasError) {
-      progressKey.errorText(accountParams.error!.tr);
+      progressKey.errorText(accountParams.localizationError);
     } else {
       final result = await wallet.deriveNewAccount(
           newAccountParams: accountParams.result, chain: widget.account);
       if (result.hasError) {
-        progressKey.errorText(result.error!.tr);
+        progressKey.errorText(result.localizationError);
       } else {
         progressKey.success(
             backToIdle: false,
@@ -169,12 +177,16 @@ class __SetupTronMultisigAddressViewState
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      initialStatus: PageProgressStatus.idle,
-      child: (c) => UnfocusableChild(
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (context) => UnfocusableChild(
         child: Center(
           child: CustomScrollView(
             shrinkWrap: true,
@@ -214,28 +226,28 @@ class __SetupTronMultisigAddressViewState
                                                   .tr),
                                           WidgetConstant.height8,
                                           AppDropDownBottom(
-                                            items: {
-                                              for (final i in permissions)
-                                                i: RichText(
-                                                    text: TextSpan(
-                                                        style: context.textTheme
-                                                            .bodyMedium,
-                                                        text: i.type.name
-                                                            .camelCase,
-                                                        children: [
-                                                      if (i.permissionName !=
-                                                          null)
-                                                        TextSpan(
-                                                            text:
-                                                                " (${i.permissionName}) ",
-                                                            style: context
-                                                                .textTheme
-                                                                .bodySmall)
-                                                    ]))
-                                            },
-                                            hint: "permissions".tr,
-                                            onChanged: onSelectPermission,
-                                          ),
+                                              items: {
+                                                for (final i in permissions)
+                                                  i: RichText(
+                                                      text: TextSpan(
+                                                          style: context
+                                                              .textTheme
+                                                              .bodyMedium,
+                                                          text: i.type.name
+                                                              .camelCase,
+                                                          children: [
+                                                        if (i.permissionName !=
+                                                            null)
+                                                          TextSpan(
+                                                              text:
+                                                                  " (${i.permissionName}) ",
+                                                              style: context
+                                                                  .textTheme
+                                                                  .bodySmall)
+                                                      ]))
+                                              },
+                                              hint: "permissions".tr,
+                                              onChanged: onSelectPermission),
                                           APPAnimatedSize(
                                             duration: APPConst.animationDuraion,
                                             isActive: permission != null,
@@ -280,28 +292,31 @@ class __SetupTronMultisigAddressViewState
                                                         WidgetConstant.width8,
                                                         ToolTipView(
                                                             waitDuration: null,
-                                                            tooltipWidget:
-                                                                (c) => Wrap(
-                                                                      alignment:
-                                                                          WrapAlignment
-                                                                              .spaceBetween,
-                                                                      runSpacing:
-                                                                          2.5,
-                                                                      spacing:
-                                                                          2.5,
-                                                                      children: List.generate(
-                                                                          operations!.length,
-                                                                          (index) => Container(
+                                                            tooltipWidget: (c) =>
+                                                                TooltipConstrainsWidget(
+                                                                    child: Wrap(
+                                                                  alignment:
+                                                                      WrapAlignment
+                                                                          .spaceBetween,
+                                                                  runSpacing:
+                                                                      2.5,
+                                                                  spacing: 2.5,
+                                                                  children: List
+                                                                      .generate(
+                                                                          operations!
+                                                                              .length,
+                                                                          (index) =>
+                                                                              Container(
                                                                                 padding: WidgetConstant.padding5,
                                                                                 decoration: BoxDecoration(color: context.colors.surface, borderRadius: WidgetConstant.border8),
                                                                                 width: 120,
                                                                                 child: OneLineTextWidget(TransactionContractType.values[index].name, style: context.textTheme.bodySmall),
                                                                               )),
-                                                                    ),
+                                                                )),
                                                             child: Icon(
                                                                 Icons.help,
                                                                 color: context
-                                                                    .onPrimaryContainer)),
+                                                                    .onPrimaryContainer))
                                                       ]
                                                     ],
                                                   ),
@@ -319,71 +334,49 @@ class __SetupTronMultisigAddressViewState
                                                     (index) {
                                                   final signerEntries =
                                                       permission!.keys.toList();
-                                                  return ContainerWithBorder(
-                                                    onRemove: () {
-                                                      if (signers[signerEntries[
-                                                              index]] !=
-                                                          null) {
-                                                        onAddSigner(
-                                                            null,
-                                                            signerEntries[
-                                                                index]);
-                                                        return;
-                                                      }
-                                                      context
-                                                          .selectOrSwitchAccount<
-                                                                  ITronAddress>(
-                                                              account: widget
-                                                                  .account,
-                                                              showMultiSig:
-                                                                  false)
-                                                          .then(
-                                                        (value) {
-                                                          if (value == null) {
-                                                            return;
-                                                          }
-                                                          onAddSigner(
-                                                              value,
-                                                              signerEntries[
-                                                                  index]);
-                                                        },
-                                                      );
+                                                  final key =
+                                                      signerEntries[index];
+                                                  final signerAccount =
+                                                      signers[key];
+                                                  return CustomizedContainer(
+                                                    onTapStackIcon: () {
+                                                      onAddSigner(key);
                                                     },
-                                                    onRemoveIcon: Checkbox(
-                                                      value: signers[
-                                                              signerEntries[
-                                                                  index]] !=
-                                                          null,
-                                                      onChanged: (value) {},
-                                                    ),
+                                                    onStackWidget: APPCheckBox(
+                                                        backgroundColor: context
+                                                            .primaryContainer,
+                                                        color: context
+                                                            .onPrimaryContainer,
+                                                        value: signerAccount !=
+                                                            null,
+                                                        onChanged: (value) {
+                                                          onAddSigner(key);
+                                                        }),
                                                     child: Column(
                                                       crossAxisAlignment:
                                                           CrossAxisAlignment
                                                               .start,
                                                       children: [
-                                                        Text("address".tr,
-                                                            style: context
-                                                                .onPrimaryTextTheme
-                                                                .labelLarge),
-                                                        Text(
-                                                            signerEntries[index]
-                                                                .address
-                                                                .toAddress(),
-                                                            style: context
-                                                                .onPrimaryTextTheme
-                                                                .bodyMedium),
-                                                        WidgetConstant.height8,
-                                                        Text("weight".tr,
-                                                            style: context
-                                                                .onPrimaryTextTheme
-                                                                .labelLarge),
-                                                        Text(
-                                                            signerEntries[index]
-                                                                .weight
-                                                                .toString(),
-                                                            style: context
-                                                                .onPrimaryTextTheme
-                                                                .bodyMedium)
+                                                        ContainerWithBorder(
+                                                          backgroundColor: context
+                                                              .onPrimaryContainer,
+                                                          child: Text(
+                                                              key.address
+                                                                  .toAddress(),
+                                                              style: context
+                                                                  .primaryTextTheme
+                                                                  .bodyMedium),
+                                                        ),
+                                                        ContainerWithBorder(
+                                                          backgroundColor: context
+                                                              .onPrimaryContainer,
+                                                          child: Text(
+                                                              key.weight
+                                                                  .toString(),
+                                                              style: context
+                                                                  .primaryTextTheme
+                                                                  .bodyMedium),
+                                                        )
                                                       ],
                                                     ),
                                                   );

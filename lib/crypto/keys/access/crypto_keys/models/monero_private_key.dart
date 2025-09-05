@@ -115,6 +115,25 @@ final class MoneroPrivateKeyData extends CryptoPrivateKeyData {
         account: account, coin: coin, keyName: keyName);
   }
 
+  factory MoneroPrivateKeyData._fromSeed({
+    required List<int> seedBytes,
+    required CryptoCoins coin,
+    required String keyName,
+  }) {
+    final moneroAccount = MoneroAccount.fromSeed(seedBytes);
+    return MoneroPrivateKeyData.__(
+      privateKey: moneroAccount.privateSpendKey.toHex(),
+      extendedKey: null,
+      coin: coin,
+      wif: null,
+      keyName: keyName,
+      viewPrivateKey: moneroAccount.privVkey,
+      spendPrivateKey: moneroAccount.privateSpendKey,
+      publicKey: MoneroPublicKeyData._(
+          privateKey: moneroAccount.privateSpendKey, keyName: keyName),
+    );
+  }
+
   @override
   CborTagValue toCbor() {
     return CborTagValue(

@@ -3,13 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_bridge/web/api/chrome/api/core.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/future/wallet/controller/extension/impl/extention_wallet.dart';
 import 'package:on_chain_wallet/future/wallet/controller/wallet/ui_wallet.dart';
 import 'package:on_chain_wallet/future/wallet/web3/controller/web3_request_controller.dart';
 import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
-import 'package:on_chain_wallet/wallet/models/setting/models/lock_time.dart';
 import 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 import 'package:on_chain_wallet/crypto/impl/worker_impl.dart';
 import 'io.dart';
@@ -27,26 +24,26 @@ class ExtentionWallet extends UIWallet
   ExtentionWallet({required super.navigatorKey, required super.storageVersion});
   final _lock = SynchronizedLock();
 
-  @override
-  Future<MethodResult<WalletLockTime>> login(String password) async {
-    final bool isReadOnly = this.isReadOnly || isLock;
-    final result = await super.login(password);
-    if (isReadOnly && isUnlock) {
-      await _lock.synchronized(() async {
-        await saveLoginHistory(password);
-      });
-    }
-    return result;
-  }
+  // @override
+  // Future<MethodResult<WalletLockTime>> login_(String password) async {
+  // final bool isReadOnly = this.isReadOnly || isLock;
+  // final result = await super.login_(password);
+  // if (isReadOnly && isUnlock) {
+  //   await _lock.synchronized(() async {
+  //     await saveLoginHistory(password);
+  //   });
+  // }
+  //   return result;
+  // }
 
   @override
-  Future<MethodResult<List<CryptoKeyData>>> accsess(
-      WalletAccsessType accsessType, String password,
-      {ChainAccount? account, String? keyId}) async {
+  Future<MethodResult<RESPONSE>>
+      login_<RESPONSE extends WalletCredentialResponse>(
+          WalletCredentialRequest<RESPONSE> request) async {
+    final password = request.password;
     final bool isReadOnly = this.isReadOnly || isLock;
-    final result = await super
-        .accsess(accsessType, password, account: account, keyId: keyId);
-    if (isReadOnly && isUnlock) {
+    final result = await super.login_(request);
+    if (isReadOnly && isUnlock && password != null) {
       await _lock.synchronized(() async {
         await saveLoginHistory(password);
       });

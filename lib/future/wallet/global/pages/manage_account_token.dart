@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/token/network/token.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 
@@ -41,11 +41,13 @@ class _ManageAccountToken extends StatefulWidget {
 }
 
 class __ManageAccountTokenState extends State<_ManageAccountToken>
-    with SafeState<_ManageAccountToken>, ProgressMixin {
+    with SafeState<_ManageAccountToken> {
   late WalletProvider wallet;
   StreamSubscription<List<BaseNetworkToken>>? listener;
   ChainAccount get address => widget.address;
   List<BaseNetworkToken> tokens = [];
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
 
   void onNewToken(List<BaseNetworkToken> token) {
     tokens.addAll(token);
@@ -106,6 +108,7 @@ class __ManageAccountTokenState extends State<_ManageAccountToken>
   @override
   void safeDispose() {
     super.safeDispose();
+    progressKey.dispose();
     listener?.cancel();
     listener = null;
     for (final i in tokens) {
@@ -117,12 +120,11 @@ class __ManageAccountTokenState extends State<_ManageAccountToken>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("manage_tokens".tr)),
-      body: PageProgress(
-        key: progressKey,
-        initialStatus: StreamWidgetStatus.progress,
+      body: StreamPageProgress(
+        controller: progressKey,
         initialWidget:
             ProgressWithTextView(text: 'fetching_account_token_please_wait'.tr),
-        child: (context) => ChainStreamBuilder(
+        builder: (context) => ChainStreamBuilder(
           account: widget.account,
           allowNotify: [DefaultChainNotify.token],
           builder: (context, value, _) => CustomScrollView(

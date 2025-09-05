@@ -2,14 +2,6 @@ import 'package:blockchain_utils/utils/utils.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 
 class StrUtils {
-  static bool isStrongPassword(String? password) {
-    if (password == null) return false;
-    // Use a regular expression to check for the password requirements
-    const pattern = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$';
-    final regExp = RegExp(pattern);
-    return regExp.hasMatch(password);
-  }
-
   static bool isHtml(String error) {
     return RegExp(
             r'<(html|head|body|title|h1|h2|h3|h4|h5|h6|p|div|span|a|form|table|img)[^>]*>',
@@ -157,39 +149,6 @@ class StrUtils {
     return result;
   }
 
-  // static String to3Digits(String number, {String separator = ","}) {
-  //   String integerPart = '';
-  //   String fractionalPart = '';
-  //   bool negative = false;
-
-  //   if (number.contains('.')) {
-  //     final List<String> parts = number.split('.');
-  //     integerPart = parts[0];
-  //     fractionalPart = parts[1];
-  //   } else {
-  //     integerPart = number;
-  //   }
-
-  //   if (integerPart.startsWith("-")) {
-  //     negative = true;
-  //     integerPart = integerPart.substring(1);
-  //   }
-
-  //   final List<String> groups = [];
-  //   int i = integerPart.length;
-  //   while (i > 0) {
-  //     final String group = integerPart.substring(IntUtils.max(0, i - 3), i);
-  //     groups.insert(0, group);
-
-  //     i -= 3;
-  //   }
-
-  //   final String result = groups.join(separator) +
-  //       (fractionalPart.isEmpty ? '' : '.$fractionalPart');
-  //   if (negative) return "-$result";
-  //   return result;
-  // }
-
   static String? validateUri(String? url,
       {List<String> schame = const ['http', 'https']}) {
     if (url == null) return null;
@@ -198,17 +157,6 @@ class StrUtils {
     if (uri.host.isEmpty) return null;
     if (!schame.contains(uri.scheme.toLowerCase())) return null;
     return uri.normalizePath().toString();
-  }
-
-  static String? validateIpfsCIDV1(String? cid,
-      {List<String> schame = const ['http', 'https']}) {
-    if (cid == null) return null;
-    final RegExp regex = RegExp(
-        r'^(Qm[1-9A-HJ-NP-Za-km-z]{44,}|b[A-Za-z2-7]{58,}|B[A-Z2-7]{58,}|z[1-9A-HJ-NP-Za-km-z]{48,}|F[0-9A-F]{50,})$');
-    if (regex.hasMatch(cid)) {
-      return cid;
-    }
-    return null;
   }
 
   static int findFirstMissingNumber(List<int> numbers, {int start = 0}) {
@@ -261,10 +209,6 @@ class StrUtils {
         () => schames.firstWhere((element) => lower.startsWith(element)));
     if (schame == null) return uri;
     return uri.substring(schame.length - 1);
-  }
-
-  static String toIpfsV1Uri(String cid) {
-    return "https://ipfs.io/ipfs/$cid";
   }
 
   static String substring(String value, {int length = 5, String replace = ''}) {

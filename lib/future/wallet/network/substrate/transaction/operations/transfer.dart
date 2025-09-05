@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/utils/price/utils.dart';
 import 'package:on_chain_wallet/crypto/utils/substrate/substrate.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
@@ -9,9 +9,7 @@ import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/cont
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/substrate/transaction/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/substrate/client/substrate.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/substrate.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 
 class SubstrateTransactionTransferOperation
@@ -269,7 +267,7 @@ class SubstrateTransactionTransferOperation
       {bool updateAccount = true}) async {
     await super.initForm(client, updateAccount: updateAccount);
     if (!client.metadata.supportNativeTransfer) {
-      throw WalletException("substrate_disable_transfer_option_desc");
+      throw AppException("substrate_disable_transfer_option_desc");
     }
     transferMethod.setValue(client.metadata.transferTypes.first);
     final existentialDeposit = metadata.existentialDeposit;

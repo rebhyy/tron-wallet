@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
-import 'package:on_chain_wallet/app/core.dart'
-    show APPConst, MethodUtils, StateConst;
+import 'package:on_chain_wallet/app/core.dart' show APPConst, MethodUtils;
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/crypto/keys/keys.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
 
 class AccountPublicKeyView extends StatelessWidget {
@@ -18,10 +16,10 @@ class AccountPublicKeyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ChainAccount account = context.getArgruments();
-    return PasswordCheckerView(
-        accsess: WalletAccsessType.unlock,
-        onAccsess: (credential, password, network) =>
-            _BipAccountPublicKey(account: account, network: network),
+    return AccessWalletView<WalletCredentialResponseLogin,
+            WalletCredentialLogin>(
+        request: WalletCredentialLogin.instance,
+        onAccsess: (credential) => _BipAccountPublicKey(account: account),
         title: "public_key".tr,
         subtitle: PageTitleSubtitle(
             title: "unlock_wallet".tr, body: Text("unlock_access_desc".tr)));
@@ -29,23 +27,24 @@ class AccountPublicKeyView extends StatelessWidget {
 }
 
 class _BipAccountPublicKey extends StatefulWidget {
-  const _BipAccountPublicKey({required this.account, required this.network});
+  const _BipAccountPublicKey({required this.account});
   final ChainAccount account;
-  final WalletNetwork network;
   @override
   State<_BipAccountPublicKey> createState() => __BipAccountPublicKeyState();
 }
 
 class __BipAccountPublicKeyState extends State<_BipAccountPublicKey>
     with SafeState<_BipAccountPublicKey> {
-  final List<PublicKeysView> pubKeys = [];
+  final List<PublicKeyDerivationResult> pubKeys = [];
   bool get hasMultipleKey => pubKeys.length > 1;
-  late PublicKeysView publicKey;
+  late PublicKeyDerivationResult publicKey;
   String? keyInNetwork;
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   ICardanoAddress? adaLegacyAddress;
+  late WalletNetwork network;
   String comperessedToNetworkFormat(String key) {
-    switch (widget.network.type) {
+    switch (network.type) {
       case NetworkType.xrpl:
         return MethodUtils.nullOnException(
                 () => RippleUtils.toRipplePublicKey(key)) ??
@@ -55,13 +54,21 @@ class __BipAccountPublicKeyState extends State<_BipAccountPublicKey>
     }
   }
 
-  void initPubKey() async {
+  Future<void> initPubKey() async {
     adaLegacyAddress = isAdaLegacy();
-    final wallet = context.watch<WalletProvider>(StateConst.main).wallet;
+    final wallet = context.wallet.wallet;
+    network = wallet
+        .getChains()
+        .firstWhere((e) => e.network.value == widget.account.network)
+        .network;
     final result = await wallet.getAccountPubKys(account: widget.account);
     if (result.hasResult) {
-      pubKeys.addAll(result.result.map((e) => e.toViewKey
-          .copyWith(comprossed: comperessedToNetworkFormat(e.comprossed))));
+      pubKeys.addAll(result.result.map((e) => PublicKeyDerivationResult(
+          key: e.key,
+          index: e.index,
+          walletName: e.walletName,
+          viewKey: e.viewKey.copyWith(
+              comprossed: comperessedToNetworkFormat(e.viewKey.comprossed)))));
       progressKey.success();
       publicKey = pubKeys.first;
     } else {
@@ -69,8 +76,7 @@ class __BipAccountPublicKeyState extends State<_BipAccountPublicKey>
         progressKey.errorText("unavailable_multi_sig_public_key".tr,
             backToIdle: false);
       } else {
-        progressKey.errorText(result.error?.tr ?? "cannot_export_public_key".tr,
-            backToIdle: false);
+        progressKey.errorText(result.localizationError, backToIdle: false);
       }
     }
   }
@@ -85,7 +91,7 @@ class __BipAccountPublicKeyState extends State<_BipAccountPublicKey>
     return null;
   }
 
-  void onChangeKey(PublicKeysView? changeKey) {
+  void onChangeKey(PublicKeyDerivationResult? changeKey) {
     if (publicKey == changeKey || changeKey == null) return;
     publicKey = changeKey;
     updateState();
@@ -98,14 +104,18 @@ class __BipAccountPublicKeyState extends State<_BipAccountPublicKey>
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      initialStatus: StreamWidgetStatus.progress,
-      backToIdle: APPConst.oneSecoundDuration,
+    return StreamPageProgress(
+      controller: progressKey,
       initialWidget:
           ProgressWithTextView(text: "retrieve_account_informations".tr),
-      child: (c) => CustomScrollView(
+      builder: (c) => CustomScrollView(
         shrinkWrap: true,
         slivers: [
           WidgetConstant.sliverPaddingVertial20,
@@ -123,19 +133,20 @@ class __BipAccountPublicKeyState extends State<_BipAccountPublicKey>
                     Text("switch_between_keys".tr),
                     WidgetConstant.height8,
                     AppDropDownBottom(
-                      onChanged: onChangeKey,
-                      items: {for (final i in pubKeys) i: Text(i.keyName.tr)},
-                      hint: "key_name".tr,
-                      value: publicKey,
-                    ),
+                        onChanged: onChangeKey,
+                        items: {
+                          for (final i in pubKeys) i: Text(i.viewKey.keyName.tr)
+                        },
+                        hint: "key_name".tr,
+                        value: publicKey),
                     WidgetConstant.height20
                   ],
                   _HDPathDetails(byronLegacy: adaLegacyAddress),
                   AnimatedSwitcher(
                     duration: APPConst.animationDuraion,
                     child: PublicKeysDataView(
-                        key: ValueKey(publicKey), pubKey: publicKey),
-                  )
+                        key: ValueKey(publicKey), publicKey: publicKey),
+                  ),
                 ],
               ),
             ),
@@ -159,18 +170,6 @@ class _HDPathDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("hd_path".tr, style: context.textTheme.titleMedium),
-        WidgetConstant.height8,
-        ContainerWithBorder(
-          onRemove: () {},
-          onRemoveIcon: CopyTextIcon(
-            isSensitive: false,
-            dataToCopy: addressInfo.hdPath!,
-            color: context.onPrimaryContainer,
-          ),
-          child: Text(addressInfo.hdPath!.or("non_derivation".tr)),
-        ),
-        WidgetConstant.height20,
         Text("hd_path_key".tr, style: context.textTheme.titleMedium),
         WidgetConstant.height8,
         ContainerWithBorder(
@@ -189,22 +188,36 @@ class _HDPathDetails extends StatelessWidget {
 }
 
 class PublicKeysDataView extends StatelessWidget {
-  final PublicKeysView pubKey;
+  final PublicKeyDerivationResult publicKey;
   final Color? color;
   final Color? reverse;
   const PublicKeysDataView(
-      {super.key, required this.pubKey, this.color, this.reverse});
-
+      {super.key, required this.publicKey, this.color, this.reverse});
+  PublicKeysView get viewKey => publicKey.viewKey;
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (pubKey.extendKey != null) ...[
+        Text("derivation_path".tr, style: context.textTheme.titleMedium),
+        WidgetConstant.height8,
+        ContainerWithBorder(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          ConditionalWidget(
+            enable: publicKey.walletName != null,
+            onActive: (context) => Text(publicKey.walletName!),
+          ),
+          AddressDrivationInfo(publicKey.index,
+              color: context.onPrimaryContainer,
+              style: context.onPrimaryTextTheme.bodySmall)
+        ])),
+        WidgetConstant.height20,
+        if (viewKey.extendKey != null) ...[
           Text("extended_public_key".tr, style: context.textTheme.titleMedium),
           WidgetConstant.height8,
           SecureContentView(
-            content: pubKey.extendKey!,
+            content: viewKey.extendKey!,
             isSensitive: false,
           ),
           WidgetConstant.height20,
@@ -212,22 +225,19 @@ class PublicKeysDataView extends StatelessWidget {
         Text("comperessed_public_key".tr, style: context.textTheme.titleMedium),
         WidgetConstant.height8,
         SecureContentView(
-          content: pubKey.comprossed,
+          content: viewKey.comprossed,
           isSensitive: false,
         ),
-        if (pubKey.uncomprossed != null) ...[
+        if (viewKey.uncomprossed != null) ...[
           WidgetConstant.height20,
           Text("uncomperessed_public_key".tr,
               style: context.textTheme.titleMedium),
           WidgetConstant.height8,
-          SecureContentView(
-            content: pubKey.uncomprossed!,
-            isSensitive: false,
-          ),
+          SecureContentView(content: viewKey.uncomprossed!, isSensitive: false),
         ],
         ConditionalWidget(
-            onActive: (context) => _MoneroKeysView(pubKey: pubKey.cast()),
-            enable: pubKey.keyType == CryptoPublicKeyDataType.monero)
+            onActive: (context) => _MoneroKeysView(pubKey: viewKey.cast()),
+            enable: viewKey.keyType == CryptoPublicKeyDataType.monero)
       ],
     );
   }
@@ -274,17 +284,10 @@ class _AddressInfo extends StatelessWidget {
         WidgetConstant.height8,
         ContainerWithBorder(
           child: CopyableTextWidget(
-            text: account.address.toAddress,
-            widget: AddressDetailsView(
-                address: account, color: context.onPrimaryContainer),
-          ),
+              text: account.address.toAddress,
+              widget: AddressDetailsView(
+                  address: account, color: context.onPrimaryContainer)),
         ),
-        WidgetConstant.height20,
-        Text("derivation_path".tr, style: context.textTheme.titleMedium),
-        WidgetConstant.height8,
-        ContainerWithBorder(
-            child: AddressDrivationInfo(account.keyIndex,
-                color: context.onPrimaryContainer)),
         switch (account.runtimeType) {
           const (IMoneroAddress) => _MoneroAccountInfo(account.cast()),
           const (IXRPAddress) => _XRPAddressInfo(account.cast()),

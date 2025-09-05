@@ -34,9 +34,8 @@ final class WalletRequestReadPublicKeys
   WalletRequestMethod get method => WalletRequestMethod.readPublicKeys;
 
   @override
-  Future<MessageArgsOneBytes> getResult(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final keys = wallet.readPublicKeys(request.indexes);
+  Future<MessageArgsOneBytes> getResult(WalletInMemory wallet) async {
+    final keys = wallet.masterKey.readPublicKeys(request.indexes);
     return MessageArgsOneBytes(keyOne: keys.toCbor().encode());
   }
 
@@ -49,9 +48,8 @@ final class WalletRequestReadPublicKeys
   }
 
   @override
-  Future<List<CryptoPublicKeyData>> result(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final keys = wallet.readPublicKeys(request.indexes);
+  Future<List<CryptoPublicKeyData>> result(WalletInMemory wallet) async {
+    final keys = wallet.masterKey.readPublicKeys(request.indexes);
     return keys.keys;
   }
 }

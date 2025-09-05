@@ -350,11 +350,11 @@ class CosmosAddNewChainFrom
     final bech32 = await MethodUtils.call(() => service.networkBech32());
     if (bech32.hasError) {
       if (hrp.isEmpty) {
-        throw WalletException("unable_to_retrieve_hrp");
+        throw AppException("unable_to_retrieve_hrp");
       }
     } else {
       if (hrp.isNotEmpty && hrp != bech32.result) {
-        throw WalletException("different_network_hrp");
+        throw AppException("different_network_hrp");
       }
       hrp = bech32.result;
     }

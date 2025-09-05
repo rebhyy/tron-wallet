@@ -23,6 +23,9 @@ class AppCryptoNative {
       } else if (Platform.isAndroid) {
         return AppCryptoNative(
             library: DynamicLibrary.open(AppCryptoConst.cryptoLibNameAndroid));
+      } else if (Platform.isLinux) {
+        return AppCryptoNative(
+            library: DynamicLibrary.open(AppCryptoConst.cryptoLibNameAndroid));
       }
       return null;
     } catch (e, s) {

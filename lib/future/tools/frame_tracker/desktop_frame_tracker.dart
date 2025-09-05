@@ -1,8 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:on_chain_bridge/models/device/models/platform.dart';
-import 'package:on_chain_bridge/models/events/models/windows_listener.dart';
-import 'package:on_chain_bridge/models/size/models/rect.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
@@ -40,7 +37,8 @@ mixin DesktopFrameTracker on StateController {
   }
 
   void _start() {
-    if (AppNativeMethods.platform.platform == AppPlatform.windows) {
+    final platform = AppNativeMethods.platform.platform;
+    if (platform == AppPlatform.windows || platform == AppPlatform.linux) {
       _tracker = _WindowsFrameTracker(_detectFrame);
       PlatformInterface.instance.desktop.addListener(_tracker);
     }

@@ -9,7 +9,7 @@ import 'package:on_chain_wallet/future/wallet/network/cosmos/transaction/widgets
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 
 class CosmosTransactionTransferWidget extends StatelessWidget {
@@ -30,15 +30,13 @@ class CosmosTransactionTransferWidget extends StatelessWidget {
         builder: (context, field, value) => APPStreamBuilder(
           value: value.notifier,
           builder: (context, _) {
-            return ContainerWithBorder(
+            return CustomizedContainer(
               iconAlginment: CrossAxisAlignment.start,
-              onRemoveWidget: IconButton(
-                  onPressed: () => form.onRemoveRecipients(value),
-                  icon: Icon(Icons.remove_circle,
-                      color: context.colors.onPrimaryContainer)),
               validate: value.isReady,
               enableTap: false,
-              onRemove: () => form.onRemoveRecipients(value),
+              onStackIcon: Icons.remove_circle,
+              onTapStackIcon: () => form.onRemoveRecipients(value),
+              reverseColor: context.colors.onPrimaryContainer,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

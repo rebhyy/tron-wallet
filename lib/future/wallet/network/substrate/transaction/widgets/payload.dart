@@ -51,7 +51,6 @@ class SubstrateShowPayloadInfoWidget extends StatelessWidget {
             onActive: (context) =>
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text("payload".tr, style: context.textTheme.titleMedium),
-                  Text("serialized_data_hash".tr),
                   WidgetConstant.height8,
                   ContainerWithBorder(
                       child: LargeTextContainer(

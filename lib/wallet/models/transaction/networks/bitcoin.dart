@@ -2,7 +2,7 @@ import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 
@@ -83,8 +83,7 @@ abstract class BitcoinWalletTransactionOutput extends WalletTransactionOutput {
       WalletTransactionOutputType.operation =>
         BitcoinWalletTransactionScriptOutput.deserialize(network,
             bytes: bytes, cborHex: cborHex, object: object),
-      _ => throw WalletExceptionConst.invalidData(
-          messsage: 'invalid bitcoin tx output')
+      _ => throw WalletExceptionConst.invalidWalletTransactionData
     };
   }
 }

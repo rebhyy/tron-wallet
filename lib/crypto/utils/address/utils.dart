@@ -4,7 +4,7 @@ import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/models/network/network.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 import 'package:stellar_dart/stellar_dart.dart';

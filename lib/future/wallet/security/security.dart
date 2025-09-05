@@ -2,7 +2,6 @@ export 'pages/change_password.dart';
 export 'pages/erase_wallet.dart';
 export 'pages/export_seed.dart';
 export 'pages/import_account.dart';
-export 'pages/password_checker.dart';
 export 'pages/secure_backup.dart';
 export 'pages/wallet_settings.dart';
 export 'pages/export_private_key.dart';

@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
@@ -78,20 +78,7 @@ class _VerifyMnemonicViewState extends State<VerifyMnemonicView>
     updateState(() {});
   }
 
-  void _debugConfirm() {
-    // return;
-    if (kDebugMode) {
-      for (int i = 0; i < inSelectMnemonic.length; i++) {
-        inSelectMnemonic[i] = SelectedMnemonic.select(
-            index: 0,
-            readIndex: inSelectMnemonic[i].readIndex,
-            word: widget.mnemonic.elementAt(inSelectMnemonic[i].readIndex - 1));
-      }
-      isEqual();
-      updateState(() {});
-    }
-  }
-
+  /// boy hour plate liquid charge champion electric eye grit lizard anxiety space
   void validate() {
     final mnemonic = widget.mnemonic.clone();
     final equal = inSelectMnemonic.every((e) {
@@ -111,13 +98,43 @@ class _VerifyMnemonicViewState extends State<VerifyMnemonicView>
     }
     inSelectMnemonic = List<SelectedMnemonic>.generate(
         selected.length, (i) => SelectedMnemonic.notSelected(selected[i]));
-    _debugConfirm();
+  }
+
+  void _autoFill() {
+    for (int i = 0; i < inSelectMnemonic.length; i++) {
+      inSelectMnemonic[i] = SelectedMnemonic.select(
+          index: 0,
+          readIndex: inSelectMnemonic[i].readIndex,
+          word: widget.mnemonic.elementAt(inSelectMnemonic[i].readIndex - 1));
+    }
+    isEqual();
+    updateState(() {});
+  }
+
+  Timer? timer;
+
+  void onLongTabCancel(LongPressEndDetails _) {
+    timer?.cancel();
+    timer = null;
+  }
+
+  void onLongTab(LongPressStartDetails _) {
+    timer = Timer(const Duration(seconds: 3), () {
+      _autoFill();
+    });
   }
 
   @override
   void onInitOnce() {
     super.onInitOnce();
     _init();
+  }
+
+  @override
+  void safeDispose() {
+    super.safeDispose();
+    timer?.cancel();
+    timer = null;
   }
 
   @override
@@ -134,8 +151,10 @@ class _VerifyMnemonicViewState extends State<VerifyMnemonicView>
             alignment: Alignment.center,
             child: APPAnimated(
                 isActive: equal,
-                onDeactive: (context) =>
-                    _MnemonicView(mnemonic: inSelectMnemonic),
+                onDeactive: (context) => GestureDetector(
+                    onLongPressStart: onLongTab,
+                    onLongPressEnd: onLongTabCancel,
+                    child: _MnemonicView(mnemonic: inSelectMnemonic)),
                 onActive: (context) =>
                     MnemonicView(mnemonic: widget.mnemonic))),
         WidgetConstant.height20,

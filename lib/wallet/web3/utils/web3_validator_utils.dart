@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/types/message.dart';
 import 'package:on_chain_wallet/wallet/web3/core/methods/methods.dart';

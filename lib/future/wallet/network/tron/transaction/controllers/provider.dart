@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/crypto/utils/solidity/solidity.dart';
 import 'package:on_chain_wallet/crypto/utils/tron/tron.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/tron/client/tron.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/networks/tron/models/account_delegated_resource_info.dart';
 import 'package:on_chain_wallet/wallet/models/networks/tron/models/delegated_resouce_balance.dart';
 import 'package:on_chain_wallet/wallet/models/networks/tron/models/tron_account_info.dart';

@@ -109,7 +109,10 @@ extension QuickContextAccsess on BuildContext {
   Future<T?> toPage<T>(Widget page, {dynamic argruments}) async {
     if (mounted) {
       final push = await Navigator.push(
-          this, MaterialPageRoute(builder: (context) => page));
+          this,
+          MaterialPageRoute(
+              builder: (context) => page,
+              settings: RouteSettings(arguments: argruments)));
       return (push as T?);
     }
     return null;
@@ -218,9 +221,16 @@ extension QuickContextAccsess on BuildContext {
 
   Future<T?> openDialogPage<T>(
     String label, {
+    /// instead custom scroll widget
     WidgetContext? child,
     List<Widget> Function(BuildContext)? content,
     WidgetContext? fullWidget,
+
+    /// under Custom scroll widget
+    WidgetContext? sliver,
+
+    /// under sliver widget
+    WidgetContext? widget,
     String? routeName,
     double? maxWidth,
   }) async {
@@ -233,9 +243,11 @@ extension QuickContextAccsess on BuildContext {
         return fullWidget?.call(context) ??
             DialogView(
               title: label,
+              sliver: sliver?.call(context),
+              widget: widget?.call(context),
               content: content?.call(context) ?? const [],
               maxWidth: maxWidth,
-              child: child?.call(context) ?? WidgetConstant.sizedBox,
+              child: child?.call(context),
             );
       },
     );

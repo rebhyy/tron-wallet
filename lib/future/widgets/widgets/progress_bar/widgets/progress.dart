@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 
 export 'page_progress.dart';
@@ -23,7 +22,7 @@ extension QuickAccsessStreamButtonStateState on GlobalKey<StreamWidgetState> {
 
   void fromMethodResult(MethodResult result) {
     if (result.hasError) {
-      error(message: result.error!.tr);
+      error(message: result.localizationError);
     } else {
       success();
     }

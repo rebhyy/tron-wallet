@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
@@ -15,7 +13,6 @@ abstract class PageProgressBaseState<T extends StatefulWidget> extends State<T>
   Duration? get backToIdle;
 
   PageProgressStatus get status => _status;
-  Widget? _child;
 
   void _listen(PageProgressStatus status) async {
     if (backToIdle == null) return;
@@ -42,82 +39,12 @@ abstract class PageProgressBaseState<T extends StatefulWidget> extends State<T>
   void dispose() {
     super.dispose();
     _statusWidget = null;
-    _child = null;
   }
 
   @override
   void didUpdateWidget(covariant T oldWidget) {
     super.didUpdateWidget(oldWidget);
   }
-}
-
-class PageProgress extends StatefulWidget {
-  const PageProgress(
-      {super.key,
-      required this.child,
-      this.initialStatus = PageProgressStatus.idle,
-      this.backToIdle,
-      this.initialWidget});
-  final PageProgressStatus initialStatus;
-  final FuncWidgetContext child;
-  final Duration? backToIdle;
-  final Widget? initialWidget;
-
-  @override
-  State<PageProgress> createState() => PageProgressState();
-}
-
-class PageProgressState extends PageProgressBaseState<PageProgress> {
-  @override
-  late PageProgressStatus _status = widget.initialStatus;
-  @override
-  late Widget? _statusWidget = widget.initialWidget;
-  @override
-  Duration? get backToIdle => widget.backToIdle;
-
-  @override
-  void dispose() {
-    super.dispose();
-    _statusWidget = null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return APPAnimatedSwitcher(
-      duration: APPConst.animationDuraion,
-      enable: _status,
-      widgets: {
-        PageProgressStatus.idle: (c) => FutureBuilder(
-              future: MethodUtils.after(() async => widget.child(c)),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                      child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      WidgetConstant.errorIconLarge,
-                      if (kDebugMode) Text(snapshot.error?.toString() ?? "")
-                    ],
-                  ));
-                }
-                if (snapshot.hasData) {
-                  _child = snapshot.data!;
-                }
-                return _child ?? WidgetConstant.sizedBox;
-              },
-            ),
-        PageProgressStatus.success: (c) => PageProgressChildWidget(
-            _statusWidget ?? WidgetConstant.checkCircleLarge),
-        PageProgressStatus.error: (c) => PageProgressChildWidget(
-            _statusWidget ?? WidgetConstant.errorIconLarge),
-        PageProgressStatus.progress: (c) => PageProgressChildWidget(
-            _statusWidget ?? const CircularProgressIndicator()),
-      },
-    );
-  }
-
-  @override
-  FuncWidgetContext get child => widget.child;
 }
 
 class PageProgressChildWidget extends StatelessWidget {

@@ -11,8 +11,7 @@ import 'package:on_chain_wallet/future/wallet/network/ton/web3/pages/send_transa
 import 'package:on_chain_wallet/future/wallet/network/ton/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/ton/client/ton.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ton/params/models/transaction.dart';
 import 'package:ton_dart/ton_dart.dart';
 

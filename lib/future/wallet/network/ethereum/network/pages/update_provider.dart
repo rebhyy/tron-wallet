@@ -31,7 +31,6 @@ class _UpdateEthereumProvider extends StatefulWidget {
 class _UpdateSolanaProviderState extends State<_UpdateEthereumProvider>
     with
         SafeState<_UpdateEthereumProvider>,
-        ProgressMixin<_UpdateEthereumProvider>,
         UpdateNetworkProviderState<
             _UpdateEthereumProvider,
             EthereumAPIProvider,
@@ -73,7 +72,7 @@ class _UpdateSolanaProviderState extends State<_UpdateEthereumProvider>
         provider: provider, network: network.toNetwork());
     final init = await client.checkNetworkChainId();
     if (!init) {
-      throw WalletException("network_incorrect_chain_id");
+      throw AppException("network_incorrect_chain_id");
     }
     return provider;
   }

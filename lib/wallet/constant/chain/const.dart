@@ -5,7 +5,7 @@ import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:cosmos_sdk/cosmos_sdk.dart';
 import 'package:monero_dart/monero_dart.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/constant/constant.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
@@ -1270,11 +1270,11 @@ class ChainConst {
 
   static WalletNetwork updateNetwork({int? networkId, WalletNetwork? network}) {
     if (networkId == null || network != null && networkId != network.value) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw WalletExceptionConst.networkDoesNotExist;
     }
     if (!defaultCoins.containsKey(networkId)) {
       if (network == null) {
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw WalletExceptionConst.networkDoesNotExist;
       }
       return network;
     }
@@ -1323,7 +1323,7 @@ class ChainConst {
       case NetworkType.monero:
       case NetworkType.substrate:
         if (!StringUtils.isHexBytes(part)) {
-          throw WalletExceptionConst.invalidHexBytes;
+          throw AppCryptoExceptionConst.invalidHexBytes;
         }
         part = StringUtils.strip0x(identifier.toLowerCase()).substring(0, 32);
         break;

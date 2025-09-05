@@ -9,8 +9,10 @@ final class CryptoPrivateKeysResponse with CborSerializable {
   }
   factory CryptoPrivateKeysResponse.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CryptoKeyConst.accessPrivateKeysRequest);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CryptoKeyConst.accessPrivateKeysRequest);
     final List<CryptoPrivateKeyData> indexes = cbor.value
         .map((e) => CryptoPrivateKeyData.fromCborBytesOrObject(obj: e))
         .toList();
@@ -34,8 +36,10 @@ final class CryptoPublicKeysResponse with CborSerializable {
   }
   factory CryptoPublicKeysResponse.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CryptoKeyConst.accessPublicKeysRequest);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CryptoKeyConst.accessPublicKeysRequest);
     final List<CryptoPublicKeyData> indexes = cbor.value
         .map((e) => CryptoPublicKeyData.fromCborBytesOrObject(obj: e))
         .toList();

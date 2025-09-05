@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/core/provider.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/aptos.dart';
@@ -14,7 +14,7 @@ import 'package:on_chain_wallet/wallet/models/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/aptos.dart';
 import 'package:on_chain/aptos/aptos.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class AptosClient extends NetworkClient<AptosWalletTransaction,
     AptosAPIProvider, AptosNetworkToken, AptosAddress> {

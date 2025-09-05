@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/cosmos.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'network_types.dart';
 
@@ -33,7 +33,7 @@ class CosmosFeeToken with CborSerializable {
       BigRational? highGasPrice}) {
     final e = token.decimal;
     if (e > CosmosConst.maxTokenExponent) {
-      throw WalletException("invalid_token_exponent");
+      throw WalletExceptionConst.invalidTokenInformation;
     }
     final networkDecimals = BigRational(BigInt.from(10).pow(e));
     return CosmosFeeToken._(
@@ -53,8 +53,8 @@ class CosmosFeeToken with CborSerializable {
   }
   factory CosmosFeeToken.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.cosmosNativeToken);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.cosmosNativeToken);
     final token = Token.deserialize(obj: values.elementAsCborTag(0));
     return CosmosFeeToken._(
         token: token,

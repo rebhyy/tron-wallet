@@ -164,6 +164,7 @@ class _WorkerConnection {
 
   static Future<web.Worker> _buildExtentionWorker() async {
     final url = PlatformUtils.assetPath(_extentionJs);
+    Logg.log("data $url");
     return web.Worker(url, WorkerOptions()..type = "module");
   }
 
@@ -204,28 +205,35 @@ class _WorkerConnection {
     final Completer<_WorkerConnection> completer = Completer();
     String? moudle;
     final ByteBuffer? wasm;
+    Logg.log("come herwe!");
     try {
       wasm = await _loadWasm(mode: mode);
       moudle = await _loadModuleScript(mode: mode);
     } catch (e) {
       throw FailedIsolateInitialization.failed;
     }
+    Logg.log("wasm $wasm");
+    Logg.log("module ${moudle?.length}");
+    final k = X25519Keypair.generate();
     final worker = await _buildWorker();
+    Logg.log("worker done!");
     void onEvent(MessageEvent event) {
+      Logg.log("got event ?!");
       final String key = event.data.dartify() as String;
-      final List<int> keyBytes = BytesUtils.fromHexString(key);
+      final List<int> sharedKey =
+          X25519.scalarMult(k.privateKey, BytesUtils.fromHexString(key));
       switch (mode) {
         case WorkerMode.sync1:
         case WorkerMode.sync2:
           completer.complete(_WorkerConnection(
-              key: keyBytes,
+              key: sharedKey,
               worker: worker,
               onStreamRespone: onStreamRespone,
               mode: mode));
           break;
         case WorkerMode.main:
           completer.complete(_SyncWorkerConnection(
-              key: keyBytes,
+              key: sharedKey,
               worker: worker,
               onStreamRespone: onStreamRespone,
               mode: mode));
@@ -237,6 +245,9 @@ class _WorkerConnection {
 
     onWorkerErrorListener = (MessageEvent event) {
       onDone(event, mode);
+      if (!completer.isCompleted) {
+        completer.completeError(FailedIsolateInitialization.failed);
+      }
     }.toJS;
     worker.addEventListener("error", onWorkerErrorListener);
     workerListener = onEvent.toJS;
@@ -245,9 +256,11 @@ class _WorkerConnection {
       "module": moudle,
       "wasm": wasm,
       "isWasm": !isJs,
-      "isStream": mode != WorkerMode.main
+      "isStream": mode != WorkerMode.main,
+      "key": k.publicKeyHex()
     }.jsify()!);
-    final result = await completer.future.timeout(const Duration(seconds: 20));
+    Logg.log("call");
+    final result = await completer.future.timeout(const Duration(minutes: 2));
     worker.removeEventListener("message", workerListener);
     worker.addEventListener("message", result.onResponse.toJS);
     return result;
@@ -271,10 +284,10 @@ class _WorkerConnection {
       _sentRequest(request: args, requestId: next, encryptedPart: encryptPart);
       final result = await _requests[next]!.getResult(timeout: timeout);
       if (result.type == ArgsResponseType.exception) {
-        throw WalletException((result as MessageArgsException).message);
+        throw AppCryptoException((result as MessageArgsException).message);
       }
       if (result is! T) {
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.internalError("getStreamResult");
       }
       return result;
     } finally {
@@ -291,10 +304,10 @@ class _WorkerConnection {
       _sentRequest(request: args, requestId: next, encryptedPart: encryptPart);
       final result = await _requests[next]!.getResult(timeout: timeout);
       if (result.type == ArgsResponseType.exception) {
-        throw WalletException((result as MessageArgsException).message);
+        throw AppCryptoException((result as MessageArgsException).message);
       }
       if (result is! T) {
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.internalError("getResult");
       }
       return result;
     } finally {

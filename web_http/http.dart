@@ -17,7 +17,7 @@ void _onMessage(JSAny message) {
   service.sentResult(message);
 }
 
-String _onActivation() {
+String _onActivation(String? _) {
   try {
     return "";
   } finally {

@@ -20,8 +20,8 @@ class CustomAPIProvider extends APIProvider {
 
   factory CustomAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.customApiProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.customApiProvider);
     return CustomAPIProvider(
         url: values.elementAs(0),
         auth: values.elemetMybeAs<ProviderAuthenticated, CborTagValue>(

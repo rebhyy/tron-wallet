@@ -29,7 +29,7 @@ abstract class Web3StellarTransactionStateController<
         await MethodUtils.call(() async => await client.submitTx(envelopeXdr));
 
     if (submissionResult.hasError) {
-      return SubmitTransactionFailed(submissionResult.error!.tr);
+      return SubmitTransactionFailed(submissionResult.localizationError);
     }
     final success = submissionResult.result?.successful ?? true;
     if (!success) {

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter/foundation.dart';
-import 'package:on_chain_bridge/models/models.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/state_managment/core/observer.dart';

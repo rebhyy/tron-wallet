@@ -1,6 +1,5 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart'
-    show WalletExceptionConst;
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
 import 'package:blockchain_utils/bip/bip.dart';
@@ -19,8 +18,8 @@ enum StellarChainType {
   static StellarChainType fromValue(int? value) {
     return values.firstWhere(
       (e) => e.value == value,
-      orElse: () => throw WalletExceptionConst.invalidData(
-          messsage: "StellarChainType not found."),
+      orElse: () =>
+          throw AppSerializationException(objectName: "StellarChainType"),
     );
   }
 

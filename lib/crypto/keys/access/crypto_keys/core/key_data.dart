@@ -10,7 +10,8 @@ enum CryptoPublicKeyDataType {
   static CryptoPublicKeyDataType fromTag(List<int>? tag) {
     return CryptoPublicKeyDataType.values.firstWhere(
         (e) => BytesUtils.bytesEqual(e.tag, tag),
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () => throw AppSerializationException(
+            objectName: "CryptoPublicKeyDataType"));
   }
 }
 
@@ -24,7 +25,8 @@ enum CryptoPrivateKeyDataType {
   static CryptoPrivateKeyDataType fromTag(List<int>? tag) {
     return CryptoPrivateKeyDataType.values.firstWhere(
         (e) => BytesUtils.bytesEqual(e.tag, tag),
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () => throw AppSerializationException(
+            objectName: "CryptoPrivateKeyDataType"));
   }
 }
 
@@ -34,7 +36,7 @@ abstract class CryptoKeyData with CborSerializable {
 }
 
 abstract final class CryptoPublicKeyData extends CryptoKeyData {
-  const CryptoPublicKeyData._(
+  CryptoPublicKeyData._(
       {required this.type,
       required this.extendedKey,
       required this.comprossed,
@@ -49,11 +51,11 @@ abstract final class CryptoPublicKeyData extends CryptoKeyData {
   final String? uncomprossed;
   final EllipticCurveTypes curve;
 
-  String get normalizedComprossedKey =>
+  late final String normalizedComprossedKey =
       CryptoKeyUtils.normalizePublicKeyHex(comprossed, curve);
 
-  List<int> get normalizedComprossedBytes =>
-      BytesUtils.fromHexString(normalizedComprossedKey);
+  late final List<int> normalizedComprossedBytes =
+      BytesUtils.fromHexString(normalizedComprossedKey).immutable;
 
   PublicKeysView get toViewKey => PublicKeysView._(
       extendKey: extendedKey,
@@ -109,7 +111,7 @@ abstract final class CryptoPublicKeyData extends CryptoKeyData {
 
   T cast<T extends CryptoPublicKeyData>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", runtimeType.toString()]);
+      throw AppCryptoExceptionConst.internalError("CryptoPublicKeyData");
     }
     return this as T;
   }
@@ -176,7 +178,7 @@ abstract final class CryptoPrivateKeyData extends CryptoKeyData {
   }
   T cast<T extends CryptoPrivateKeyData>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", runtimeType.toString()]);
+      throw AppCryptoExceptionConst.internalError("CryptoPrivateKeyData");
     }
     return this as T;
   }
@@ -185,6 +187,11 @@ abstract final class CryptoPrivateKeyData extends CryptoKeyData {
 final class PublicKeyDerivationResult {
   final CryptoPublicKeyData key;
   final AddressDerivationIndex index;
-  late final PublicKeysView viewKey = key.toViewKey;
-  PublicKeyDerivationResult({required this.key, required this.index});
+  final PublicKeysView viewKey;
+  final String? walletName;
+  PublicKeyDerivationResult(
+      {required this.key,
+      required this.index,
+      required this.walletName,
+      required this.viewKey});
 }

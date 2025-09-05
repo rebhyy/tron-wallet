@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:on_chain/solidity/address/core.dart';
 import 'package:on_chain/tron/tron.dart';
 import 'package:on_chain_wallet/app/constant/global/app.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 

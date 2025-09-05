@@ -5,7 +5,6 @@ import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/core/message.dart';
-import 'package:on_chain_wallet/crypto/requets/messages/crypto/requests/read_master_key.dart';
 
 class _MessageArgsTags {
   static const List<int> twoBytes = [1, 2];
@@ -39,8 +38,8 @@ enum ArgsResponseType {
   static ArgsResponseType fromTag(List<int>? tag) {
     return values.firstWhere(
         (e) => BytesUtils.bytesEqual(e.tag, tag?.sublist(0, tagLength)),
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "invalid args type tag."));
+        orElse: () =>
+            throw AppSerializationException(objectName: "ArgsResponseType"));
   }
 }
 
@@ -58,8 +57,8 @@ enum CryptoArgsType {
   static CryptoArgsType fromTag(List<int>? tag) {
     return values.firstWhere(
         (e) => BytesUtils.bytesEqual(e.tag, tag?.sublist(0, tagLength)),
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "invalid args type tag."));
+        orElse: () =>
+            throw AppSerializationException(objectName: "CryptoArgsType"));
   }
 }
 
@@ -74,8 +73,8 @@ enum StreamCryptoArgsType {
   static StreamCryptoArgsType fromTag(List<int>? tag) {
     return values.firstWhere(
         (e) => BytesUtils.bytesEqual(e.tag, tag?.sublist(0, tagLength)),
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "invalid args type tag."));
+        orElse: () => throw AppSerializationException(
+            objectName: "StreamCryptoArgsType"));
   }
 }
 
@@ -83,7 +82,7 @@ abstract class CborMessageResponseArgs with CborSerializable {
   const CborMessageResponseArgs();
   abstract final ArgsResponseType type;
   static T deserialize<T extends CborMessageResponseArgs>(List<int> bytes) {
-    final CborTagValue cbor = CborSerializable.toTagValue(bytes);
+    final CborTagValue cbor = CborSerializable.decode(cborBytes: bytes);
     final type = ArgsResponseType.fromTag(cbor.tags);
     CborMessageResponseArgs args;
     switch (type) {
@@ -113,7 +112,7 @@ abstract class CborMessageResponseArgs with CborSerializable {
         break;
     }
     if (args is! T) {
-      throw WalletExceptionConst.invalidArgruments("$T", "${args.runtimeType}");
+      throw AppCryptoExceptionConst.internalError("CborMessageResponseArgs");
     }
     return args;
   }
@@ -125,7 +124,7 @@ abstract class CryptoMessageArgs extends RequestableMessage {
   @override
   bool get isEncrypted => type.isEncrypted;
   static T deserialize<T extends CryptoMessageArgs>(List<int> bytes) {
-    final CborTagValue cbor = CborSerializable.toTagValue(bytes);
+    final CborTagValue cbor = CborSerializable.decode(cborBytes: bytes);
     final type = CryptoArgsType.fromTag(cbor.tags);
     CryptoMessageArgs args;
     switch (type) {
@@ -140,7 +139,7 @@ abstract class CryptoMessageArgs extends RequestableMessage {
         break;
     }
     if (args is! T) {
-      throw WalletExceptionConst.invalidArgruments("$T", "${args.runtimeType}");
+      throw AppCryptoExceptionConst.internalError("CryptoMessageArgs");
     }
     return args;
   }
@@ -152,7 +151,7 @@ abstract class CryptoStreamMessageArgs extends RequestableMessage {
   @override
   bool get isEncrypted => false;
   static T deserialize<T extends CryptoStreamMessageArgs>(List<int> bytes) {
-    final CborTagValue cbor = CborSerializable.toTagValue(bytes);
+    final CborTagValue cbor = CborSerializable.decode(cborBytes: bytes);
     final type = StreamCryptoArgsType.fromTag(cbor.tags);
     CryptoStreamMessageArgs args;
     switch (type) {
@@ -164,7 +163,7 @@ abstract class CryptoStreamMessageArgs extends RequestableMessage {
         break;
     }
     if (args is! T) {
-      throw WalletExceptionConst.invalidArgruments("$T", "${args.runtimeType}");
+      throw AppCryptoExceptionConst.internalError("CryptoStreamMessageArgs");
     }
     return args;
   }
@@ -214,6 +213,18 @@ class MessageArgsOneBytes extends CborMessageResponseArgs {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: object, tags: ArgsResponseType.oneArg.tag);
     return MessageArgsOneBytes(keyOne: values.elementAs(0));
+  }
+  factory MessageArgsOneBytes.fromBool(bool value) {
+    return MessageArgsOneBytes(keyOne: [value ? 1 : 0]);
+  }
+
+  bool asBoolean() {
+    final val = keyOne.firstOrNull;
+    if (keyOne.length != 1 || (val != 0 && val != 1)) {
+      throw AppSerializationException(objectName: "MessageArgsOneBytes");
+    }
+    if (val == 0) return false;
+    return true;
   }
 
   @override
@@ -332,8 +343,8 @@ enum MessageArgsStreamMethod {
   const MessageArgsStreamMethod(this.value);
   static MessageArgsStreamMethod fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "stream method not found."));
+        orElse: () => throw AppSerializationException(
+            objectName: "MessageArgsStreamMethod"));
   }
 }
 
@@ -513,66 +524,59 @@ abstract class NoneEncryptedArgsCompleter<T, A extends CborMessageResponseArgs>
 abstract class WalletArgsCompleter<T, A extends CborMessageResponseArgs>
     with CborSerializable {
   const WalletArgsCompleter() : super();
-  Future<A> getResult(
-      {required WalletMasterKeys wallet, required List<int> key});
+  Future<A> getResult(WalletInMemory wallet);
   Future<T> parsResult(A result);
-  Future<T> result({required WalletMasterKeys wallet, required List<int> key});
+  Future<T> result(WalletInMemory wallet);
 }
 
 class WalletArgs<T, A extends CborMessageResponseArgs,
     R extends WalletArgsCompleter<T, A>> extends CryptoMessageArgs {
   final R args;
-  final int version;
-  final List<int> nonce;
-  final List<int> walletData;
-  final List<int> key;
+  final WalletInMemoryData masterKey;
+  // final List<int> walletData;
+  final List<int> memoryKey;
   WalletArgs({
     required this.args,
-    required this.version,
-    required List<int> walletData,
-    required List<int> key,
-    required List<int> nonce,
-  })  : walletData = walletData.asImmutableBytes,
-        key = key.asImmutableBytes,
-        nonce = nonce.asImmutableBytes;
+    required this.masterKey,
+    required List<int> memoryKey,
+  }) : memoryKey = memoryKey.asImmutableBytes;
 
-  factory WalletArgs.fromStorage(
-      {required R args,
-      required List<int> encryptedMasterKey,
-      required List<int> key}) {
-    try {
-      final CborListValue values =
-          CborSerializable.decode(cborBytes: encryptedMasterKey);
-      return WalletArgs(
-          args: args,
-          version: values.elementAs(0),
-          nonce: values.elementAs(1),
-          walletData: values.elementAs(2),
-          key: key);
-    } catch (e) {
-      throw WalletExceptionConst.incorrectWalletData;
-    }
-  }
+  // factory WalletArgs.fromStorage(
+  //     {required R args,
+  //     required List<int> encryptedMasterKey,
+  //     required List<int> key}) {
+  //   try {
+  //     final CborListValue values =
+  //         CborSerializable.decode(cborBytes: encryptedMasterKey);
+  //     return WalletArgs(
+  //         args: args,
+  //         version: values.elementAs(0),
+  //         nonce: values.elementAs(1),
+  //         walletData: values.elementAs(2),
+  //         key: key);
+  //   } catch (e) {
+  //     throw WalletExceptionConst.incorrectWalletData;
+  //   }
+  // }
+
   factory WalletArgs.deserialize({List<int>? bytes, CborTagValue? object}) {
     final CborListValue values = CborSerializable.cborTagValue(
         cborBytes: bytes, object: object, tags: CryptoArgsType.wallet.tag);
     final WalletArgsCompleter args =
         WalletRequest.deserialize(object: values.elementAsCborTag(0));
     if (args is! R) {
-      throw WalletExceptionConst.invalidArgruments("$T", "${args.runtimeType}");
+      throw AppCryptoExceptionConst.internalError("WalletArgs");
     }
     return WalletArgs(
         args: args,
-        version: values.elementAs(1),
-        walletData: values.elementAs(2),
-        nonce: values.elementAs(3),
-        key: values.elementAs(4));
+        masterKey: WalletInMemoryData.deserialize(
+            obj: values.indexAs<CborTagValue>(1)),
+        memoryKey: values.elementAs(2));
   }
 
   Future<A> getResult() {
-    final masterKey = CryptoRequestReadMasterKey.getWalletMasterKeys(
-        nonce: nonce, walletData: walletData, key: key);
-    return args.getResult(wallet: masterKey, key: key);
+    final masterKey = WalletInMemory.fromMemory(this.masterKey, memoryKey);
+    return args.getResult(masterKey);
   }
 
   Future<T> parseResult(A result) {
@@ -588,7 +592,7 @@ class WalletArgs<T, A extends CborMessageResponseArgs,
   CborTagValue toCbor() {
     return CborTagValue(
         CborSerializable.fromDynamic(
-            [args.toCbor(), version, walletData, nonce, key]),
+            [args.toCbor(), masterKey.toCbor(), CborBytesValue(memoryKey)]),
         CryptoArgsType.wallet.tag);
   }
 

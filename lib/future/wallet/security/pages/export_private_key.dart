@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
 import 'package:on_chain_wallet/future/tools/secure_state/secure_state.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/address_details.dart';
-import 'package:on_chain_wallet/future/wallet/security/security.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/crypto/keys/keys.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain/sui/sui.dart';
 import 'package:on_chain/aptos/aptos.dart';
@@ -21,25 +22,35 @@ class AccountPrivteKeyView extends StatelessWidget {
     final wallet = context.watch<WalletProvider>(StateConst.main);
     ChainAccount? account;
     EncryptedCustomKey? customKey;
-    String? password;
     final args = context.getDynamicArgs();
     if (args is ChainAccount) {
       account = args;
     } else {
-      args as (EncryptedCustomKey, String);
-      customKey = args.$1;
-      password = args.$2;
+      args as EncryptedCustomKey;
+      customKey = args;
     }
 
-    return PasswordCheckerView(
-        accsess: WalletAccsessType.extendedKey,
-        account: account,
-        password: password,
-        importedKey: customKey,
-        onAccsess: (crendential, password, network) {
+    return AccessWalletView<WalletCredentialResponse, WalletCredential>(
+        request: customKey == null
+            ? WalletCredentialAccountKey(account: account!)
+            : WalletCredentialImportedKey(keyId: customKey.id),
+        onAccsess: (credential) {
+          List<CryptoPrivateKeyData> keys;
+          WalletCredentialResponseVerify id;
+          if (credential.type == WalletCredentialType.accountKey) {
+            final accountCred =
+                credential.cast<WalletCredentialResponseAccountKey>();
+            id = accountCred.id;
+            keys = accountCred.credentials;
+          } else {
+            final keyCred =
+                credential.cast<WalletCredentialResponseImportedKey>();
+            id = keyCred.id;
+            keys = [keyCred.credential];
+          }
           return _AccountPrivateKeyView(
-              keys: crendential.whereType<CryptoPrivateKeyData>().toList(),
-              password: password,
+              keys: keys,
+              credential: id,
               account: account,
               network: wallet.wallet.network,
               customKey: customKey);
@@ -61,13 +72,13 @@ class AccountPrivteKeyView extends StatelessWidget {
 class _AccountPrivateKeyView extends StatefulWidget {
   const _AccountPrivateKeyView({
     required this.keys,
-    required this.password,
+    required this.credential,
     required this.account,
     required this.network,
     required this.customKey,
   });
   final List<CryptoPrivateKeyData> keys;
-  final String password;
+  final WalletCredentialResponseVerify credential;
   final ChainAccount? account;
   final EncryptedCustomKey? customKey;
   final WalletNetwork network;
@@ -76,7 +87,9 @@ class _AccountPrivateKeyView extends StatefulWidget {
 }
 
 class _AccountPrivateKeyViewState extends State<_AccountPrivateKeyView>
-    with SafeState<_AccountPrivateKeyView>, SecureState {
+    with
+        SafeState<_AccountPrivateKeyView>,
+        SecureState<_AccountPrivateKeyView> {
   List<PrivateKeysView> keys = [];
   WalletNetwork get network => widget.network;
   late PrivateKeysView key;
@@ -125,65 +138,69 @@ class _AccountPrivateKeyViewState extends State<_AccountPrivateKeyView>
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        SliverConstraintsBoxView(
-          padding: WidgetConstant.paddingHorizontal20,
-          sliver: SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                PageTitleSubtitle(
-                    title: "private_key".tr,
-                    body: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [Text("export_private_key_desc".tr)],
-                    )),
-                if (hasMultipleKey) ...[
-                  Text("private_keys".tr, style: context.textTheme.titleMedium),
-                  Text("switch_between_keys".tr),
-                  WidgetConstant.height8,
-                  AppDropDownBottom(
-                      onChanged: onChangeKey,
-                      items: {for (final i in keys) i: Text(i.keyName.tr)},
-                      hint: "key_name".tr,
-                      value: key),
-                  WidgetConstant.height20,
-                ],
-                if (widget.account != null && !hasMultipleKey) ...[
-                  Text("address_details".tr,
-                      style: context.textTheme.titleMedium),
-                  WidgetConstant.height8,
-                  ContainerWithBorder(
-                    child: CopyableTextWidget(
-                      text: widget.account!.address.toAddress,
-                      widget: AddressDetailsView(
-                          address: widget.account!,
-                          color: context.onPrimaryContainer),
+    return SensitiveContent(
+      sensitivity: ContentSensitivity.sensitive,
+      child: CustomScrollView(
+        slivers: [
+          SliverConstraintsBoxView(
+            padding: WidgetConstant.paddingHorizontal20,
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PageTitleSubtitle(
+                      title: "private_key".tr,
+                      body: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [Text("export_private_key_desc".tr)],
+                      )),
+                  if (hasMultipleKey) ...[
+                    Text("private_keys".tr,
+                        style: context.textTheme.titleMedium),
+                    Text("switch_between_keys".tr),
+                    WidgetConstant.height8,
+                    AppDropDownBottom(
+                        onChanged: onChangeKey,
+                        items: {for (final i in keys) i: Text(i.keyName.tr)},
+                        hint: "key_name".tr,
+                        value: key),
+                    WidgetConstant.height20,
+                  ],
+                  if (widget.account != null && !hasMultipleKey) ...[
+                    Text("address_details".tr,
+                        style: context.textTheme.titleMedium),
+                    WidgetConstant.height8,
+                    ContainerWithBorder(
+                      child: CopyableTextWidget(
+                        text: widget.account!.address.toAddress,
+                        widget: AddressDetailsView(
+                            address: widget.account!,
+                            color: context.onPrimaryContainer),
+                      ),
                     ),
+                    WidgetConstant.height20,
+                  ],
+                  if (keyName != null) ...[
+                    Text("key_name".tr, style: context.textTheme.titleMedium),
+                    WidgetConstant.height8,
+                    ContainerWithBorder(
+                        child: Text(keyName ?? "",
+                            style: context.onPrimaryTextTheme.bodyMedium)),
+                    WidgetConstant.height20,
+                  ],
+                  AnimatedSwitcher(
+                    duration: APPConst.animationDuraion,
+                    child: _KeysView(
+                        privateKey: key, state: this, key: ValueKey(key)),
                   ),
-                  WidgetConstant.height20,
+                  WidgetConstant.height20
                 ],
-                if (keyName != null) ...[
-                  Text("key_name".tr, style: context.textTheme.titleMedium),
-                  WidgetConstant.height8,
-                  ContainerWithBorder(
-                      child: Text(keyName ?? "",
-                          style: context.onPrimaryTextTheme.bodyMedium)),
-                  WidgetConstant.height20,
-                ],
-                AnimatedSwitcher(
-                  duration: APPConst.animationDuraion,
-                  child: _KeysView(
-                      privateKey: key, state: this, key: ValueKey(key)),
-                ),
-                WidgetConstant.height20
-              ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -202,14 +219,14 @@ class _KeysView extends StatelessWidget {
             title: "private_key".tr,
             subtitle: privateKey.curve.name.camelCase,
             keyData: privateKey.privateKey,
-            password: state.widget.password,
+            credential: state.widget.credential,
             type: WalletBackupTypes.privatekey),
         if (privateKey.extendKey != null) ...[
           WidgetConstant.height20,
           _HiddenKeyView(
               title: "extended_private_key".tr,
               keyData: privateKey.extendKey!,
-              password: state.widget.password,
+              credential: state.widget.credential,
               type: WalletBackupTypes.extendedKey),
         ],
         if (privateKey.wif != null) ...[
@@ -217,7 +234,7 @@ class _KeysView extends StatelessWidget {
           _HiddenKeyView(
               title: "wif".tr,
               keyData: privateKey.wif!,
-              password: state.widget.password,
+              credential: state.widget.credential,
               type: WalletBackupTypes.wif),
         ],
         if (privateKey.inNetworkStyle != null) ...[
@@ -250,13 +267,13 @@ class _MoneroKeysView extends StatelessWidget {
         _HiddenKeyView(
             title: "spend_private_key".tr,
             keyData: privateKey.spendPrivateKey,
-            password: state.widget.password,
+            credential: state.widget.credential,
             type: WalletBackupTypes.privatekey),
         WidgetConstant.height20,
         _HiddenKeyView(
             title: "view_private_key".tr,
             keyData: privateKey.viewPrivateKey,
-            password: state.widget.password,
+            credential: state.widget.credential,
             type: WalletBackupTypes.privatekey),
       ],
     );
@@ -268,13 +285,13 @@ class _HiddenKeyView extends StatelessWidget {
   final String keyData;
   final String? subtitle;
   final WalletBackupTypes? type;
-  final String? password;
+  final WalletCredentialResponseVerify? credential;
   const _HiddenKeyView(
       {required this.title,
       required this.keyData,
       this.subtitle,
       this.type,
-      this.password});
+      this.credential});
 
   @override
   Widget build(BuildContext context) {
@@ -285,10 +302,7 @@ class _HiddenKeyView extends StatelessWidget {
         if (subtitle != null) Text(subtitle!),
         WidgetConstant.height8,
         SecureContentView(
-          content: keyData,
-          backupType: type,
-          password: password,
-        ),
+            content: keyData, backupType: type, credential: credential),
       ],
     );
   }

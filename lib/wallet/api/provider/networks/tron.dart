@@ -23,8 +23,10 @@ class TronAPIProvider extends APIProvider {
 
   factory TronAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.tronApiServiceProvider);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.tronApiServiceProvider);
     return TronAPIProvider(
         httpNodeUri: cbor.elementAs(0),
         solidityProvider: EthereumAPIProvider.fromCborBytesOrObject(

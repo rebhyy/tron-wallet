@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 
@@ -13,10 +11,11 @@ class ManageImportedKeysView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-        accsess: WalletAccsessType.verify,
-        onAccsess: (crendential, password, network) {
-          return _ImportAccount(password: password, network: network);
+    return AccessWalletView<WalletCredentialResponseVerify,
+            WalletCredentialVerify>(
+        request: WalletCredentialVerify(),
+        onAccsess: (credential) {
+          return _ImportAccount(credential: credential);
         },
         title: "imported_key".tr,
         subtitle: PageTitleSubtitle(
@@ -26,26 +25,27 @@ class ManageImportedKeysView extends StatelessWidget {
 }
 
 class _ImportAccount extends StatefulWidget {
-  const _ImportAccount({required this.password, required this.network});
-  final String password;
-  final WalletNetwork network;
+  const _ImportAccount({required this.credential});
+  final WalletCredentialResponseVerify credential;
   @override
   State<_ImportAccount> createState() => _ImportAccountState();
 }
 
-class _ImportAccountState extends State<_ImportAccount> with SafeState {
+class _ImportAccountState extends State<_ImportAccount>
+    with SafeState<_ImportAccount> {
   final GlobalKey<AppTextFieldState> textFieldState =
       GlobalKey<AppTextFieldState>(debugLabel: "_ImportAccountState");
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>(debugLabel: "_ImportAccountState_1");
+
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   final GlobalKey<FormState> form =
       GlobalKey(debugLabel: "_ImportAccountState_2");
   final Set<EncryptedCustomKey> importedKeys = {};
-  void getAccounts() async {
-    final wallet = context.watch<WalletProvider>(StateConst.main);
+  Future<void> getAccounts() async {
+    final wallet = context.wallet;
     final result = await wallet.wallet.getImportedAccounts();
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr, backToIdle: false);
+      progressKey.errorText(result.localizationError, backToIdle: false);
     } else {
       if (result.result.isEmpty) {
         progressKey.success(
@@ -60,12 +60,13 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
     }
   }
 
-  void removeKey(EncryptedCustomKey key) async {
+  Future<void> removeKey(EncryptedCustomKey key) async {
     progressKey.progressText("deleting_key".tr);
-    final wallet = context.watch<WalletProvider>(StateConst.main);
-    final result = await wallet.wallet.removeImportedKey(key, widget.password);
+    final wallet = context.wallet;
+    final result =
+        await wallet.wallet.removeImportedKey(key, widget.credential);
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr);
+      progressKey.errorText(result.localizationError);
       return;
     }
     importedKeys.clear();
@@ -84,14 +85,18 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
+    return StreamPageProgress(
+      controller: progressKey,
       initialWidget:
           ProgressWithTextView(text: "retrieving_imported_keys_wait".tr),
-      initialStatus: StreamWidgetStatus.progress,
-      backToIdle: APPConst.oneSecoundDuration,
-      child: (c) => UnfocusableChild(
+      builder: (c) => UnfocusableChild(
         child: CustomScrollView(
           slivers: [
             SliverConstraintsBoxView(
@@ -167,7 +172,7 @@ class _ImportAccountState extends State<_ImportAccount> with SafeState {
                             IconButton(
                               onPressed: () {
                                 context.to(PageRouter.exportPrivateKey,
-                                    argruments: (key, widget.password));
+                                    argruments: key);
                               },
                               icon: Icon(Icons.open_in_new,
                                   color: context.onPrimaryContainer),

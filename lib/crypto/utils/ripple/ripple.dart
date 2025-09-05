@@ -147,7 +147,7 @@ class RippleUtils {
     try {
       return XRPPrivateKey.fromSeed(seed);
     } catch (e) {
-      throw WalletExceptionConst.invalidPrivateKey;
+      throw AppCryptoExceptionConst.invalidPrivateKey;
     }
   }
 
@@ -156,7 +156,7 @@ class RippleUtils {
     try {
       return XRPPrivateKey.fromEntropy(entropy, algorithm: algorithm);
     } catch (e) {
-      throw WalletExceptionConst.invalidPrivateKey;
+      throw AppCryptoExceptionConst.invalidPrivateKey;
     }
   }
 
@@ -170,7 +170,7 @@ class RippleUtils {
 
       return ripplePrivateKey.toBytes();
     } catch (e) {
-      throw WalletExceptionConst.invalidPrivateKey;
+      throw AppCryptoExceptionConst.invalidPrivateKey;
     }
   }
 

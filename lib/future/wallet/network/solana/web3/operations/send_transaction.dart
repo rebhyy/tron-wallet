@@ -16,7 +16,7 @@ import 'package:on_chain_wallet/future/wallet/network/solana/web3/types/types.da
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/solana/solana.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
@@ -65,7 +65,7 @@ class WebSolanaSignTransactionStateController
       );
     });
     if (txId.hasError) {
-      return SubmitTransactionFailed(txId.error!.tr);
+      return SubmitTransactionFailed(txId.localizationError);
     }
     return SubmitTransactionSuccess(
         txId: txId.result, signedTransaction: signedTransaction);

@@ -8,7 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/typ
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/widgets/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/tron/client/tron.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/networks/tron.dart';
@@ -126,41 +126,6 @@ class TronTransactionTransferTRC10TokenOperation
           transaction: transaction, account: signedTx.transaction.account)
     ];
   }
-
-  // @override
-  // Future<TronWalletTransaction> buildWalletTransaction(
-  //     {required ITronTransaction<ITronTransactionData<TransferAssetContract>>
-  //         transaction,
-  //     required ITronSignedTransaction<
-  //             ITronTransactionData<TransferAssetContract>>
-  //         signedTx,
-  //     required SubmitTransactionSuccess txId}) async {
-  //   final transfer = transaction.transactionData.tokenTransfer;
-  //   final token = transfer?.token;
-  //   assert(transfer != null && token != null);
-  //   if (transfer == null || token == null) {
-  //     return super.buildWalletTransaction(
-  //         transaction: transaction, signedTx: signedTx, txId: txId);
-  //   }
-  //   return TronWalletTransaction(
-  //       txId: txId.txId,
-  //       network: network,
-  //       totalOutput: WalletTransactionIntegerAmount(
-  //           amount: transfer.amount,
-  //           network: network,
-  //           token: token.token,
-  //           tokenIdentifier: token.identifier),
-  //       outputs: [
-  //         TronWalletTransactionTransferOutput(
-  //           to: transfer.recipient,
-  //           amount: WalletTransactionIntegerAmount(
-  //               amount: transfer.amount,
-  //               network: network,
-  //               token: token.token,
-  //               tokenIdentifier: token.identifier),
-  //         ),
-  //       ]);
-  // }
 
   @override
   Future<ITronTransactionData<TransferAssetContract>> buildTransactionData(
@@ -287,17 +252,6 @@ class TronTransactionTransferTRC20TokenOperation
           transaction: transaction, account: signedTx.transaction.account)
     ];
   }
-
-  // @override
-  // Future<TronWalletTransaction> buildWalletTransaction(
-  //     {required ITronTransaction<ITronTransactionData<TriggerSmartContract>>
-  //         transaction,
-  //     required ITronSignedTransaction<
-  //             ITronTransactionData<TriggerSmartContract>>
-  //         signedTx,
-  //     required SubmitTransactionSuccess txId}) async {
-
-  // }
 
   @override
   TransactionStateController cloneController(ITronAddress address) {

@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/future/wallet/network/sui/transaction/types/type
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'fee.dart';
 import 'package:on_chain/sui/src/transaction/types/types.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/types/types.dart';
 import 'provider.dart';
 
@@ -120,8 +120,7 @@ abstract class SuiTransactionStateController<T extends ISuiTransactionData>
   Future<ISuiSignedTransaction<T>> signTransaction(
       ISuiTransaction<T> transaction,
       {bool fakeSignature = false}) async {
-    final transactionWithGas =
-        await client.filledGasPayment(transaction.transaction);
+    final transactionWithGas = await filledGasPayment(transaction.transaction);
     final signedTx = await signTransactionInternal(
         transaction: transactionWithGas, signer: address);
     return ISuiSignedTransaction(

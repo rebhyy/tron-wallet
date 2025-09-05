@@ -20,8 +20,8 @@ final class ImportedKeyStorage with CborSerializable, Equatable {
   factory ImportedKeyStorage.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
     try {
-      final CborListValue cbor = CborSerializable.decodeCborTags(
-          bytes, obj, CryptoKeyConst.walletCustomKey);
+      final CborListValue cbor = CborSerializable.cborTagValue(
+          cborBytes: bytes, object: obj, tags: CryptoKeyConst.walletCustomKey);
 
       final CryptoCoins coin = CustomCoins.getCoin(
         name: cbor.elementAs(4),
@@ -36,7 +36,7 @@ final class ImportedKeyStorage with CborSerializable, Equatable {
           name: cbor.elementAs(6),
           keyType: CustomKeyType.fromValue(cbor.elementAs(7)));
     } catch (e) {
-      throw WalletExceptionConst.invalidMnemonic;
+      throw AppCryptoExceptionConst.invalidMnemonic;
     }
   }
 
@@ -88,7 +88,7 @@ final class ImportedKeyStorage with CborSerializable, Equatable {
     }
     if (currentCoin == Bip44Coins.moneroEd25519Slip) {
       if (coin != Bip44Coins.moneroEd25519Slip) {
-        throw WalletExceptionConst.invalidCoin;
+        throw AppCryptoExceptionConst.invalidCoin;
       }
       return MoneroPrivateKeyData._(
           spendPrivateKey: MoneroPrivateKey.fromHex(extendedPrivateKey),
@@ -105,11 +105,11 @@ final class ImportedKeyStorage with CborSerializable, Equatable {
       {Bip44Levels maxLevel = Bip44Levels.addressIndex}) {
     if (key is Bip32AddressIndex) {
       if (key.indexes.isNotEmpty) {
-        throw WalletExceptionConst.importedKeyDerivationNotAllowed;
+        throw AppCryptoExceptionConst.importedKeyDerivationNotAllowed;
       }
     } else if (key is SubstrateAddressIndex) {
       if (key.substratePath != null) {
-        throw WalletExceptionConst.importedKeyDerivationNotAllowed;
+        throw AppCryptoExceptionConst.importedKeyDerivationNotAllowed;
       }
     }
     return _toBip32Key(key);

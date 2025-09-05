@@ -8,10 +8,9 @@ import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/types/
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/stellar/transaction/widgets/operations/operations.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/stellar/stellar.dart';
 import 'package:stellar_dart/stellar_dart.dart';
 import 'fee.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'memo.dart';
 import 'provider.dart';
 import 'signer.dart';
@@ -228,7 +227,7 @@ class StellarTransactionStateController extends BaseStellarTransactionController
         await MethodUtils.call(() async => await client.submitTx(envelopeXdr));
 
     if (submissionResult.hasError) {
-      return SubmitTransactionFailed(submissionResult.error!.tr);
+      return SubmitTransactionFailed(submissionResult.localizationError);
     }
     final success = submissionResult.result?.successful ?? true;
     if (!success) {
@@ -260,7 +259,7 @@ class StellarTransactionStateController extends BaseStellarTransactionController
 
     _accountData = await getAccount(address.networkAddress);
     if (_accountData == null) {
-      throw WalletException("account_not_found".tr);
+      throw AppException("account_not_found");
     }
     final baseReserve = await getBaseReserve();
     await initFee();

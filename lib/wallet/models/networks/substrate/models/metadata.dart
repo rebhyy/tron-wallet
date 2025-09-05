@@ -80,7 +80,7 @@ class _SubstrateChainConst {
     if (eth != null) return (SubstrateChainType.ethereum, [eth]);
     final substrate = isSubstrate(metadata: metadata, extrinsic: extrinsic);
     if (substrate.isEmpty) {
-      throw WalletException('unsuported_network_metadata');
+      throw WalletException.error('unsuported_network_metadata');
     }
     return (SubstrateChainType.substrate, substrate);
   }
@@ -89,7 +89,7 @@ class _SubstrateChainConst {
     try {
       return metadata.networkSS58Prefix();
     } catch (_) {
-      throw WalletException('unsuported_network_metadata');
+      throw WalletException.error('unsuported_network_metadata');
     }
   }
 
@@ -230,7 +230,8 @@ enum SubstrateChainType {
 
   static SubstrateChainType fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () =>
+            throw AppSerializationException(objectName: "SubstrateChainType"));
   }
 }
 
@@ -283,7 +284,8 @@ class SubstrateChainMetadata {
                 .contains(e.version) &&
             e.addressType != null &&
             e.signatureType != null,
-        orElse: () => throw WalletException('unsuported_network_metadata'));
+        orElse: () =>
+            throw WalletException.error('unsuported_network_metadata'));
 
     final keyAlgorithms = _SubstrateChainConst.getAlgorithms(
         metadata: metadata, extrinsic: metadataExtrinsic);

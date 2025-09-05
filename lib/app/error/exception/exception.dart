@@ -8,8 +8,24 @@ import 'package:on_chain_wallet/app/utils/string/utils.dart';
 
 class ApiProviderExceptionConst {
   static const int timeoutStatucCode = 10001;
-  static ApiProviderException connectionClosed =
+  static const ApiProviderException connectionClosed =
       ApiProviderException._(message: 'http_connection_closed');
+  static const ApiProviderException socketConnectingFailed =
+      ApiProviderException._(message: 'socket_connection_failed');
+  static const ApiProviderException initializeClientFailed =
+      ApiProviderException._(message: 'network_client_initialize_failed');
+  static const ApiProviderException invalidRequestType =
+      ApiProviderException._(message: 'invalid_request_type');
+  static const ApiProviderException invalidOrUnsuportedDigestAuth =
+      ApiProviderException._(message: 'invalid_or_unsuported_dgiest_auth');
+  static const ApiProviderException timeoutException =
+      ApiProviderException._(message: 'api_http_timeout_error');
+  static const ApiProviderException serverUnexpectedResponse =
+      ApiProviderException._(message: 'server_unexpected_response');
+  static const ApiProviderException unexpectedRequestData =
+      ApiProviderException._(message: 'unexpected_request_data');
+  static const ApiProviderException invalidRequestUrl =
+      ApiProviderException._(message: 'invalid_request_url');
 }
 
 class ApiProviderException implements Exception {
@@ -40,7 +56,7 @@ class ApiProviderException implements Exception {
     return ApiProviderException._(
         message: defaultError, statusCode: statusCode);
   }
-  factory ApiProviderException.error(String message) {
+  factory ApiProviderException.message(String message) {
     return ApiProviderException._(message: message);
   }
   factory ApiProviderException.fromException(
@@ -48,10 +64,15 @@ class ApiProviderException implements Exception {
     final defaultError = validStatusCode.contains(statusCode)
         ? "http_error_$statusCode"
         : "request_error";
-    if (message == null) {
+    if (message is ApiProviderException) {
+      return message;
+    } else if (message == null) {
       return ApiProviderException._(
           message: defaultError, code: code, statusCode: statusCode);
     } else if (message is ClientException) {
+      return ApiProviderException._(
+          message: "api_http_client_error", statusCode: statusCode, code: code);
+    } else if (message is TlsException) {
       return ApiProviderException._(
           message: "api_http_client_error", statusCode: statusCode, code: code);
     } else if (message is TimeoutException) {
@@ -68,8 +89,6 @@ class ApiProviderException implements Exception {
     } else if (message is HttpException) {
       return ApiProviderException._(
           message: "http_exception", statusCode: statusCode, code: code);
-    } else if (message is ApiProviderException) {
-      return message;
     } else if (message is RPCError) {
       return ApiProviderException._(
           message: message.message,

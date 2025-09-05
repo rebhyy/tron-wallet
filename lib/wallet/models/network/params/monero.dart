@@ -13,8 +13,8 @@ class MoneroNetworkParams extends NetworkCoinParams<MoneroAPIProvider> {
 
   factory MoneroNetworkParams.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.moneroNetworkParams);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.moneroNetworkParams);
 
     return MoneroNetworkParams(
         token: Token.deserialize(obj: values.elementAsCborTag(2)),

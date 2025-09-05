@@ -110,7 +110,7 @@ class SubstrateNetworkParams extends NetworkCoinParams<SubstrateAPIProvider> {
 
   SubstrateNetworkParams updateSpecVersion(int specVersion) {
     if (specVersion.isNegative || specVersion < this.specVersion) {
-      throw WalletException("invalid_spec_version");
+      throw WalletException.error("invalid_spec_version");
     }
     return SubstrateNetworkParams(
         token: token,

@@ -65,7 +65,7 @@ class CryptoRequestReadMasterKey
     final decrypt = WorkerCryptoUtils.decryptChacha(
         key: key, nonce: nonce, data: walletData);
     if (decrypt == null) {
-      throw WalletExceptionConst.incorrectPassword;
+      throw WalletExceptionConst.authFailed;
     }
     return WalletMasterKeys.deserialize(bytes: decrypt);
   }

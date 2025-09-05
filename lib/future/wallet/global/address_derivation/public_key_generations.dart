@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/wallet/models/access/wallet_access.dart';
 
 import 'package:blockchain_utils/blockchain_utils.dart';
@@ -9,19 +10,23 @@ import 'package:on_chain_wallet/crypto/worker.dart';
 
 class PublicKeyDerivationView extends StatelessWidget {
   const PublicKeyDerivationView(
-      {required this.controller, required this.type, super.key});
+      {required this.controller,
+      this.pubKeyMode = PubKeyModes.compressed,
+      required this.coins,
+      super.key});
   final ScrollController controller;
-  final EllipticCurveTypes type;
-  // final WalletNetwork? network;
+  final List<CryptoCoins> coins;
+  final PubKeyModes? pubKeyMode;
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       controller: controller,
-      accsess: WalletAccsessType.unlock,
       title: "generate_public_key".tr,
-      onAccsess: (credential, password, network) {
+      onAccsess: (credential) {
         return _PublicKeyDerivationView(
-            type: type, controller: controller, password: password);
+            coins: coins, controller: controller, pubKeyMode: pubKeyMode);
       },
     );
   }
@@ -31,10 +36,10 @@ typedef _OnGenerateDerivation = Future<AddressDerivationIndex?> Function();
 
 class _PublicKeyDerivationView extends StatefulWidget {
   final ScrollController controller;
-  final EllipticCurveTypes type;
-  final String password;
+  final List<CryptoCoins> coins;
+  final PubKeyModes? pubKeyMode;
   const _PublicKeyDerivationView(
-      {required this.type, required this.controller, required this.password});
+      {required this.coins, required this.controller, this.pubKeyMode});
 
   @override
   State<_PublicKeyDerivationView> createState() =>
@@ -43,15 +48,17 @@ class _PublicKeyDerivationView extends StatefulWidget {
 
 class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
     with SafeState<_PublicKeyDerivationView> {
+  late WalletProvider walletProvider;
   final StreamPageProgressController controller =
       StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
-  List<CryptoCoins> coins = [];
+  List<ViewDerivationKeyModel> derivationKeys = [];
+  late ViewDerivationKeyModel derivationKey;
+  late AddressDerivationIndex nextKeyIndex;
+  List<CryptoCoins> get coins => widget.coins;
   PublicKeyDerivationResult? generatedKey;
-  EncryptedCustomKey? selectedCustomKey;
-  bool get allowDerivation => !isImportedKey;
-  bool get isImportedKey => selectedCustomKey != null;
   late CryptoCoins coin;
   bool useByronLegacyDeriavation = false;
+  bool get showKeyMode => widget.pubKeyMode == null;
   List<EncryptedCustomKey> importedKeys = [];
   SeedTypes seedType = SeedTypes.bip39;
   List<EncryptedCustomKey> customKeys = [];
@@ -59,35 +66,36 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
   AddressDerivationIndex? customKeyIndex;
   Map<CryptoCoins, Widget> coinItems = {};
   final generateAddressKey = GlobalKey();
-  AddressDerivationIndex derivationkey(CryptoCoins coin) {
-    if (selectedCustomKey != null) {
-      assert(customKeyIndex == null, "must be null.");
-      final keyIndex = switch (coin.proposal) {
-        SubstratePropoosal.substrate =>
-          SubstrateAddressIndex(currencyCoin: coin as SubstrateCoins),
-        _ => Bip32AddressIndex(currencyCoin: coin, seedGeneration: seedType)
-      };
-      return keyIndex.asImportedKey(selectedCustomKey!.id);
-    }
-    return customKeyIndex ?? nextDerivation;
+  Map<ViewDerivationKeyModel, Widget> items = {};
+  List<PubKeyModes> keyModes = [
+    PubKeyModes.compressed,
+    PubKeyModes.uncompressed
+  ];
+  PubKeyModes keyMode = PubKeyModes.compressed;
+
+  void onChangeKeyMode(PubKeyModes? mode) {
+    if (mode == null || !showKeyMode) return;
+    keyMode = mode;
+    updateState();
   }
 
-  late AddressDerivationIndex nextDerivation;
+  List<PubKeyModes> builKeyModes(PublicKeyDerivationResult key) {
+    return [
+      PubKeyModes.compressed,
+      if (key.key.uncomprossed != null) PubKeyModes.uncompressed,
+    ];
+  }
 
-  void onChangeCustomKey(EncryptedCustomKey? newSelected) {
-    if (newSelected == null) {
-      selectedCustomKey = null;
-    } else {
-      bool canUseKey = false;
-      if (newSelected.coin.conf.type == coin.conf.type) {
-        selectedCustomKey = newSelected;
-        canUseKey = true;
-      }
-      if (canUseKey) {
-        customKeyIndex = null;
-      } else {
-        context.showAlert("unsuported_key".tr);
-      }
+  Map<ViewDerivationKeyModel, Widget> buildKeysItems() {
+    return {for (final i in derivationKeys) i: ViewDerivationKeyModelWidget(i)};
+  }
+
+  void onChangeDerivationKey(ViewDerivationKeyModel? key) {
+    if (key == null || key == derivationKey) return;
+    customKeyIndex = null;
+    derivationKey = key;
+    if (key.allowDerivation) {
+      nextKeyIndex = getNextDerivation();
     }
     updateState();
   }
@@ -99,26 +107,6 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
       customKeyIndex = null;
     }
     updateState();
-  }
-
-  Future<void> onGenerateKey() async {
-    controller.progressText("generating_public_key_please_wait".tr);
-    final index = derivationkey(coin);
-    final publicKey =
-        await context.wallet.wallet.getKeyDerivationPublicKey(index);
-    if (publicKey.hasError) {
-      controller.errorText(publicKey.error!.tr,
-          backToIdle: false, showBackButton: true);
-      return;
-    }
-    generatedKey = publicKey.result;
-    controller.backToIdle();
-  }
-
-  void onSubmit() {
-    final key = generatedKey;
-    if (key == null) return;
-    context.pop(key);
   }
 
   SeedTypes _findSeedType(CryptoCoins coin) {
@@ -150,22 +138,81 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
         runtime: runtimeType,
         functionName: 'onChangeCoin',
         msg: "$coin: ${seedType.name}");
-    if (!customKeys.contains(selectedCustomKey)) {
-      selectedCustomKey = null;
-    }
     customKeyIndex = null;
-    nextDerivation = BipDerivationUtils.generateAccountNextKeyIndex(
-        coin: coin, seedGenerationType: seedType);
+    buildKeys();
+    items = buildKeysItems();
+
     updateState();
+  }
+
+  AddressDerivationIndex getNextDerivation() {
+    final index = BipDerivationUtils.generateAccountNextKeyIndex(
+        coin: coin, seedGenerationType: seedType);
+    if (derivationKey.isSubWallet) {
+      return index.asSubWalletKey(derivationKey.subId!);
+    }
+    return index;
+  }
+
+  void buildKeys() {
+    final wallet = walletProvider.wallet.wallet;
+    final mainWalletDerivation = ViewDerivationKeyModel(
+        name: wallet.name,
+        created: wallet.created,
+        allowDerivation: true,
+        icon: Icon(Icons.account_balance_wallet_rounded));
+    final List<ViewDerivationKeyModel> keys = [mainWalletDerivation];
+    final sWIcon = Icon(Icons.account_balance_wallet_outlined);
+    for (final i in wallet.subWallets) {
+      switch (i.walletType) {
+        case SubWalletType.bip39:
+          keys.add(ViewDerivationKeyModel(
+              name: i.name,
+              created: i.created,
+              subId: i.id,
+              allowDerivation: true,
+              icon: sWIcon));
+          break;
+        case SubWalletType.monero:
+          if (coin.conf.type == EllipticCurveTypes.ed25519Monero) {
+            keys.add(ViewDerivationKeyModel(
+                name: i.name,
+                created: i.created,
+                subId: i.id,
+                allowDerivation: false,
+                icon: sWIcon));
+          }
+          break;
+        case SubWalletType.ton:
+          if (coin.conf.type == EllipticCurveTypes.ed25519) {
+            keys.add(ViewDerivationKeyModel(
+                name: i.name,
+                created: i.created,
+                subId: i.id,
+                allowDerivation: false,
+                icon: sWIcon));
+          }
+          break;
+      }
+    }
+
+    for (final i in customKeys) {
+      keys.add(ViewDerivationKeyModel(
+          name: i.name ?? i.publicKey,
+          created: i.created,
+          importedKey: i.id,
+          allowDerivation: false,
+          icon: Icon(Icons.key)));
+    }
+    derivationKeys = keys;
+    derivationKey = mainWalletDerivation;
+    nextKeyIndex = getNextDerivation();
   }
 
   Future<void> init() async {
     final importedKeys = await context.wallet.wallet.getImportedAccounts();
     assert(importedKeys.hasResult);
     this.importedKeys = importedKeys.resultOrNull ?? [];
-    coins = CustomCoins.fromCurve(widget.type)
-        .where((e) => e.conf.chainType.isMainnet)
-        .toList();
     coinItems = {
       for (final i in coins)
         i: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -184,9 +231,40 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
     updateState();
   }
 
+  Future<void> onGenerateKey() async {
+    controller.progressText("generating_public_key_please_wait".tr);
+    final index = derivationKey.toDerivationIndex(
+        coin: coin,
+        customKeyIndex: customKeyIndex,
+        defaultKeyIndex: nextKeyIndex,
+        seedGeneration: seedType);
+    final publicKey =
+        await context.wallet.wallet.getKeyDerivationPublicKey(index);
+    if (publicKey.hasError) {
+      controller.errorText(publicKey.localizationError,
+          backToIdle: false, showBackButton: true);
+      return;
+    }
+    if (showKeyMode) {
+      keyModes = builKeyModes(publicKey.result);
+      keyMode = keyModes.first;
+    }
+
+    generatedKey = publicKey.result;
+    controller.backToIdle();
+  }
+
+  void onSubmit() {
+    final key = generatedKey;
+    if (key == null) return;
+    context.pop(PublicKeyDerivationWithMode(derivation: key, mode: keyMode));
+  }
+
   @override
   void onInitOnce() {
     super.onInitOnce();
+    keyMode = widget.pubKeyMode ?? PubKeyModes.compressed;
+    walletProvider = context.wallet;
     MethodUtils.after(init);
   }
 
@@ -226,7 +304,9 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
                                 style: context.textTheme.titleMedium),
                             WidgetConstant.height8,
                             ContainerWithBorder(
-                                onRemove: allowDerivation ? () {} : null,
+                                onRemove: derivationKey.allowDerivation
+                                    ? () {}
+                                    : null,
                                 enableTap: false,
                                 onRemoveWidget: IconButton(
                                     onPressed: () {
@@ -248,7 +328,7 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
                                                   child: Bip32KeyDerivationView(
                                                       coin: coin,
                                                       defaultPath:
-                                                          nextDerivation.hdPath,
+                                                          nextKeyIndex.hdPath,
                                                       seedGeneration: seedType),
                                                   centerContent: false);
                                         },
@@ -267,10 +347,10 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
                                         })),
                                 // onRemoveIcon:,
                                 child: APPAnimated(
-                                    isActive: isImportedKey,
-                                    onDeactive: (context) => FullWidthWrapper(
+                                    isActive: derivationKey.allowDerivation,
+                                    onActive: (context) => FullWidthWrapper(
                                           key: ValueKey(
-                                              customKeyIndex ?? nextDerivation),
+                                              customKeyIndex ?? nextKeyIndex),
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
@@ -283,19 +363,17 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
                                                       .textTheme.labelLarge),
                                               AddressDrivationInfo(
                                                   customKeyIndex ??
-                                                      nextDerivation)
+                                                      nextKeyIndex)
                                             ],
                                           ),
                                         ),
-                                    onActive: (context) => Column(
+                                    onDeactive: (context) => Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text("non_derivation".tr,
                                                 style: context
                                                     .textTheme.labelLarge),
-                                            Text("import_key_derivation_desc2"
-                                                .tr),
                                             ErrorTextContainer(
                                                 error:
                                                     "key_derivation_disabled_desc"
@@ -304,42 +382,17 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
                                           ],
                                         ))),
                             WidgetConstant.height20,
-                            Text(
-                              "select_creation_type".tr,
-                              style: context.textTheme.titleMedium,
-                            ),
+                            Text("select_creation_type".tr,
+                                style: context.textTheme.titleMedium),
                             Text("generate_from_hd_wallet".tr),
                             WidgetConstant.height8,
-                            RadioGroup<EncryptedCustomKey?>(
-                              groupValue: selectedCustomKey,
-                              onChanged: onChangeCustomKey,
-                              child: Column(
-                                children: [
-                                  RadioListTile<EncryptedCustomKey?>(
-                                      value: null,
-                                      title: Text("hd_wallet".tr),
-                                      subtitle:
-                                          Text("generate_from_hd_wallet".tr)),
-                                  ...List.generate(customKeys.length, (index) {
-                                    final key = customKeys[index];
-
-                                    return RadioGroup<EncryptedCustomKey?>(
-                                      groupValue: selectedCustomKey,
-                                      onChanged: onChangeCustomKey,
-                                      child: RadioListTile(
-                                        value: key,
-                                        title: OneLineTextWidget(
-                                            key.name ?? key.publicKey),
-                                        subtitle: Text("imported_at"
-                                            .tr
-                                            .replaceOne(
-                                                key.created.toString())),
-                                      ),
-                                    );
-                                  })
-                                ],
-                              ),
-                            ),
+                            AppDropDownBottom(
+                                key: ValueKey(coin),
+                                items: items,
+                                value: derivationKey,
+                                onChanged: onChangeDerivationKey,
+                                isDense: false,
+                                isExpanded: true),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -353,7 +406,26 @@ class __PublicKeyDerivationView2State extends State<_PublicKeyDerivationView>
                           ],
                         ),
                         onDeactive: (context) => Column(children: [
-                          PublicKeysDataView(pubKey: generatedKey!.viewKey),
+                          PublicKeysDataView(publicKey: generatedKey!),
+                          ConditionalWidget(
+                              enable: showKeyMode,
+                              onActive: (context) => Column(children: [
+                                    Divider(),
+                                    AppGroupRadioBuilder<PubKeyModes>(
+                                      groupValue: keyMode,
+                                      onChanged: onChangeKeyMode,
+                                      builder: (context) {
+                                        return Column(
+                                            children: List.generate(
+                                                keyModes.length, (i) {
+                                          return AppRadioListTile<PubKeyModes>(
+                                              title: Text(
+                                                  keyModes[i].name.camelCase),
+                                              value: keyModes[i]);
+                                        }));
+                                      },
+                                    ),
+                                  ])),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

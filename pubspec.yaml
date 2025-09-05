@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.5.0+1
+version: 0.6.0+1
 
 homepage: "https://github.com/mrtnetwork/onchain_wallet"
 repository: "https://github.com/mrtnetwork/onchain_wallet"
@@ -68,10 +68,10 @@ dependencies:
     git:
       url: https://github.com/mrtnetwork/onchain_bridge.git
       ref: main
-  bitcoin_base: ^6.8.0
+  bitcoin_base: ^6.9.0
   # bitcoin_base:
   #   path: ../bitcoin_base
-  xrpl_dart: ^7.1.0
+  xrpl_dart: ^7.2.0
   # xrpl_dart:
   #   path: ../xrpl_dart
   on_chain: ^7.0.0

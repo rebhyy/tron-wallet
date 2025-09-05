@@ -4,6 +4,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/json/json/widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -12,10 +13,11 @@ class CardanoMultisigAccountInfoView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-      accsess: WalletAccsessType.unlock,
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       title: "multisig_address_infos".tr,
-      onAccsess: (credential, password, network) {
+      onAccsess: (_) {
         return NetworkAccountControllerView<ADAClient?, ICardanoAddress,
             ADAChain>(
           addressRequired: true,
@@ -40,7 +42,9 @@ class _CardanoMultisigAccountInfoView extends StatefulWidget {
 
 class __AptosMultisigAccountInfoViewState
     extends State<_CardanoMultisigAccountInfoView>
-    with ProgressMixin, SafeState<_CardanoMultisigAccountInfoView> {
+    with SafeState<_CardanoMultisigAccountInfoView> {
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   ADAChain get account => widget.account;
   late final _CardanoCredentialInfo baseKeyInfo;
   late final ICardanoMultiSigAddress address;
@@ -95,14 +99,18 @@ class __AptosMultisigAccountInfoViewState
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      initialStatus: PageProgressStatus.progress,
-      backToIdle: APPConst.oneSecoundDuration,
-      key: progressKey,
+    return StreamPageProgress(
+      controller: progressKey,
       initialWidget:
           ProgressWithTextView(text: "retrieve_account_informations".tr),
-      child: (context) {
+      builder: (context) {
         return CustomScrollView(slivers: [
           SliverConstraintsBoxView(
               padding: WidgetConstant.padding20,
@@ -151,7 +159,7 @@ class _CredentialDetailsView extends StatelessWidget {
         Text("credential_type".tr, style: context.textTheme.titleMedium),
         WidgetConstant.height8,
         ContainerWithBorder(
-          child: Text(credential.type.name,
+          child: Text(credential.type.name.tr,
               style: context.onPrimaryTextTheme.bodyMedium),
         ),
         WidgetConstant.height20,
@@ -238,10 +246,10 @@ class _ShowAddressView extends StatelessWidget {
               widget: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  OneLineTextWidget(account.publicKey,
+                      style: context.primaryTextTheme.titleMedium),
                   AddressDrivationInfo(account.keyIndex,
                       color: context.primaryContainer),
-                  OneLineTextWidget(account.publicKey,
-                      style: context.primaryTextTheme.titleMedium)
                 ],
               ),
             )),

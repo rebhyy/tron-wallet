@@ -1,6 +1,5 @@
 import 'package:blockchain_utils/cbor/cbor.dart';
 import 'package:on_chain_wallet/app/constant/global/serialization.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/euqatable/equatable.dart';
 import 'package:on_chain_wallet/app/serialization/serialization.dart';
 import 'package:on_chain_wallet/app/utils/string/utils.dart';
@@ -55,15 +54,10 @@ class APPImage with CborSerializable, Equatable implements APPImageInfo {
   }
 
   factory APPImage.deserialize({List<int>? bytes, CborObject? obj}) {
-    try {
-      final CborListValue cbor = CborSerializable.cborTagValue(
-          cborBytes: bytes, object: obj, tags: APPSerializationConst.imageTag);
-      final String uri = cbor.elementAs(1);
-      return APPImage._(
-          type: ContentType.fromValue(cbor.elementAs(0)), uri: uri);
-    } catch (e) {
-      throw WalletExceptionConst.dataVerificationFailed;
-    }
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: APPSerializationConst.imageTag);
+    final String uri = cbor.elementAs(1);
+    return APPImage._(type: ContentType.fromValue(cbor.elementAs(0)), uri: uri);
   }
   @override
   CborTagValue toCbor() {

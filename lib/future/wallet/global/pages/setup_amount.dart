@@ -32,6 +32,7 @@ class _SetupNetworkAmountState extends State<SetupNetworkAmount>
       : widget.max!.isNegative
           ? BigInt.zero
           : widget.max;
+  late final bool enableMin = widget.min > BigInt.zero;
 
   final GlobalKey<FormState> form =
       GlobalKey<FormState>(debugLabel: "SetupNetworkAmount");
@@ -39,7 +40,7 @@ class _SetupNetworkAmountState extends State<SetupNetworkAmount>
       PriceUtils.tryEncodePrice(maxValue, widget.token.decimal);
   late final String? minString =
       PriceUtils.tryEncodePrice(widget.min, widget.token.decimal);
-  late final bool enableMin = widget.min > BigInt.zero;
+
   String? validator(String? v) {
     if (v == null) {
       if (widget.token.decimal == 0) {
@@ -180,7 +181,7 @@ class _SetupNetworkAmountState extends State<SetupNetworkAmount>
                           validator: validator,
                         ),
                         Positioned(
-                          bottom: 25,
+                          top: 50,
                           left: 10,
                           child: APPStreamBuilder(
                               value: balance,
@@ -250,17 +251,17 @@ class SetupDecimalTokenAmountView extends StatefulWidget {
   const SetupDecimalTokenAmountView(
       {super.key,
       required this.token,
+      required this.min,
       this.subtitle,
       this.subtitleText,
       this.max,
-      this.min,
       this.buttonText});
   final Widget? subtitle;
   final String? subtitleText;
   final BigRational? max;
-  final BigRational? min;
+  final BigRational min;
   final String? buttonText;
-  final APPToken token;
+  final NonDecimalToken token;
 
   @override
   State<SetupDecimalTokenAmountView> createState() =>
@@ -270,21 +271,31 @@ class SetupDecimalTokenAmountView extends StatefulWidget {
 class _SetupDecimalTokenAmountViewState
     extends State<SetupDecimalTokenAmountView> with SafeState {
   final GlobalKey<FormState> form =
-      GlobalKey<FormState>(debugLabel: "SetupNetworkAmount");
-  final GlobalKey<AppTextFieldState> textFieldKey = GlobalKey();
+      GlobalKey<FormState>(debugLabel: "_SetupDecimalTokenAmountViewState");
+  final CurrencyTextEdittingController controller =
+      CurrencyTextEdittingController();
+  late StreamValue<DecimalBalance> balance =
+      StreamValue(DecimalBalance.zero(widget.token));
 
-  late final String? maxString = widget.max?.toDecimal();
-  late final String? minString = widget.min?.toDecimal();
-  String? validator(String? v) {
+  BigRational? maxValue;
+  bool enableMin = false;
+  String? maxString;
+  String? minString;
+
+  bool isMax = false;
+  bool isMin = false;
+  String? onValidatePrice(String? v) {
     if (v == null) return "decimal_int_validator".tr;
-    final rational = BigRational.tryParseDecimaal(v);
+    final rational = BigRational.tryParseDecimaal(StrUtils.removeSeperator(v));
     if (rational == null) {
       return "decimal_int_validator".tr;
     }
+    balance.value.updateBalance(rational);
+    balance.notify();
     if (widget.max != null && rational > widget.max!) {
       return "price_less_than".tr.replaceOne(
           PriceUtils.priceWithCoinName(maxString!, widget.token.symbol));
-    } else if (widget.min != null && rational < widget.min!) {
+    } else if (rational < widget.min) {
       return "price_greather_than".tr.replaceOne(
           PriceUtils.priceWithCoinName(minString!, widget.token.symbol));
     }
@@ -292,8 +303,8 @@ class _SetupDecimalTokenAmountViewState
   }
 
   String price = "0.0";
-  void onChaanged(String v) {
-    price = v;
+  void onChanged() {
+    price = controller.getText();
   }
 
   void onSetup() {
@@ -305,12 +316,41 @@ class _SetupDecimalTokenAmountViewState
     }
   }
 
+  void onTapMax() {
+    final maxString = this.maxString;
+    if (maxString != null) {
+      controller.text = maxString;
+    }
+  }
+
+  void onTapMin() {
+    final minString = this.minString;
+    if (minString != null) {
+      controller.text = minString;
+    }
+  }
+
   @override
   void onInitOnce() {
     super.onInitOnce();
-    MethodUtils.after(() async {
-      textFieldKey.ensureKeyVisible();
-    });
+    final max = widget.max;
+    maxValue = max == null
+        ? null
+        : max.isNegative
+            ? BigRational.zero
+            : max;
+    final min = widget.min;
+    enableMin = min > BigRational.zero;
+    maxString = max?.toDecimal();
+    minString = min.toDecimal();
+    controller.setSymbol(widget.token.symbolView);
+    controller.addListener(onChanged);
+  }
+
+  @override
+  void safeDispose() {
+    super.safeDispose();
+    controller.dispose();
   }
 
   @override
@@ -347,39 +387,73 @@ class _SetupDecimalTokenAmountViewState
               alignment: Alignment.center,
               child: ConstraintsBoxView(
                 maxWidth: 350,
-                key: textFieldKey,
-                child: AppTextField(
-                  style: context.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                  keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true, signed: false),
-                  textAlign: TextAlign.center,
-                  inputFormatters: [
-                    BigRetionalRangeTextInputFormatter(
-                        min: widget.min,
-                        max: null,
-                        allowSign: false,
-                        allowDecimal: true),
-                  ],
-                  validator: validator,
-                  initialValue: price,
-                  onChanged: onChaanged,
-                  prefixIcon: const SizedBox(width: 40),
-                  suffixIcon: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 50,
-                        child: OneLineTextWidget(
-                          widget.token.symbolView,
-                          style: context.textTheme.labelLarge?.copyWith(
-                              color: context.colors.primary,
-                              fontWeight: FontWeight.bold),
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        AppTextField(
+                            style: context.textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true, signed: false),
+                            textAlign: TextAlign.start,
+                            controller: controller,
+                            enableInteractiveSelection: true,
+                            maxLines: 1,
+                            constraints: BoxConstraints(minHeight: 70),
+                            inputFormatters: [
+                              BigRetionalWithSeperatorTextInputFormatter()
+                            ],
+                            validator: onValidatePrice),
+                        Positioned(
+                          top: 50,
+                          left: 10,
+                          child: APPStreamBuilder(
+                              value: balance,
+                              builder: (context, value) =>
+                                  MarketPriceView(balance: value)),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    ConditionalWidget(
+                        enable: maxValue != null || enableMin,
+                        onActive: (context) => Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                if (enableMin) ...[
+                                  FilledButton(
+                                      onPressed: onTapMin,
+                                      style: TextButton.styleFrom(
+                                          backgroundColor: isMin
+                                              ? context.colors.errorContainer
+                                              : Colors.transparent,
+                                          foregroundColor: isMin
+                                              ? context.colors.onErrorContainer
+                                              : context.colors.onSurface,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  WidgetConstant.border8)),
+                                      child: Text("min".tr)),
+                                  if (maxValue != null) WidgetConstant.width8,
+                                ],
+                                if (maxValue != null)
+                                  FilledButton(
+                                    onPressed: onTapMax,
+                                    style: TextButton.styleFrom(
+                                        backgroundColor: isMax
+                                            ? context.colors.errorContainer
+                                            : Colors.transparent,
+                                        foregroundColor: isMax
+                                            ? context.colors.onErrorContainer
+                                            : context.colors.onSurface,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                WidgetConstant.border8)),
+                                    child: Text("max".tr),
+                                  ),
+                              ],
+                            )),
+                  ],
                 ),
               ),
             ),
@@ -431,7 +505,7 @@ class _SetupDecimalExchangeRateInputState
   final CurrencyTextEdittingController controller =
       CurrencyTextEdittingController(text: "0.0");
   final GlobalKey<FormState> form =
-      GlobalKey<FormState>(debugLabel: "SetupNetworkAmount");
+      GlobalKey<FormState>(debugLabel: "_SetupDecimalExchangeRateInputState");
   late final String? maxString = widget.max?.toDecimal();
   late final String? minString = widget.min?.toDecimal();
   String? validator(String? v) {

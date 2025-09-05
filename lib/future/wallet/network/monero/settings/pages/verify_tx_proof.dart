@@ -5,18 +5,19 @@ import 'package:on_chain_wallet/crypto/requets/messages.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/account/state.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/monero/monero.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class MoneroVerifyTxProofView extends StatelessWidget {
   const MoneroVerifyTxProofView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       title: "verify_transaction_proof".tr,
-      accsess: WalletAccsessType.unlock,
-      onAccsess: (credential, password, network) {
+      onAccsess: (_) {
         return NetworkAccountControllerView<MoneroClient, IMoneroAddress,
                 MoneroChain>(
             addressRequired: true,
@@ -97,7 +98,7 @@ class _MoneroVerifyTxProofViewState
             address: selectedAccount!.networkAddress,
             signature: signature)));
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr,
+      progressKey.errorText(result.localizationError,
           backToIdle: false, showBackButton: true);
       return;
     }
@@ -112,10 +113,9 @@ class _MoneroVerifyTxProofViewState
 
   @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      key: progressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      child: (context) {
+    return StreamPageProgress(
+      controller: progressKey,
+      builder: (context) {
         return CustomScrollView(slivers: [
           SliverConstraintsBoxView(
             padding: WidgetConstant.paddingHorizontal20,

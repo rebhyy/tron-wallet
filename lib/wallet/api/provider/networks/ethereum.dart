@@ -32,8 +32,10 @@ class EthereumAPIProvider extends APIProvider {
 
   factory EthereumAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.evmApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.evmApiServiceProvider);
     final int? protocolId = values.elementAs(1);
     return EthereumAPIProvider._(
         uri: values.elementAs(0),

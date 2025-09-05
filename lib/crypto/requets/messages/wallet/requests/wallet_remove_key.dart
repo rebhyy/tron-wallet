@@ -3,10 +3,9 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/core/message.dart';
-import 'package:on_chain_wallet/crypto/requets/messages/models/models/generate_master_key.dart';
 
-final class WalletRequestRemoveKey extends WalletRequest<
-    CryptoGenerateMasterKeyResponse, MessageArgsThreeBytes> {
+final class WalletRequestRemoveKey
+    extends WalletRequest<EncryptedMasterKey, MessageArgsOneBytes> {
   final String keyId;
   const WalletRequestRemoveKey._(this.keyId);
 
@@ -32,35 +31,19 @@ final class WalletRequestRemoveKey extends WalletRequest<
   WalletRequestMethod get method => WalletRequestMethod.removeWalletKeys;
 
   @override
-  Future<MessageArgsThreeBytes> getResult(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final newWallet = wallet.removeKey(keyId);
-    final encryptWallet = newWallet.encrypt(key: key);
-    return MessageArgsThreeBytes(
-        keyOne: encryptWallet.$1.toCbor().encode(),
-        keyTwo: encryptWallet.$2,
-        keyThree: key);
+  Future<MessageArgsOneBytes> getResult(WalletInMemory wallet) async {
+    return MessageArgsOneBytes(
+        keyOne: (await result(wallet)).toCbor().encode());
   }
 
   @override
-  Future<CryptoGenerateMasterKeyResponse> parsResult(
-      MessageArgsThreeBytes result) async {
-    return CryptoGenerateMasterKeyResponse(
-        masterKey: EncryptedMasterKey.deserialize(bytes: result.keyOne),
-        storageData:
-            StringUtils.decode(result.keyTwo, type: StringEncoding.base64),
-        walletKey: result.keyThree);
+  Future<EncryptedMasterKey> parsResult(MessageArgsOneBytes result) async {
+    return EncryptedMasterKey.deserialize(bytes: result.keyOne);
   }
 
   @override
-  Future<CryptoGenerateMasterKeyResponse> result(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final newWallet = wallet.removeKey(keyId);
-    final encryptWallet = newWallet.encrypt(key: key);
-    return CryptoGenerateMasterKeyResponse(
-        masterKey: encryptWallet.$1,
-        storageData:
-            StringUtils.decode(encryptWallet.$2, type: StringEncoding.base64),
-        walletKey: key);
+  Future<EncryptedMasterKey> result(WalletInMemory wallet) async {
+    final newWallet = wallet.masterKey.removeKey(keyId);
+    return newWallet.encrypt(wallet);
   }
 }

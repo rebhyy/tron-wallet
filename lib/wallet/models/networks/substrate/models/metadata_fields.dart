@@ -9,7 +9,7 @@ abstract class LookupField {
   const LookupField();
   T cast<T extends LookupField>() {
     if (this is! T) {
-      throw WalletException.invalidArgruments(["$T", runtimeType.toString()]);
+      throw WalletExceptionConst.internalError("LookupField");
     }
     return this as T;
   }
@@ -339,7 +339,7 @@ class SubstrateDefaultExtrinsic {
               throw UnimplementedError("field not found ${i.name} $n");
           }
         } catch (e) {
-          throw WalletException('extrinsic_encoding_failed');
+          throw WalletException.error('extrinsic_encoding_failed');
         }
       }
     }

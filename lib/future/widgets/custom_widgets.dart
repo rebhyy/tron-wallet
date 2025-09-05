@@ -57,3 +57,4 @@ export 'widgets/custom_icons_icons.dart';
 export 'widgets/key_wrapper.dart';
 export 'widgets/fetch_object.dart';
 export 'widgets/tabbar.dart';
+export 'widgets/password_strength.dart';

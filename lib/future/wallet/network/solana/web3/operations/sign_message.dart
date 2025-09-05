@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/future/wallet/network/solana/web3/pages/sign_mes
 import 'package:on_chain_wallet/future/wallet/network/solana/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/params/models/sign_message.dart';

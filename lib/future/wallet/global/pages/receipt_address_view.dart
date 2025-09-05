@@ -69,30 +69,69 @@ class ReceiptAddressView extends StatelessWidget {
 
 class ReceiptAddressDetailsView extends StatelessWidget {
   const ReceiptAddressDetailsView(
-      {required this.address, super.key, this.color});
+      {required this.address, super.key, required this.color});
   final ReceiptAddress address;
-  final Color? color;
+  final Color color;
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (address.type != null)
-          Text(address.type!.tr,
+        ConditionalWidget(
+          enable: address.account?.accountName != null,
+          onActive: (context) => Text(address.account!.accountName!,
               style: context.textTheme.labelLarge?.copyWith(color: color)),
-        if (address.hasContact)
-          Text(address.contact!.name,
-              style: context.textTheme.labelSmall?.copyWith(color: color))
-        else if (address.isAccount) ...[
-          if (address.account!.accountName != null)
-            Text(address.account!.accountName!,
-                style: context.textTheme.labelSmall?.copyWith(color: color)),
-          AddressDrivationInfo(address.account!.keyIndex, color: color),
-        ],
-        OneLineTextWidget(
-          address.view,
-          style: context.textTheme.bodyMedium?.copyWith(color: color),
-        )
+          onDeactive: (context) {
+            if (address.hasContact) {
+              return RichText(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  text: TextSpan(
+                      style:
+                          context.textTheme.bodyMedium?.copyWith(color: color),
+                      children: [
+                        WidgetSpan(
+                            child: Icon(
+                          Icons.contacts,
+                          size: context.textTheme.bodyMedium?.fontSize ??
+                              APPConst.smallIconSize,
+                          color: color,
+                        )),
+                        TextSpan(text: " "),
+                        TextSpan(
+                            text: address.contact!.name,
+                            style: context.textTheme.bodyMedium
+                                ?.copyWith(color: color))
+                      ]));
+            }
+            if (address.type != null) {
+              return Text(address.type!.tr,
+                  style: context.textTheme.labelLarge?.copyWith(color: color));
+            }
+            return WidgetConstant.sizedBox;
+          },
+        ),
+        RichText(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            text: TextSpan(
+                style: context.textTheme.bodyMedium?.copyWith(color: color),
+                children: [
+                  if (address.account != null) ...[
+                    WidgetSpan(
+                        child: AddressDerivationKeyIcon(
+                      address.account!.keyIndex,
+                      color: color,
+                      size: context.textTheme.bodyMedium?.fontSize ??
+                          APPConst.smallIconSize,
+                    )),
+                    TextSpan(text: " ")
+                  ],
+                  TextSpan(
+                      text: address.view,
+                      style:
+                          context.textTheme.bodyMedium?.copyWith(color: color))
+                ])),
       ],
     );
   }

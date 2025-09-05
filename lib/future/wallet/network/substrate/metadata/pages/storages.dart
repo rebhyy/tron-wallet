@@ -60,7 +60,8 @@ class _SubstrateMetadataStoragesWidgetState
   SubstrateChainMetadata get metadata => client.metadata;
 
   late final List<PalletInfo> storagePallets;
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   GlobalKey? getStoragesKey = GlobalKey();
   final List<StorageInfo> storages = [];
   _StoragePage page = _StoragePage.select;
@@ -143,7 +144,7 @@ class _SubstrateMetadataStoragesWidgetState
           .toList());
     });
     if (r.hasError) {
-      progressKey.errorText(r.error!.tr,
+      progressKey.errorText(r.localizationError,
           backToIdle: false, showBackButton: true);
     } else {
       _results = r.result;
@@ -165,6 +166,12 @@ class _SubstrateMetadataStoragesWidgetState
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Form(
       key: formState,
@@ -172,13 +179,11 @@ class _SubstrateMetadataStoragesWidgetState
       onPopInvokedWithResult: (_, __) {
         onBackButton();
       },
-      child: PageProgress(
-        key: progressKey,
-        backToIdle: APPConst.oneSecoundDuration,
-        initialStatus: StreamWidgetStatus.progress,
+      child: StreamPageProgress(
+        controller: progressKey,
         initialWidget:
             ProgressWithTextView(text: 'retrieving_data_please_wait'.tr),
-        child: (context) => UnfocusableChild(
+        builder: (context) => UnfocusableChild(
           child: CustomScrollView(
             controller: widget.scrollController,
             slivers: [

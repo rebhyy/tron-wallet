@@ -5,7 +5,7 @@ import 'package:on_chain/tron/src/models/contract/transaction/transaction_raw.da
 import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/signing.dart';
 import 'package:on_chain_wallet/future/future.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 mixin TronTransactionSignerController on DisposableMixin {
   WalletTronNetwork get network;
@@ -41,7 +41,7 @@ mixin TronTransactionSignerController on DisposableMixin {
               }
             }
             if (threshHold < multiSigAddress.multiSignatureAccount.threshold) {
-              throw WalletExceptionConst.privateKeyIsNotAvailable;
+              throw AppCryptoExceptionConst.privateKeyIsNotAvailable;
             }
             return signerSignatures;
           }

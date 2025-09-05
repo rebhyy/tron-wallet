@@ -21,7 +21,6 @@ class _FileAndDirUtils {
 
     source.listSync(recursive: false).forEach((var entity) {
       if (entity is File) {
-        _log("path ${entity.uri.path}");
         if (extension != null && !entity.uri.path.endsWith(extension)) return;
         final newFile =
             File('${destination.path}/${entity.uri.pathSegments.last}');
@@ -347,8 +346,8 @@ class _ExtensionAndWebScriptsBuilder {
     final bool scripts = !commands.contains("--no-scripts");
     final bool extension = chrome | firefox | opera | ie;
     bool compileApp = !commands.contains("--no-app");
-    final String baseHref = "--base-href=/onchain_wallet/";
-
+    // final String baseHref = "--base-href=/onchain_wallet/";
+    final String baseHref = "--base-href=/";
     if (clean) {
       await _FlutterCommands.clean();
     }

@@ -11,9 +11,9 @@ class QuickBytesUtils {
     }
   }
 
-  static String ensureHexWithLength(String data, int strWidth) {
+  static String stringToHexWithLength(String data, int strWidth) {
     assert(strWidth.isEven, "invalid hex length");
-    final toHex = BytesUtils.toHexString(StringUtils.encode(data));
+    final toHex = BytesUtils.toHexString(StringUtils.toBytes(data));
     final hex = toHex.padLeft(strWidth, "0");
     return hex;
   }

@@ -1,9 +1,10 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/api/client/core/client.dart';
+import 'package:on_chain_wallet/wallet/api/client/networks/bitcoin/types/types.dart';
 import 'package:on_chain_wallet/wallet/api/provider/networks/bitcoin/bitcoin.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/token/network/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
@@ -30,6 +31,7 @@ abstract class BitcoinClient<T extends IBitcoinAddress> extends NetworkClient<
   Future<String> genesisHash();
   Future<BtcTransaction> getTx(String txId);
   BitcoinClient clone();
+  Future<ElectrumVerbosTxResponse?> getTransactionData(String txId);
 
   @override
   Future<List<PsbtUtxo>> getAccountsUtxos(
@@ -82,6 +84,26 @@ abstract class BitcoinClient<T extends IBitcoinAddress> extends NetworkClient<
         address: account, balance: await getBalance(account), asset: asset);
   }
 
+  Future<List<BitcoinBlockTransactionInfo>> getTrasactionsBlockInfo(
+      List<String> txIds) async {
+    txIds = txIds.toSet().toList();
+    List<BitcoinBlockTransactionInfo> transactions = [];
+    await Future.wait(txIds.map((e) async {
+      final result = await getTransactionData(e);
+      if (result == null) return;
+      final confirmed = (result.confirmations ?? 0) > 0;
+      assert(!confirmed || result.blocktime != null);
+      if (confirmed && result.blocktime == null) return;
+      transactions.add(BitcoinBlockTransactionInfo(
+          confirmed: confirmed,
+          blockTime: confirmed
+              ? DateTimeUtils.detectEpochUnit(result.blocktime!)
+              : null,
+          txId: e));
+    }));
+    return transactions;
+  }
+
   @override
   NetworkType get networkType => network.type;
 
@@ -89,7 +111,7 @@ abstract class BitcoinClient<T extends IBitcoinAddress> extends NetworkClient<
   Future<bool> initSwapClient() async {
     final init = await this.init();
     if (!init) {
-      throw WalletException('network_client_initialize_failed'.find);
+      throw ApiProviderExceptionConst.initializeClientFailed;
     }
     return true;
   }

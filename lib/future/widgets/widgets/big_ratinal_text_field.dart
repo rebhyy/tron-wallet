@@ -148,8 +148,7 @@ class BigRationalTextFieldState extends State<BigRationalTextField>
       onPaste: onPaste,
       inputFormatters: [
         // FilteringTextInputFormatter.digitsOnly,
-        BigRetionalRangeTextInputFormatter(
-            min: min,
+        BigRetionalTextInputFormatter(
             max: max,
             allowSign: allowSign,
             allowDecimal: showDecimal,

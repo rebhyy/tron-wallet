@@ -2,7 +2,7 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain/solana/src/rpc/models/models/commitment.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/constant/constants/constant.dart';
@@ -59,7 +59,7 @@ class Web3SolanaSendTransactionOptions with CborSerializable {
   }
   factory Web3SolanaSendTransactionOptions.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
-    final values = CborSerializable.cborTagValue<CborListValue>(
+    final values = CborSerializable.cborTagValue(
         cborBytes: bytes,
         hex: hex,
         object: object,
@@ -107,7 +107,7 @@ class Web3SolanaSendTransactionData with CborSerializable {
   }) : messageBytes = messageByte.asImmutableBytes;
   factory Web3SolanaSendTransactionData.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
-    final values = CborSerializable.cborTagValue<CborListValue>(
+    final values = CborSerializable.cborTagValue(
         cborBytes: bytes,
         hex: hex,
         object: object,

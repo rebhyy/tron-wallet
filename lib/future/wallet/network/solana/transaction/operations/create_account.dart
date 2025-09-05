@@ -79,7 +79,7 @@ class SolanaTransactionCreateAccountOperation
         this.rent.setValue(TransactionResourceRequirementSolanaRentData(
             value: IntegerBalance.zero(network.token),
             status: TransactionResourceRequirementFetchStatus.failed,
-            error: rent.error!.tr));
+            error: rent.localizationError));
         return;
       }
       this.rent.setValue(TransactionResourceRequirementSolanaRentData(

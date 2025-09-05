@@ -254,8 +254,8 @@ abstract class HTTPService<P extends APIProvider>
       }
       return ServiceErrorResponse(
           error: response.bodyAs<String?>(), statusCode: response.statusCode);
-    } catch (e) {
-      throw ApiProviderException.error("invalid_request_type");
+    } catch (_) {
+      throw ApiProviderExceptionConst.invalidRequestType;
     }
   }
 
@@ -265,8 +265,8 @@ abstract class HTTPService<P extends APIProvider>
           result: response.bodyAs<T>(),
           statusCode: response.statusCode,
           responseType: response.responseType);
-    } catch (e) {
-      throw ApiProviderException.error("invalid_request_type");
+    } catch (_) {
+      throw ApiProviderExceptionConst.invalidRequestType;
     }
   }
 }

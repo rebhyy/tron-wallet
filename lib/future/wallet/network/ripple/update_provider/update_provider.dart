@@ -30,7 +30,6 @@ class _UpdateRippleProvider extends StatefulWidget {
 class _UpdateRippleProviderState extends State<_UpdateRippleProvider>
     with
         SafeState<_UpdateRippleProvider>,
-        ProgressMixin<_UpdateRippleProvider>,
         UpdateNetworkProviderState<_UpdateRippleProvider, RippleAPIProvider,
             XRPAddress, IXRPAddress, XRPClient, TokenCore, NFTCore, XRPChain> {
   @override
@@ -65,7 +64,7 @@ class _UpdateRippleProviderState extends State<_UpdateRippleProvider>
         provider: provider, network: network.toNetwork());
     final init = await client.onInit();
     if (!init) {
-      throw WalletException("ripple_provider_network_id_validator");
+      throw AppException("ripple_provider_network_id_validator");
     }
     return provider;
   }

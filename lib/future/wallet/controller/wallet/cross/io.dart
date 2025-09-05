@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/wallet/controller/wallet/ui_wallet.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/status.dart';
+import 'package:on_chain_wallet/wallet/models/others/models/wallet.dart';
 
 UIWallet uiWallet(GlobalKey<NavigatorState> navigatorKey, int storageVersion) =>
     Wallet(navigatorKey: navigatorKey, storageVersion: storageVersion);

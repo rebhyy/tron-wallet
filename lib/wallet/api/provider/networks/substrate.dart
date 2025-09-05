@@ -28,8 +28,10 @@ class SubstrateAPIProvider extends APIProvider {
 
   factory SubstrateAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.substrateApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.substrateApiServiceProvider);
     final int? protocolId = values.elementAs(1);
     return SubstrateAPIProvider._(
         uri: values.elementAs(0),

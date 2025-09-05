@@ -2,7 +2,7 @@ import 'package:blockchain_utils/layout/constant/constant.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:blockchain_utils/utils/string/string.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/utils/web3_validator_utils.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';

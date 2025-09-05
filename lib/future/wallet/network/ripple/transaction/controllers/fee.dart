@@ -1,9 +1,8 @@
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
@@ -53,7 +52,6 @@ mixin RippleTransactionFeeController
 
   Future<SubmittableTransaction> simulateFee() async {
     _feeRate ??= await getFeeData();
-    // final transaction = await buildTransaction(simulate: true);
     final submitableTx = await simulateTransaction();
     if (submitableTx.transactionType ==
         SubmittableTransactionType.escrowFinish) {
@@ -68,7 +66,7 @@ mixin RippleTransactionFeeController
     }
     final result = await client.simulateTx(submitableTx);
     if (!result.isSuccess) {
-      throw WalletException(result.engineResult);
+      throw AppException(result.engineResult);
     }
     return submitableTx;
   }
@@ -81,7 +79,7 @@ mixin RippleTransactionFeeController
           await MethodUtils.call(() async => await simulateFee());
       if (transaction.isCancel) return;
       if (transaction.hasError) {
-        _setFee(error: transaction.error!.tr);
+        _setFee(error: transaction.localizationError);
         return;
       }
       final submitableTx = transaction.result;

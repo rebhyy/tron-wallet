@@ -8,7 +8,7 @@ import 'package:polkadot_dart/polkadot_dart.dart';
 class SubstrateUtils {
   static Map<String, dynamic> buildMethod(List<Map<String, dynamic>> messages) {
     if (messages.isEmpty) {
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppCryptoExceptionConst.internalError("SubstrateUtils.buildMethod");
     }
     if (messages.length == 1) {
       return messages[0];
@@ -38,7 +38,7 @@ class SubstrateUtils {
   }) {
     if (isEthereum) {
       if (curve != EllipticCurveTypes.secp256k1) {
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.internalError("SubstrateUtils.toAddress");
       }
       return SubstrateEthereumAddress.fromPublicKey(publicKey);
     }
@@ -50,7 +50,7 @@ class SubstrateUtils {
       case EllipticCurveTypes.sr25519:
         return SubstrateAddress.fromSr25519(publicKey, ss58Format: ss58Format);
       default:
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.internalError("SubstrateUtils.toAddress");
     }
   }
 

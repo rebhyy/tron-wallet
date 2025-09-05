@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/account/pages/account_controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/account/state.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -14,10 +14,11 @@ class BitcoinMultisigAccountInfoView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-      accsess: WalletAccsessType.unlock,
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       title: "multisig_address_infos".tr,
-      onAccsess: (credential, password, network) {
+      onAccsess: (_) {
         return NetworkAccountControllerView<BitcoinClient?, IBitcoinAddress,
             BitcoinChain>(
           addressRequired: true,
@@ -41,8 +42,9 @@ class _BitcoinMultisigAccountInfoView extends StatefulWidget {
 }
 
 class __BitcoinMultisigAccountInfoViewState
-    extends BitcoinAccountState<_BitcoinMultisigAccountInfoView>
-    with ProgressMixin {
+    extends BitcoinAccountState<_BitcoinMultisigAccountInfoView> {
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   @override
   BitcoinChain get account => widget.account;
   List<_BitcoinMultisigAccountInfo> keyInfos = [];
@@ -75,14 +77,18 @@ class __BitcoinMultisigAccountInfoViewState
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      initialStatus: PageProgressStatus.progress,
-      backToIdle: APPConst.oneSecoundDuration,
+    return StreamPageProgress(
       initialWidget:
           ProgressWithTextView(text: "retrieve_account_informations".tr),
-      key: progressKey,
-      child: (context) {
+      controller: progressKey,
+      builder: (context) {
         return CustomScrollView(slivers: [
           SliverConstraintsBoxView(
               padding: WidgetConstant.paddingHorizontal20,
@@ -137,7 +143,7 @@ class __BitcoinMultisigAccountInfoViewState
 class _BitcoinMultisigAccountInfo {
   final IBitcoinAddress? address;
   final String publicKey;
-  final Bip32AddressIndex keyIndex;
+  final AddressDerivationIndex keyIndex;
   final int weight;
   const _BitcoinMultisigAccountInfo(
       {required this.address,
@@ -175,8 +181,10 @@ class _ShowAddressView extends StatelessWidget {
               widget: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AddressDrivationInfo(account.keyIndex,
-                      color: context.primaryContainer),
+                  AddressDrivationInfo(
+                    account.keyIndex,
+                    color: context.primaryContainer,
+                  ),
                   OneLineTextWidget(account.publicKey,
                       style: context.primaryTextTheme.titleMedium)
                 ],

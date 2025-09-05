@@ -119,8 +119,8 @@ class Token extends APPToken {
 class NonDecimalToken extends APPToken {
   factory NonDecimalToken.deserialize({List<int>? bytes, CborObject? obj}) {
     try {
-      final CborListValue cbor = CborSerializable.decodeCborTags(
-          bytes, obj, CborTagsConst.decimalToken);
+      final CborListValue cbor = CborSerializable.cborTagValue(
+          cborBytes: bytes, object: obj, tags: CborTagsConst.decimalToken);
       final String name = cbor.elementAs(0);
       final String symbol = cbor.elementAs(1);
       final APPImage? image = cbor.elemetMybeAs<APPImage, CborTagValue>(

@@ -5,9 +5,8 @@ import 'package:on_chain_wallet/app/http/impl/impl.dart';
 import 'package:on_chain_wallet/app/utils/utils.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/cosmos/cosmos.dart';
 
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 typedef ONIBCSELECTDESTINATIONCHAIN = void Function(
     BuildContext context, CosmosIbcChainData chain);
@@ -94,10 +93,9 @@ class _CosmosTransactionPickTokenViewState
       appBar: AppBar(
         title: Text('cosmos_chains'.tr),
       ),
-      body: PageProgress(
-        key: progressKey,
-        backToIdle: APPConst.oneSecoundDuration,
-        child: (context) => CustomScrollView(
+      body: StreamPageProgress(
+        controller: progressKey,
+        builder: (context) => CustomScrollView(
           controller: widget.scrollController,
           slivers: [
             SliverConstraintsBoxView(

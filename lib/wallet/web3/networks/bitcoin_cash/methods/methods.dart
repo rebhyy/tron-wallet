@@ -1,5 +1,5 @@
 import 'package:on_chain_wallet/app/utils/list/extension.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin/methods/methods.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/bitcoin_cash/constant/constants/constant.dart';

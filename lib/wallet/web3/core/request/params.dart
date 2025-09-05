@@ -1,6 +1,5 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/messages/messages.dart';
 import 'package:on_chain_wallet/wallet/web3/core/methods/methods.dart';
@@ -12,7 +11,7 @@ import 'package:on_chain_wallet/wallet/web3/networks/cosmos/params/core/request.
 import 'package:on_chain_wallet/wallet/web3/networks/ethereum/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/permission.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/global/global.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/monero/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/ripple/params/core/request.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/solana/solana.dart';
@@ -22,6 +21,7 @@ import 'package:on_chain_wallet/wallet/web3/networks/sui/params/core/request.dar
 import 'package:on_chain_wallet/wallet/web3/networks/ton/ton.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/tron/tron.dart';
 import 'web_request.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 abstract class Web3WalletRequestParams<RESPONSE> extends Web3MessageCore {
   abstract final Web3RequestMethods method;

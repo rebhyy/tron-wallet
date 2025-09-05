@@ -1,6 +1,6 @@
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/core/permission/models/authenticated.dart';
 
 typedef ONWEB3PERMISSIONUPDATED = Future<bool> Function(

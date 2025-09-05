@@ -9,8 +9,7 @@ import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/control
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/widgets/transfer/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/ripple/client/ripple.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 class RippleTransactionPaymentOperation
@@ -150,6 +149,7 @@ class RippleTransactionPaymentOperation
       if (max.isNegative) return BigInt.zero;
       return max;
     }
+    if (_token.type.isCreateAsset) return null;
     return _token.issueToken?.currencyBalance;
   }
 
@@ -200,7 +200,7 @@ class RippleTransactionPaymentOperation
   @override
   Payment buildTransactionInternal() {
     final token = _token;
-    return Payment(
+    final payment = Payment(
         destination: recipient.value!.view,
         destinationTag: recipient.value?.networkAddress.tag,
         memos: RippleUtils.toXrplMemos(memos),
@@ -217,6 +217,7 @@ class RippleTransactionPaymentOperation
         sourceTag: address.networkAddress.tag,
         fee: txFee.fee.fee.balance,
         flags: [flag.value?.id ?? 0]);
+    return payment;
   }
 
   @override
@@ -230,18 +231,20 @@ class RippleTransactionPaymentOperation
     if (payment == null || token == null || token.type.isCreateAsset) {
       return super.buildWalletTransaction(signedTx: signedTx, txId: txId);
     }
-    final transaction =
-        XRPWalletTransaction(txId: txId.txId, network: network, outputs: [
-      XRPWalletTransactionTransferOutput(
-          to: payment.recipient,
-          amount: token.type.isNative
-              ? WalletTransactionIntegerAmount(
-                  amount: payment.amount, network: network)
-              : WalletTransactionDecimalsAmount(
-                  amount: (payment.amount as BigRational).toDecimal(),
-                  token: token.issueToken!.token,
-                  tokenIdentifier: token.issuer!)),
-    ]);
+    final WalletTransactionAmount txAmount = token.type.isNative
+        ? WalletTransactionIntegerAmount(
+            amount: payment.amount, network: network)
+        : WalletTransactionDecimalsAmount(
+            amount: (payment.amount as BigRational).toDecimal(),
+            token: token.issueToken!.token,
+            tokenIdentifier: token.issuer!);
+    final output = XRPWalletTransactionTransferOutput(
+        to: payment.recipient, amount: txAmount);
+    final transaction = XRPWalletTransaction(
+        txId: txId.txId,
+        network: network,
+        outputs: [output],
+        totalOutput: txAmount);
     return [
       IWalletTransaction(
           transaction: transaction, account: signedTx.transaction.account)

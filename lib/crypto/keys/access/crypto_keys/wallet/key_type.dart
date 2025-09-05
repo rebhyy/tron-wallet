@@ -9,8 +9,8 @@ enum CustomKeyType {
 
   static CustomKeyType fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: 'invalid crypto key tag.'));
+        orElse: () =>
+            throw AppSerializationException(objectName: "CustomKeyType"));
   }
 
   bool get isPrivateKey => this == CustomKeyType.privateKey;

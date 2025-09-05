@@ -8,7 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/typ
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/widgets/widgets/create_witness.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class TronTransactionWitnessCreateContractOperation
     extends TronTransactionStateController2<WitnessCreateContract> {

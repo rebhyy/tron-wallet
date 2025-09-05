@@ -8,7 +8,7 @@ import 'package:on_chain_wallet/wallet/web3/networks/cardano/params/models/trans
 import 'package:on_chain_wallet/wallet/web3/networks/cardano/permission/models/account.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/serialization/cbor/cbor.dart';
-import 'package:on_chain_wallet/wallet/models/chain/account.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
 import 'package:on_chain_wallet/wallet/web3/core/core.dart';
 

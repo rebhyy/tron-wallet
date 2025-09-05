@@ -8,7 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/typ
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/widgets/widgets/account_update_contract.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class TronTransactionAccountUpdateContractOperation
     extends TronTransactionStateController2<AccountUpdateContract> {

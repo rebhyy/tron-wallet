@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
+
 import 'package:on_chain_wallet/future/wallet/swap/pages/pages/swap.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/list_tile.dart';
 import 'package:on_chain_wallet/future/widgets/widgets/widget_constant.dart';
@@ -31,11 +32,10 @@ class _AppbarExtentionWidget extends StatelessWidget {
                   context.openDialogPage(
                     "",
                     child: (context) {
-                      return PasswordCheckerView(
-                        accsess: WalletAccsessType.unlock,
-                        onWalletAccess: (password) async {
-                          return null;
-                        },
+                      return AccessWalletView<WalletCredentialResponseLogin,
+                          WalletCredentialLogin>(
+                        request: WalletCredentialLogin.instance,
+                        onWalletAccess: (_) async {},
                       );
                     },
                   );

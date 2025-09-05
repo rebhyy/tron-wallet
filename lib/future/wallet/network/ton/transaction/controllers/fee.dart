@@ -1,5 +1,4 @@
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/extension.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/controllers/provider.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
@@ -8,7 +7,6 @@ mixin TonTransactionFeeController on TonTransactionApiController {
   final Cancelable _cancelable = Cancelable();
   WalletTonNetwork get network;
   final _lock = SynchronizedLock();
-  // TonTransactionFee get _defaultFee => TonTransactionFee.init(network.token);
 
   late final TonTransactionFeeData txFee = TonTransactionFeeData(
       select: TonTransactionFee.init(network.token), feeToken: network.token);
@@ -52,7 +50,7 @@ mixin TonTransactionFeeController on TonTransactionApiController {
       final fee = await MethodUtils.call(() async => await simulateFee());
       if (fee.isCancel) return;
       if (fee.hasError) {
-        setDefaultFee(error: fee.error!.tr);
+        setDefaultFee(error: fee.localizationError);
         return;
       }
       txFee.setFee(fee.result);

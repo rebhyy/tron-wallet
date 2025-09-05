@@ -1,5 +1,4 @@
 import 'package:monero_dart/monero_dart.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/isolate/types.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
@@ -7,7 +6,7 @@ import 'package:on_chain_wallet/wallet/api/client/client.dart';
 import 'package:on_chain_wallet/wallet/api/provider/provider.dart';
 import 'package:on_chain_wallet/wallet/api/services/service.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:polkadot_dart/polkadot_dart.dart';
 import 'package:stellar_dart/stellar_dart.dart';
@@ -377,7 +376,8 @@ class APIUtils {
             isolate: isolate);
         break;
       default:
-        throw WalletExceptionConst.incorrectNetwork;
+        assert(false, "invalid network");
+        return null;
     }
 
     if (client is! T) {

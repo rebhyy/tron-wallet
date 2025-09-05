@@ -5,9 +5,9 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/monero/account/state.dart';
-import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/monero.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
+
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 enum _SyncOptionsPage {
   walletRPC("wallet_rpc"),
@@ -24,10 +24,11 @@ class MoneroSyncOptionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       title: "sync_options".tr,
-      accsess: WalletAccsessType.unlock,
-      onAccsess: (credential, password, network) {
+      onAccsess: (_) {
         return NetworkAccountControllerView<MoneroClient, IMoneroAddress,
                 MoneroChain>(
             addressRequired: true,
@@ -85,8 +86,8 @@ class _MoneroSyncOptionsViewState
   bool get walletRpcConnected => walletRpcSync && walletProvider != null;
 
   _SyncOptionsPage? option;
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey(debugLabel: "_MoneroSyncOptionsViewState_progressKey");
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
 
   void onChangeWalletRpcSync(bool? _) async {
     final provider = walletProvider;
@@ -191,7 +192,7 @@ class _MoneroSyncOptionsViewState
     final walletAddresses =
         await MethodUtils.call(() => client.readMoneroWalletAdresses());
     if (walletAddresses.hasError) {
-      progressKey.errorText(walletAddresses.error!.tr,
+      progressKey.errorText(walletAddresses.localizationError,
           backToIdle: false, showBackButton: true);
       return;
     }
@@ -207,7 +208,7 @@ class _MoneroSyncOptionsViewState
       final result =
           await MethodUtils.call(() => client.readMoneroWalletTxes(account));
       if (result.hasError) {
-        progressKey.errorText(result.error?.tr ?? "");
+        progressKey.errorText(result.localizationError);
         return;
       }
       if (walletRpcSync) {
@@ -223,7 +224,7 @@ class _MoneroSyncOptionsViewState
       final unlockedInfo = await wallet.wallet
           .moneroUpdatePendingTxes(account: account, txIds: result.result);
       if (unlockedInfo.hasError) {
-        progressKey.errorText(unlockedInfo.error!.tr);
+        progressKey.errorText(unlockedInfo.localizationError);
         return;
       }
       payments = toViewPayment(unlockedInfo.result);
@@ -309,7 +310,7 @@ class _MoneroSyncOptionsViewState
       return sync;
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr,
+      progressKey.errorText(result.localizationError,
           backToIdle: false, showBackButton: true);
       return;
     }
@@ -331,7 +332,7 @@ class _MoneroSyncOptionsViewState
     final unlockedInfo = await wallet.wallet
         .moneroUpdatePendingTxes(account: account, txIds: [relatedTxIds]);
     if (unlockedInfo.hasError) {
-      progressKey.errorText(unlockedInfo.error!.tr);
+      progressKey.errorText(unlockedInfo.localizationError);
       return;
     }
     payments = toViewPayment(unlockedInfo.result);
@@ -355,6 +356,12 @@ class _MoneroSyncOptionsViewState
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Form(
       canPop: option == null,
@@ -362,11 +369,9 @@ class _MoneroSyncOptionsViewState
       onPopInvokedWithResult: (didPop, result) {
         resetToDefault();
       },
-      child: PageProgress(
-          key: progressKey,
-          backToIdle: APPConst.twoSecoundDuration,
-          initialStatus: StreamWidgetStatus.progress,
-          child: (context) {
+      child: StreamPageProgress(
+          controller: progressKey,
+          builder: (context) {
             return Center(
               child: CustomScrollView(
                 shrinkWrap: true,
@@ -692,6 +697,12 @@ class _AtHeightSyncOpetion extends StatelessWidget {
                                 onRemoveIcon: Icon(Icons.remove_circle,
                                     color: context.onPrimaryContainer),
                                 onRemove: () => state.onRemoveRequest(request),
+                                enableTap: false,
+                                onRemoveWidget: IconButton(
+                                    onPressed: () =>
+                                        state.onRemoveRequest(request),
+                                    icon: Icon(Icons.remove_circle,
+                                        color: context.onPrimaryContainer)),
                                 child: Text(
                                   request.heightsStr,
                                   style: context.onPrimaryTextTheme.bodyMedium,

@@ -95,8 +95,8 @@ enum ExtensionWalletContextType {
 
   static ExtensionWalletContextType fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: 'invalid extension context type tag'));
+        orElse: () => throw AppSerializationException(
+            objectName: "ExtensionWalletContextType"));
   }
 }
 

@@ -1,5 +1,5 @@
 import 'package:on_chain_wallet/crypto/utils/ton/ton.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:ton_dart/ton_dart.dart';
 
 import 'types.dart';

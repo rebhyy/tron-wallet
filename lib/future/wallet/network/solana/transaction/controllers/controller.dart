@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/future/wallet/network/solana/transaction/control
 import 'package:on_chain_wallet/future/wallet/network/solana/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'fee.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 import 'provider.dart';
 

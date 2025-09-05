@@ -57,6 +57,7 @@ class APPConst {
   static final APPImage aptos = APPImage.local("assets/image/aptos.png");
   static final APPImage sui = APPImage.local("assets/image/sui.png");
   static const String name = "OnChain";
+  static const String applicationId = "com.mrtnetwork.on_chain_wallet";
   static const Duration animationDuraion = Duration(milliseconds: 400);
   static const Duration milliseconds100 = Duration(milliseconds: 100);
   static const Duration milliseconds200 = Duration(milliseconds: 200);
@@ -69,6 +70,7 @@ class APPConst {
   static const double double40 = 40;
   static const double double20 = 20;
   static const double iconSize = 24;
+  static const double smallIconSize = 12;
   static const double largeIconSize = 80;
   static const double tooltipConstrainedWidth = 300;
   static const double dialogWidth = 650;

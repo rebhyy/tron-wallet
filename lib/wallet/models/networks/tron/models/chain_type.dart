@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/wallet/web3/constant/constant/exception.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 
 enum TronChainType {
   mainnet(id: 1001, genesisBlockNumber: 728126428),
@@ -10,19 +10,9 @@ enum TronChainType {
   final int id;
   final int genesisBlockNumber;
 
-  static TronChainType fromName(String? name) {
-    final lower = name?.toLowerCase();
-    return values.firstWhere((e) => e.name == lower,
-        orElse: () => throw Web3RequestExceptionConst.invalidNetwork);
-  }
-
   static TronChainType fromId(int? id) {
     return values.firstWhere((e) => e.id == id,
-        orElse: () => throw Web3RequestExceptionConst.invalidNetwork);
-  }
-
-  static TronChainType fromGenesis(int? id) {
-    return values.firstWhere((e) => e.genesisBlockNumber == id,
-        orElse: () => throw Web3RequestExceptionConst.invalidNetwork);
+        orElse: () =>
+            throw AppSerializationException(objectName: "TronChainType"));
   }
 }

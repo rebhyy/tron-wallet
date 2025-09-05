@@ -31,7 +31,6 @@ class _UpdateAptosProvider extends StatefulWidget {
 class _UpdateAptosProviderState extends State<_UpdateAptosProvider>
     with
         SafeState<_UpdateAptosProvider>,
-        ProgressMixin<_UpdateAptosProvider>,
         UpdateNetworkProviderState<
             _UpdateAptosProvider,
             AptosAPIProvider,
@@ -95,7 +94,7 @@ class _UpdateAptosProviderState extends State<_UpdateAptosProvider>
       init = await client.validateGraphQl();
     }
     if (!init) {
-      throw WalletException("network_incorrect_chain_id");
+      throw AppException("network_incorrect_chain_id");
     }
     return provider;
   }

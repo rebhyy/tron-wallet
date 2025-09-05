@@ -22,8 +22,8 @@ class StellarAPIProvider extends APIProvider {
 
   factory StellarAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.stellarApiProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.stellarApiProvider);
     return StellarAPIProvider(
       horizonUrl: values.elementAs(0),
       sorobanUrl: values.elementAs(1),

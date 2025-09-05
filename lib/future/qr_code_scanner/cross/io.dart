@@ -13,9 +13,8 @@ class _MacosBarcodeScannerViewState extends State<BarcodeScannerView>
     with SafeState {
   late bool isSecure;
   final GlobalKey globalKey = GlobalKey();
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>();
-
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   StreamSubscription<BarcodeScannerResult>? stream;
   void init() async {
     final result = await MethodUtils.call(() async {
@@ -39,7 +38,7 @@ class _MacosBarcodeScannerViewState extends State<BarcodeScannerView>
               .listen(onBarcodeData);
     }, delay: Duration.zero);
     if (result.hasError) {
-      progressKey.errorText(result.error!);
+      progressKey.errorText(result.localizationError);
     } else {
       progressKey.backToIdle();
     }
@@ -104,6 +103,7 @@ class _MacosBarcodeScannerViewState extends State<BarcodeScannerView>
   void dispose() {
     stream?.cancel();
     stream = null;
+    progressKey.dispose();
     super.dispose();
   }
 
@@ -128,21 +128,16 @@ class _MacosBarcodeScannerViewState extends State<BarcodeScannerView>
                     padding: WidgetConstant.padding20,
                     child: Container(
                       key: globalKey,
-                      child: PageProgress(
-                        backToIdle: APPConst.milliseconds100,
-                        initialStatus: StreamWidgetStatus.progress,
+                      child: StreamPageProgress(
                         initialWidget: ProgressWithTextView(
                             text: "getting_scanner_ready".tr),
-                        key: progressKey,
-                        child: (c) => const Column(
+                        controller: progressKey,
+                        builder: (c) => const Column(
                           mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.camera,
-                              size: APPConst.double80,
-                            )
+                            Icon(Icons.camera, size: APPConst.double80)
                           ],
                         ),
                       ),

@@ -44,15 +44,6 @@ class _SuiServices extends StatelessWidget {
           children: [
             AppListTile(
               trailing: const Icon(Icons.arrow_forward),
-              title: Text("multi_sig_addr".tr),
-              subtitle: Text("establishing_multi_sig_addr".tr),
-              onTap: () {
-                context.to(PageRouter.suiMultisigAddress);
-              },
-            ),
-            WidgetConstant.divider,
-            AppListTile(
-              trailing: const Icon(Icons.arrow_forward),
               title: Text("sui_key_conversion".tr),
               subtitle: Text("sui_key_conversion_desc".tr),
               onTap: () {

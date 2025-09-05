@@ -3,7 +3,7 @@ import 'package:blockchain_utils/signer/const/constants.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
 import 'package:on_chain_wallet/crypto/keys/keys.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/signing.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/bitcoin/transaction/types/types.dart';
@@ -58,7 +58,7 @@ mixin BitcoinTransactionSignerController on DisposableMixin {
                 index: keyIndex.cast(),
                 useTaproot: utxo.utxo.isP2tr,
                 sighash: sighash,
-                useBchSchnorr: !account.multiSigAccount,
+                useBchSchnorr: false,
                 network: network.coinParam.isBCH
                     ? SigningRequestMode.bitcoinCash
                     : SigningRequestMode.bitcoin);
@@ -132,7 +132,7 @@ mixin BitcoinTransactionSignerController on DisposableMixin {
                     final bitcoinSigning = BitcoinSigning(
                         digest: p.digest,
                         index: account.keyIndex.cast(),
-                        useBchSchnorr: true,
+                        useBchSchnorr: false,
                         useTaproot: account.networkAddress.type.isP2tr,
                         sighash: p.sighash,
                         network: network.type == NetworkType.bitcoinCash

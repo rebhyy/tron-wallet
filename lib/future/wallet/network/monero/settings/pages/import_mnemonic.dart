@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
-import 'package:on_chain_wallet/future/wallet/setup/setup.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/crypto/worker.dart';
 
@@ -53,13 +52,15 @@ class _GenerateMoneroMnemonicView extends StatefulWidget {
 
 class __GenerateMoneroMnemonicViewState
     extends State<_GenerateMoneroMnemonicView>
-    with SafeState<_GenerateMoneroMnemonicView> {
+    with
+        SafeState<_GenerateMoneroMnemonicView>,
+        ProgressMixin<_GenerateMoneroMnemonicView> {
   bool showKeys = false;
   bool showMnemonic = false;
   final GlobalKey<AppTextFieldState> mnemonicKey = GlobalKey<AppTextFieldState>(
       debugLabel: "__GenerateTonMnemonicViewState_1");
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  // final GlobalKey<PageProgressState> progressKey = GlobalKey();
 
   _MnemonicOption option = _MnemonicOption.import;
   _MnemonicPage? page;
@@ -141,9 +142,9 @@ class __GenerateMoneroMnemonicViewState
         .cryptoIsolateRequest(MoneroMenmonicGenerateMessage(
             language: language, wordsNum: wordsNum)));
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr);
+      progressKey.errorText(result.localizationError);
     } else {
-      mnemonic = result.result;
+      mnemonic = result.result.toStr();
       mnemonicList = CryptoKeyUtils.normalizeMnemonic(mnemonic);
       page = _MnemonicPage.viewMnemonic;
       progressKey.success();
@@ -169,7 +170,7 @@ class __GenerateMoneroMnemonicViewState
         },
       );
       if (key.hasError) {
-        progressKey.errorText(key.error?.tr ?? "");
+        progressKey.errorText(key.localizationError);
       } else {
         keyPair = key.result;
         page = _MnemonicPage.importKey;
@@ -229,10 +230,9 @@ class __GenerateMoneroMnemonicViewState
       },
       child: Form(
         key: formKey,
-        child: PageProgress(
-          key: progressKey,
-          backToIdle: APPConst.oneSecoundDuration,
-          child: (context) {
+        child: StreamPageProgress(
+          controller: progressKey,
+          builder: (context) {
             return CustomScrollView(
               slivers: [
                 SliverConstraintsBoxView(

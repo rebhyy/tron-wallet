@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/marketcap/prices/coingecko.dart';
 import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class LiveCurrencies with HttpImpl {
   final _syncRequest = SynchronizedLock();
@@ -49,15 +50,13 @@ class LiveCurrencies with HttpImpl {
   }
 
   IntegerBalance? amount(String amount, APPToken token) {
-    if (token is NonDecimalToken) return null;
+    // if (token is NonDecimalToken) return null;
     return _currenciesPrice.getPrice(
         baseCurrency: currencyToken, token: token, amount: amount);
   }
 
-  IntegerBalance? getTokenPrice({
-    required String amount,
-    required APPToken? token,
-  }) {
+  IntegerBalance? getTokenPrice(
+      {required String amount, required APPToken? token}) {
     if (token == null) return null;
     return _currenciesPrice.getPrice(
         baseCurrency: currencyToken, token: token, amount: amount);
@@ -82,6 +81,7 @@ class LiveCurrencies with HttpImpl {
       await MethodUtils.call(() async {
         return await _getCoinList();
       });
+
       if (_currenciesPrice.hasCoinList) {
         final remindIds = _currenciesPrice.getIds();
         if (remindIds.isEmpty) return;

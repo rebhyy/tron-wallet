@@ -58,6 +58,8 @@ class StreamIsolateMessageController {
       }
     } on WalletException catch (e) {
       result = MessageArgsException(e.toString());
+    } on AppCryptoException catch (e) {
+      result = MessageArgsException(e.toString());
     } on ApiProviderException catch (e) {
       result = MessageArgsException(e.toString());
     } on BlockchainUtilsException catch (e) {

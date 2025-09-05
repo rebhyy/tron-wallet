@@ -9,8 +9,7 @@ import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/types/t
 import 'package:on_chain_wallet/future/wallet/network/ripple/transaction/widgets/nfts/create.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/ripple/client/ripple.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
 class RippleTransactionNFTokenCreateOfferOperation

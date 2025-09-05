@@ -19,7 +19,8 @@ class CryptoRequestDecodeBackup
         tags: CryptoRequestMethod.decodeBackup.tag);
     final encoding = SecretWalletEncoding.values.firstWhere(
         (element) => element.name == values.elementAs<String>(2),
-        orElse: () => throw WalletExceptionConst.dataVerificationFailed);
+        orElse: () => throw AppSerializationException(
+            objectName: "CryptoRequestDecodeBackup.deserialize"));
     return CryptoRequestDecodeBackup(
         password: values.elementAs(0),
         backup: values.elementAs(1),

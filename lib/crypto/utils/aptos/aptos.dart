@@ -1,5 +1,5 @@
 import 'package:blockchain_utils/bip/ecc/curve/elliptic_curve_types.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain/on_chain.dart';
 
 class AptosUtils {
@@ -8,7 +8,7 @@ class AptosUtils {
     return switch (scheme) {
       EllipticCurveTypes.ed25519 => AptosEd25519AnySignature(signature),
       EllipticCurveTypes.secp256k1 => AptosSecp256k1AnySignature(signature),
-      _ => throw WalletException("invalid_signature")
+      _ => throw AppCryptoException("invalid_signature")
     };
   }
 

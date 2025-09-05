@@ -29,8 +29,10 @@ class RippleAPIProvider extends APIProvider {
 
   factory RippleAPIProvider.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue values = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.rippleApiServiceProvider);
+    final CborListValue values = CborSerializable.cborTagValue(
+        cborBytes: bytes,
+        object: obj,
+        tags: CborTagsConst.rippleApiServiceProvider);
     final int? protocolId = values.elementAs(1);
     return RippleAPIProvider._(
         uri: values.elementAs(0),

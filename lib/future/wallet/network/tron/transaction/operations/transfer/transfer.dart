@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/future/wallet/network/tron/transaction/controlle
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/transaction/widgets/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 abstract class TronTransactionBaseTransferOperation<
         CONTRACT extends TronBaseContract>

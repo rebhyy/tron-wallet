@@ -30,7 +30,6 @@ class _UpdateTonProvider extends StatefulWidget {
 class _UpdateSolanaProviderState extends State<_UpdateTonProvider>
     with
         SafeState<_UpdateTonProvider>,
-        ProgressMixin<_UpdateTonProvider>,
         UpdateNetworkProviderState<_UpdateTonProvider, TonAPIProvider,
             TonAddress, ITonAddress, TonClient, TokenCore, NFTCore, TonChain> {
   @override

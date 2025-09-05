@@ -56,7 +56,7 @@ final class NoneEncryptedRequestGenerateRingOutput
     final distributions = OutputDistributionResponse.fromJson(
         MoneroStorageSerializer.deserialize(rctOffsetData));
     if (distributions.distributions.length != 1) {
-      throw const WalletException("invalid_daemon_distribution_response");
+      throw ApiProviderExceptionConst.serverUnexpectedResponse;
     }
     final List<BigInt> offsets =
         List<BigInt>.from(distributions.distributions[0].distribution);
@@ -64,10 +64,10 @@ final class NoneEncryptedRequestGenerateRingOutput
       offsets[i] = offsets[i] + offsets[i - 1];
     }
     if (offsets.length < MoneroNetworkConst.cryptonoteDefaultTxSpendableAge) {
-      throw const WalletException("generate_rct_faild");
+      throw const AppCryptoException("generate_rct_faild");
     }
     if (offsets.last < maxGlobalIndex) {
-      throw const WalletException("generate_rct_faild");
+      throw const AppCryptoException("generate_rct_faild");
     }
     return offsets;
   }

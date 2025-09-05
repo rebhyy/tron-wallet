@@ -6,6 +6,7 @@ import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/app/utils/string/utils.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class SubstrateImportChainView extends StatelessWidget {
@@ -13,10 +14,11 @@ class SubstrateImportChainView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       appbar: AppBar(title: Text("import_network".tr)),
-      accsess: WalletAccsessType.unlock,
-      onAccsess: (credential, password, network) {
+      onAccsess: (_) {
         return _ImportSubstrateNetwork();
       },
     );
@@ -24,7 +26,8 @@ class SubstrateImportChainView extends StatelessWidget {
 }
 
 mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
-  final GlobalKey<PageProgressState> pageProgressKey = GlobalKey();
+  final StreamPageProgressController pageProgressKey =
+      StreamPageProgressController();
   final GlobalKey<FormState> formKey = GlobalKey(debugLabel: "form key!");
   final GlobalKey<HTTPServiceProviderFieldsState> rpcKey = GlobalKey();
   SubstrateNetworkParams? network;
@@ -130,7 +133,7 @@ mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
     final client = APIUtils.buildsubstrateClient(provider: provider);
     final init = await MethodUtils.call(() async => client.loadApi());
     if (init.hasError) {
-      pageProgressKey.errorText(init.error!.tr,
+      pageProgressKey.errorText(init.localizationError,
           backToIdle: false, showBackButton: true);
     } else if (init.result == null) {
       pageProgressKey.errorText("unsuported_network_metadata".tr);
@@ -161,7 +164,7 @@ mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
     final import = await MethodUtils.call(
         () async => wallet.wallet.updateImportNetwork(network));
     if (import.hasError) {
-      pageProgressKey.errorText(import.error!.tr,
+      pageProgressKey.errorText(import.localizationError,
           backToIdle: false, showBackButton: true);
     } else {
       pageProgressKey.successText("network_imported_to_your_wallet".tr,
@@ -177,6 +180,12 @@ mixin AddSubstrateChainState<T extends StatefulWidget> on SafeState<T> {
       metadata = null;
       updateState();
     }
+  }
+
+  @override
+  void safeDispose() {
+    super.safeDispose();
+    pageProgressKey.dispose();
   }
 }
 
@@ -198,10 +207,10 @@ class __ImportSubstrateNetworkState extends State<_ImportSubstrateNetwork>
       canPop: canPop,
       onPopInvokedWithResult: onBackButton,
       child: UnfocusableChild(
-        child: PageProgress(
-          key: pageProgressKey,
-          backToIdle: APPConst.oneSecoundDuration,
-          child: (c) => CustomScrollView(
+        child: StreamPageProgress(
+          controller: pageProgressKey,
+          // backToIdle: APPConst.oneSecoundDuration,
+          builder: (c) => CustomScrollView(
             slivers: [
               SliverConstraintsBoxView(
                   padding: WidgetConstant.padding20,

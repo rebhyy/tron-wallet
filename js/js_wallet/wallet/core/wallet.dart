@@ -3,7 +3,7 @@ import 'dart:js_interop';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_bridge/models/events/models/wallet_event.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 import 'package:on_chain_wallet/wallet/web3/utils/web3_validator_utils.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 import '../../../js_crypto_utils.dart';

@@ -1,7 +1,7 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/keys.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/networks/cardano/models/address_details.dart';
 import 'package:on_chain_wallet/crypto/coins/custom_coins/coins.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
@@ -120,8 +120,7 @@ final class WalletRequestDeriveAddress
   static CryptoDeriveAddressResponse _deriveAptosAddress(
       AptosNewAddressParams addressParams, WalletMasterKeys wallet) {
     if (addressParams.coin.conf.type != addressParams.keyScheme.curve) {
-      throw WalletExceptionConst.invalidData(
-          messsage: "Invalid aptos address derivation coin.");
+      throw AppCryptoExceptionConst.invalidCoin;
     }
     final keyRequest =
         AccessCryptoPrivateKeyRequest(index: addressParams.deriveIndex);
@@ -137,8 +136,7 @@ final class WalletRequestDeriveAddress
             publicKey.keyBytes(), addressParams.coin.conf.type);
         address = AptosAddrEncoder().encodeSingleKey(key);
       default:
-        throw WalletExceptionConst.invalidData(
-            messsage: "Invalid aptos address derivation coin.");
+        throw AppCryptoExceptionConst.invalidCoin;
     }
     addressParams = addressParams.updateAddress(AptosAddress(address));
     return CryptoDeriveAddressResponse(
@@ -162,8 +160,7 @@ final class WalletRequestDeriveAddress
         address = SuiSecp256r1AddrEncoder().encodeKey(publicKey.keyBytes());
         break;
       default:
-        throw WalletExceptionConst.invalidData(
-            messsage: "Invalid sui key algorithm.");
+        throw AppCryptoExceptionConst.invalidCoin;
     }
     addressParams = addressParams.updateAddress(SuiAddress(address));
     return CryptoDeriveAddressResponse(
@@ -199,9 +196,8 @@ final class WalletRequestDeriveAddress
   }
 
   @override
-  Future<MessageArgsTwoBytes> getResult(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    final deriveAddr = deriveAddress(addressParams, wallet);
+  Future<MessageArgsTwoBytes> getResult(WalletInMemory wallet) async {
+    final deriveAddr = deriveAddress(addressParams, wallet.masterKey);
     return MessageArgsTwoBytes(
         keyOne: deriveAddr.accountParams.toCbor().encode(),
         keyTwo: deriveAddr.publicKey.toCbor().encode());
@@ -217,8 +213,7 @@ final class WalletRequestDeriveAddress
   }
 
   @override
-  Future<CryptoDeriveAddressResponse> result(
-      {required WalletMasterKeys wallet, required List<int> key}) async {
-    return deriveAddress(addressParams, wallet);
+  Future<CryptoDeriveAddressResponse> result(WalletInMemory wallet) async {
+    return deriveAddress(addressParams, wallet.masterKey);
   }
 }

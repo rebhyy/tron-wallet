@@ -21,14 +21,14 @@ class BigRangeTextInputFormatter extends TextInputFormatter {
       final BigInt? enteredNumber = BigInt.tryParse(newString);
       if (enteredNumber != null) {
         if (enteredNumber < min) {
-          return BigRetionalRangeTextInputFormatter._buildOldValue(oldValue);
+          return BigRetionalTextInputFormatter._buildOldValue(oldValue);
         } else if (max != null && enteredNumber > max!) {
-          return BigRetionalRangeTextInputFormatter._buildOldValue(oldValue);
+          return BigRetionalTextInputFormatter._buildOldValue(oldValue);
         } else {
           newString = enteredNumber.toString();
         }
       } else {
-        return BigRetionalRangeTextInputFormatter._buildOldValue(oldValue);
+        return BigRetionalTextInputFormatter._buildOldValue(oldValue);
       }
     } else {
       newString = min.toString();
@@ -55,14 +55,14 @@ class RangeTextInputFormatter extends TextInputFormatter {
       final int? enteredNumber = int.tryParse(newString);
       if (enteredNumber != null) {
         if (enteredNumber < min) {
-          return BigRetionalRangeTextInputFormatter._buildOldValue(oldValue);
+          return BigRetionalTextInputFormatter._buildOldValue(oldValue);
         } else if (max != null && enteredNumber > max!) {
-          return BigRetionalRangeTextInputFormatter._buildOldValue(oldValue);
+          return BigRetionalTextInputFormatter._buildOldValue(oldValue);
         } else {
           newString = enteredNumber.toString();
         }
       } else {
-        return BigRetionalRangeTextInputFormatter._buildOldValue(oldValue);
+        return BigRetionalTextInputFormatter._buildOldValue(oldValue);
       }
     } else {
       newString = min.toString();
@@ -107,16 +107,15 @@ class ValidIntegerTextInputFormatter extends TextInputFormatter {
   }
 }
 
-class BigRetionalRangeTextInputFormatter extends TextInputFormatter {
-  final BigRational? min;
+class BigRetionalTextInputFormatter extends TextInputFormatter {
+  // final BigRational? min;
   final BigRational? max;
   final int? maxScale;
   final bool allowDecimal;
   final bool allowSign;
 
-  BigRetionalRangeTextInputFormatter(
-      {required this.min,
-      this.max,
+  BigRetionalTextInputFormatter(
+      {this.max,
       this.maxScale,
       this.allowSign = true,
       this.allowDecimal = true});
@@ -139,9 +138,7 @@ class BigRetionalRangeTextInputFormatter extends TextInputFormatter {
       final BigRational? enteredNumber =
           BigRational.tryParseDecimaal(newString);
       if (enteredNumber != null) {
-        if (min != null && enteredNumber < min!) {
-          return _buildOldValue(oldValue);
-        } else if (max != null && enteredNumber > max!) {
+        if (max != null && enteredNumber > max!) {
           return _buildOldValue(oldValue);
         } else if (maxScale != null && enteredNumber.scale > maxScale!) {
           return _buildOldValue(oldValue);

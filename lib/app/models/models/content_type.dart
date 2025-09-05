@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 
 enum ContentType {
   local(0),
@@ -15,7 +15,7 @@ enum ContentType {
   static ContentType fromValue(int? value, {ContentType? defaultValue}) {
     return values.firstWhere((element) => element.value == value, orElse: () {
       if (defaultValue != null) return defaultValue;
-      throw WalletExceptionConst.dataVerificationFailed;
+      throw AppSerializationException(objectName: "DigestAuthHeadersAlg");
     });
   }
 }

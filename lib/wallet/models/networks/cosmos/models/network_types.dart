@@ -1,4 +1,4 @@
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 
 class CosmosNetworkTypes {
   final int value;
@@ -17,7 +17,7 @@ class CosmosNetworkTypes {
   ];
   factory CosmosNetworkTypes.fromValue(int value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "invalid cosmos network type."));
+        orElse: () =>
+            throw AppSerializationException(objectName: "CosmosNetworkTypes"));
   }
 }

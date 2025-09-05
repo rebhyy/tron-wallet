@@ -22,6 +22,11 @@ mixin BaseRepository {
     return await AppNativeMethods.platform.writeDb(statement);
   }
 
+  Future<bool> insertStorages(
+      List<ITableInsertOrUpdateStructA> storages) async {
+    return await AppNativeMethods.platform.writeAllDb(storages);
+  }
+
   Future<ITableDataStructA?> queryStorage({
     required int storage,
     int storageId = APPDatabaseConst.defaultStorageId,

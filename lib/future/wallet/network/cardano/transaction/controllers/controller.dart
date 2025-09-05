@@ -59,12 +59,10 @@ abstract class ADATransactionStateController
               false => mAccount.addressInfo.credential
             };
             if (cred == null) {
-              throw WalletExceptionConst.invalidAccountDetails;
+              throw WalletExceptionConst.invalidAccountDeta("signTransaction");
             }
             List<Vkeywitness> witnesses = [];
             for (int i = 0; i <= cred.threshold; i++) {
-              // final witness =
-              //     ADATransactionBuilderUtils.fakeVkeyWitnessWitness();
               signatures.add(fakeWitness.signature.data);
               witnesses.add(fakeWitness);
               if (witnesses.length >= cred.threshold) break;
@@ -107,7 +105,8 @@ abstract class ADATransactionStateController
                 false => mAccount.addressInfo.credential
               };
               if (cred == null) {
-                throw WalletExceptionConst.invalidAccountDetails;
+                throw WalletExceptionConst.invalidAccountDeta(
+                    "signTransaction");
               }
               final indexes = cred.keyIndexes;
               List<Vkeywitness> witnesses = [];

@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/types/types.dart';
@@ -168,13 +168,12 @@ class LiveFormWidgetBalanceCore<T> extends StatelessWidget {
                   final T? max = onUpdateAmountMax?.call();
                   final T? min = onUpdateAmountMin?.call();
                   context
-                      .openSliverBottomSheet<T>(
-                    "setup_amount".tr,
-                    child: SetupDecimalTokenAmountView(
-                        token: value.token,
-                        max: max as BigRational?,
-                        min: (min ?? BigRational.zero) as BigRational),
-                  )
+                      .openSliverBottomSheet<T>("setup_amount".tr,
+                          child: SetupDecimalTokenAmountView(
+                              token: value.token as NonDecimalToken,
+                              max: max as BigRational?,
+                              min: (min ?? BigRational.zero) as BigRational),
+                          initiaalExtend: 0.9)
                       .then((v) {
                     if (v == null) return;
                     onUpdateAmount(v, v == max);
@@ -251,7 +250,7 @@ class LiveFormWidgetReceiverAddress<NETWORKADDRESS> extends StatelessWidget {
           Text(field.title, style: context.textTheme.titleMedium),
           if (subtitle != null) Text(subtitle),
           WidgetConstant.height8,
-          ContainerWithBorder(
+          CustomizedContainer(
             validate: !field.hasError,
             onRemove: onUpdateAddress == null
                 ? null
@@ -451,15 +450,13 @@ class LiveWidgetTransferDetails<T extends TransferOutputDetails>
       value: transfer.notifier,
       builder: (context, value) {
         final isValid = onValidateTransfer?.call(transfer) ?? true;
-        return ContainerWithBorder(
-          iconAlginment: CrossAxisAlignment.start,
-          onRemoveWidget: IconButton(
-              onPressed: () => onRemove?.call(transfer),
-              icon: Icon(Icons.remove_circle,
-                  color: context.colors.onPrimaryContainer)),
+        return CustomizedContainer(
+          onTapStackIcon:
+              onRemove == null ? null : () => onRemove?.call(transfer),
+          onStackIcon: Icons.remove_circle,
+          reverseColor: context.colors.onPrimaryContainer,
           validate: transfer.isReady && isValid,
           enableTap: false,
-          onRemove: onRemove == null ? null : () {},
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

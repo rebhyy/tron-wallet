@@ -3,7 +3,7 @@ import 'package:blockchain_utils/bip/substrate/conf/substrate_coins.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/coins/custom_coins/coins.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 
 class BipDerivationUtils {
   static const String substrateBaseAccount = "//44//60//0/0/";
@@ -11,36 +11,42 @@ class BipDerivationUtils {
       {required CryptoCoins coin,
       List<ChainAccount> addresses = const [],
       required SeedTypes seedGenerationType,
-      int? coinType}) {
+      int? coinType,
+      int? subId}) {
     if (coin.proposal == SubstratePropoosal.substrate) {
       return findNextSubstratePath(
-          coin: coin as SubstrateCoins, addresses: addresses);
+          coin: coin as SubstrateCoins, addresses: addresses, subId: subId);
     }
     if (coin.proposal == CustomProposal.cip0019) {
-      return findNextByronLegacyIndex(coin: coin, addresses: addresses);
+      return findNextByronLegacyIndex(
+          coin: coin, addresses: addresses, subId: subId);
     }
     return findNextBip32Index(
         coin: coin as BipCoins,
         addresses: addresses,
         seedGenerationType: seedGenerationType,
-        coinType: coinType);
+        coinType: coinType,
+        subId: subId);
   }
 
-  static Bip32AddressIndex findNextBip32Index(
+  static Bip32AddressIndex findMoneroNextBip32Index(
       {required BipCoins coin,
-      required List<ChainAccount> addresses,
+      required List<IMoneroAddress> addresses,
       required SeedTypes seedGenerationType,
-      int? coinType}) {
-    final List<Bip32AddressIndex> existsIndexes = addresses
-        .map((e) => e.keyIndex)
-        .whereType<Bip32AddressIndex>()
-        .toList();
+      int? coinType,
+      int? subId,
+      int major = 0,
+      int minor = 0}) {
+    // final List<Bip32AddressIndex> existsIndexes = addresses
+    //     .map((e) => e.keyIndex)
+    //     .whereType<Bip32AddressIndex>()
+    //     .toList();
     final int purposeIndex = coin.proposal.purpose.index;
     final int coinIndex =
         Bip32KeyIndex.hardenIndex(coinType ?? coin.conf.coinIdx).index;
     final def = Bip32PathParser.parse(coin.conf.defPath);
     if (def.elems.isEmpty) {
-      throw WalletException("Invalid_coin_default_path");
+      throw AppCryptoException("Invalid_coin_default_path");
     }
 
     final List<int?> indexKeyes = List.from([
@@ -56,7 +62,7 @@ class BipDerivationUtils {
     final validIndex = indexKeyes.lastIndexWhere((element) => element != null);
     final startIndex = def.elems.elementAt(validIndex).index;
     for (int i = startIndex; i < Bip32KeyDataConst.keyIndexMaxVal; i++) {
-      final newKeyIndex = Bip32AddressIndex(
+      Bip32AddressIndex newKeyIndex = Bip32AddressIndex(
           purpose: purposeIndex,
           coin: coinIndex,
           accountLevel: getCorrectIndex(0, validIndex, i),
@@ -64,6 +70,61 @@ class BipDerivationUtils {
           addressIndex: getCorrectIndex(2, validIndex, i),
           currencyCoin: coin,
           seedGeneration: seedGenerationType);
+      if (subId != null) {
+        newKeyIndex = newKeyIndex.asSubWalletKey(subId);
+      }
+      if (!addresses.any((e) =>
+          e.keyIndex == newKeyIndex &&
+          e.addrDetails.index.major == major &&
+          e.addrDetails.index.minor == minor)) {
+        return newKeyIndex;
+      }
+    }
+    throw WalletExceptionConst.tooManyAccounts;
+  }
+
+  static Bip32AddressIndex findNextBip32Index(
+      {required BipCoins coin,
+      required List<ChainAccount> addresses,
+      required SeedTypes seedGenerationType,
+      int? coinType,
+      int? subId}) {
+    final List<Bip32AddressIndex> existsIndexes = addresses
+        .map((e) => e.keyIndex)
+        .whereType<Bip32AddressIndex>()
+        .toList();
+    final int purposeIndex = coin.proposal.purpose.index;
+    final int coinIndex =
+        Bip32KeyIndex.hardenIndex(coinType ?? coin.conf.coinIdx).index;
+    final def = Bip32PathParser.parse(coin.conf.defPath);
+    if (def.elems.isEmpty) {
+      throw AppCryptoException("Invalid_coin_default_path");
+    }
+
+    final List<int?> indexKeyes = List.from([
+      def.elems.elementAtOrNull(0)!.index,
+      def.elems.elementAtOrNull(1)?.index,
+      def.elems.elementAtOrNull(2)?.index,
+    ], growable: false);
+    int? getCorrectIndex(int elemIndex, int elemValidIndex, int index) {
+      if (elemIndex == elemValidIndex) return index;
+      return indexKeyes[elemIndex];
+    }
+
+    final validIndex = indexKeyes.lastIndexWhere((element) => element != null);
+    final startIndex = def.elems.elementAt(validIndex).index;
+    for (int i = startIndex; i < Bip32KeyDataConst.keyIndexMaxVal; i++) {
+      Bip32AddressIndex newKeyIndex = Bip32AddressIndex(
+          purpose: purposeIndex,
+          coin: coinIndex,
+          accountLevel: getCorrectIndex(0, validIndex, i),
+          changeLevel: getCorrectIndex(1, validIndex, i),
+          addressIndex: getCorrectIndex(2, validIndex, i),
+          currencyCoin: coin,
+          seedGeneration: seedGenerationType);
+      if (subId != null) {
+        newKeyIndex = newKeyIndex.asSubWalletKey(subId);
+      }
       if (!existsIndexes.contains(newKeyIndex)) {
         return newKeyIndex;
       }
@@ -71,18 +132,21 @@ class BipDerivationUtils {
     throw WalletExceptionConst.tooManyAccounts;
   }
 
-  static Bip32AddressIndex findNextByronLegacyIndex({
-    required CryptoCoins coin,
-    required List<ChainAccount> addresses,
-  }) {
+  static Bip32AddressIndex findNextByronLegacyIndex(
+      {required CryptoCoins coin,
+      required List<ChainAccount> addresses,
+      int? subId}) {
     final List<Bip32AddressIndex> addressIndex = addresses
         .map((e) => e.keyIndex)
         .whereType<Bip32AddressIndex>()
         .toList();
 
     for (int i = 0; i < Bip32KeyDataConst.keyIndexMaxVal; i++) {
-      final newKeyIndex = Bip32AddressIndex.byronLegacy(
+      Bip32AddressIndex newKeyIndex = Bip32AddressIndex.byronLegacy(
           firstIndex: 0, secoundIndex: i, currencyCoin: coin);
+      if (subId != null) {
+        newKeyIndex = newKeyIndex.asSubWalletKey(subId);
+      }
       if (!addressIndex.contains(newKeyIndex)) {
         return newKeyIndex;
       }
@@ -93,6 +157,7 @@ class BipDerivationUtils {
   static SubstrateAddressIndex findNextSubstratePath({
     required SubstrateCoins coin,
     required List<ChainAccount> addresses,
+    int? subId,
   }) {
     final List<SubstrateAddressIndex> addressIndex = addresses
         .map((e) => e.keyIndex)
@@ -100,8 +165,11 @@ class BipDerivationUtils {
         .toList();
 
     for (int i = 0; i < Bip32KeyDataConst.keyIndexMaxVal; i++) {
-      final newKeyIndex = SubstrateAddressIndex(
+      SubstrateAddressIndex newKeyIndex = SubstrateAddressIndex(
           currencyCoin: coin, substratePath: "$substrateBaseAccount$i");
+      if (subId != null) {
+        newKeyIndex = newKeyIndex.asSubWalletKey(subId);
+      }
       if (!addressIndex.contains(newKeyIndex)) {
         return newKeyIndex;
       }

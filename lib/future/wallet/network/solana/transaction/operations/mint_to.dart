@@ -8,7 +8,7 @@ import 'package:on_chain_wallet/future/wallet/network/solana/transaction/widgets
 import 'package:on_chain_wallet/future/wallet/transaction/fields/fields.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/controller.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class SolanaTransactionMintToOperation
     extends SolanaTransactionStateController {
@@ -81,7 +81,8 @@ class SolanaTransactionMintToOperation
         mint.setValue(TransactionResourceRequirementMintAccount(
             value: value.value,
             status: TransactionResourceRequirementFetchStatus.failed,
-            error: mintAccountData.error?.tr ?? "mint_account_not_found".tr));
+            error: mintAccountData.localizationErrorOrNull ??
+                "mint_account_not_found".tr));
         return;
       }
       final mintAccount = mintAccountData.result!;

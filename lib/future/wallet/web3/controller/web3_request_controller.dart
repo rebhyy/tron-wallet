@@ -4,11 +4,10 @@ import 'package:blockchain_utils/crypto/quick_crypto.dart';
 import 'package:blockchain_utils/helper/extensions/extensions.dart';
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:blockchain_utils/uuid/uuid.dart';
-import 'package:on_chain_bridge/models/events/models/wallet_event.dart';
 import 'package:on_chain_bridge/platform_interface.dart';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
-import 'package:on_chain_wallet/wallet/models/others/models/status.dart';
+import 'package:on_chain_wallet/wallet/models/others/models/wallet.dart';
 import 'package:on_chain_wallet/wallet/provider/wallet_provider.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
 import 'package:on_chain_wallet/crypto/worker.dart';
@@ -342,6 +341,11 @@ mixin Web3RequestControllerImpl on CryptoWokerImpl {
         break;
       default:
     }
+  }
+
+  bool clientExists(Web3DappInfo dappData) {
+    return clients
+        .any((e) => e.client.identifier == dappData.clientInfo.identifier);
   }
 
   Future<void> updateClientAuthenticated(Web3DappInfo dappData) async {

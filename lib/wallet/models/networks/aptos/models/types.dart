@@ -1,7 +1,7 @@
 import 'package:blockchain_utils/bip/bip/conf/bip44/bip44_coins.dart';
 import 'package:blockchain_utils/bip/ecc/bip_ecc.dart';
 import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/types/types.dart';
@@ -20,8 +20,8 @@ enum AptosSupportKeyScheme {
   const AptosSupportKeyScheme({required this.value, required this.name});
   static AptosSupportKeyScheme fromValue(int? value) {
     return values.firstWhere((e) => e.value == value,
-        orElse: () => throw WalletExceptionConst.invalidData(
-            messsage: "AptosSupportKeyScheme not found $value"));
+        orElse: () => throw AppSerializationException(
+            objectName: "AptosSupportKeyScheme"));
   }
 
   AptosSigningScheme get toSigningScheme {
@@ -49,8 +49,7 @@ enum AptosSupportKeyScheme {
         AptosSupportKeyScheme.signleKeyEd25519,
       Bip44Coins.aptosSecp256k1SingleKey =>
         AptosSupportKeyScheme.signleKeySecp256k1,
-      _ => throw WalletExceptionConst.invalidData(
-          messsage: "Invalid aptos drivation coin")
+      _ => throw AppCryptoExceptionConst.invalidCoin
     };
   }
 }

@@ -1,7 +1,10 @@
 import 'package:blockchain_utils/crypto/crypto/crypto.dart';
+import 'package:blockchain_utils/crypto/quick_crypto.dart';
+import 'package:on_chain_wallet/app/dev/logging.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 
 class WorkerCryptoUtils {
+  static const int keyItration = 25000;
   static List<int> generateNonce(List<int> seed) {
     final hasher = SHAKE128();
     final digest = List<int>.unmodifiable(hasher.update(seed).digest(12));
@@ -9,11 +12,23 @@ class WorkerCryptoUtils {
     return digest;
   }
 
-  static List<int> hashKey(
+  static List<int> hashKeyOld(
       {required List<int> key, required List<int> checksum}) {
     final List<int> keyBytes = SHA3.hash(List.from([...key, ...checksum]));
     return List<int>.unmodifiable(
         keyBytes.sublist(0, WalletProviderConst.encryptionKeyLength));
+  }
+
+  static List<int> hashKeyNew(
+      {required List<int> key, required List<int> checksum}) {
+    final hash = QuickCrypto.sha256Hash(key);
+    return Logg.def(
+        () => PBKDF2.deriveKey(
+            mac: () => HMAC(() => SHA512(), hash),
+            salt: checksum,
+            iterations: keyItration,
+            length: WalletProviderConst.encryptionKeyLength),
+        "hash key");
   }
 
   static List<int> encryptChacha(
@@ -21,7 +36,11 @@ class WorkerCryptoUtils {
       required List<int> nonce,
       required List<int> data}) {
     final chacha = ChaCha20Poly1305(key);
-    return chacha.encrypt(nonce, data);
+    try {
+      return chacha.encrypt(nonce, data);
+    } finally {
+      chacha.clean();
+    }
   }
 
   static List<int>? decryptChacha({
@@ -30,11 +49,15 @@ class WorkerCryptoUtils {
     required List<int> data,
   }) {
     final chacha = ChaCha20Poly1305(key);
-    final decrypt = chacha.decrypt(nonce, data);
-    if (decrypt != null) {
-      return List<int>.unmodifiable(decrypt);
+    try {
+      final decrypt = chacha.decrypt(nonce, data);
+      if (decrypt != null) {
+        return List<int>.unmodifiable(decrypt);
+      }
+      return decrypt;
+    } finally {
+      chacha.clean();
     }
-    return decrypt;
   }
 
   static List<List<int>> divideRange(

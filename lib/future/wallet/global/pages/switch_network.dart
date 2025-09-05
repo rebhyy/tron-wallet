@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 class SwitchNetworkView extends StatefulWidget {
   const SwitchNetworkView({required this.selectedNetwork, super.key});
@@ -17,8 +17,8 @@ class SwitchNetworkView extends StatefulWidget {
 
 class _SwitchNetworkViewState extends State<SwitchNetworkView>
     with SafeState<SwitchNetworkView> {
-  final GlobalKey<PageProgressState> progressKey =
-      GlobalKey<PageProgressState>();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   static const double imageRadius = 15;
 
   List<Chain> allChains = [];
@@ -170,6 +170,7 @@ class _SwitchNetworkViewState extends State<SwitchNetworkView>
   @override
   void safeDispose() {
     allChains = [];
+    progressKey.dispose();
     super.safeDispose();
   }
 
@@ -201,11 +202,9 @@ class _SwitchNetworkViewState extends State<SwitchNetworkView>
             ],
           ),
           // shrinkWrap: true,
-          body: PageProgress(
-            backToIdle: APPConst.oneSecoundDuration,
-            initialStatus: StreamWidgetStatus.progress,
-            key: progressKey,
-            child: (c) => Row(
+          body: StreamPageProgress(
+            controller: progressKey,
+            builder: (c) => Row(
               children: [
                 Column(
                   children: [

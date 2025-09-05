@@ -1,13 +1,13 @@
 import 'package:on_chain/sui/src/keypair/types/types.dart';
 import 'package:on_chain/sui/src/keypair/utils/utils.dart';
 import 'package:on_chain/sui/src/transaction/types/types.dart';
-import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/signing.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/transaction/types/types.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/network/core/network/network.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';
 
@@ -44,7 +44,7 @@ mixin SuiTransactionSignerController on DisposableMixin {
             }
           }
           if (weight < multisigAccount.multiSignatureAddress.threshold) {
-            throw WalletException("insufficient_signatures");
+            throw AppException("insufficient_signatures");
           }
           return genericSignatures;
         } else {

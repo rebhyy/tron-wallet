@@ -20,13 +20,13 @@ import 'package:on_chain_wallet/future/wallet/network/substrate/web3/permission/
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/permission/web3_permission.dart';
 import 'package:on_chain_wallet/future/wallet/network/ton/web3/permission/web3_permission.dart';
 import 'package:on_chain_wallet/future/wallet/network/tron/web3/permission/web3_permission.dart';
-import 'package:on_chain_wallet/future/wallet/security/security.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/client_info.dart';
 import 'package:on_chain_wallet/future/wallet/web3/types/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/wallet/web3/web3.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 class Web3PermissionUpdateView extends StatelessWidget {
   const Web3PermissionUpdateView(
@@ -44,13 +44,14 @@ class Web3PermissionUpdateView extends StatelessWidget {
       maxWidth: APPConst.dialogWidth,
       child: ClipRRect(
           borderRadius: WidgetConstant.border25,
-          child: PasswordCheckerView(
+          child: AccessWalletView<WalletCredentialResponseLogin,
+                  WalletCredentialLogin>(
+              request: WalletCredentialLogin.instance,
               appbar: AppBar(
                 title: Text('web3_permission'.tr,
                     style: context.textTheme.titleMedium),
               ),
-              accsess: WalletAccsessType.unlock,
-              onAccsess: (credential, password, network) {
+              onAccsess: (_) {
                 return Web3ApplicationPermissionView(
                     authenticated: authenticated,
                     onPermissionUpdate: onPermissionUpdate);
@@ -188,7 +189,7 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
         application,
         networks: request.hasLockedNetwork ? request.lockedNetworks : null);
     if (internalChains.hasError) {
-      controller.errorText(internalChains.error!.tr, backToIdle: false);
+      controller.errorText(internalChains.localizationError, backToIdle: false);
       return;
     }
     if (walletChains.isEmpty) {
@@ -207,7 +208,7 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
     if (activities.isEmpty) {
       final activities =
           await walletProvider.wallet.getWeb3ApplicationActivities(application);
-      assert(activities.hasResult, activities.error?.tr);
+      assert(activities.hasResult, activities.localizationError);
       this.activities = activities.resultOrNull ?? [];
     }
     controller.backToIdle();
@@ -282,7 +283,7 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
         .updateWeb3Application(application: cp, chains: updatedNetwork);
     if (update.hasError) {
       controller.errorText(
-        update.error!.tr,
+        update.localizationError,
         backToIdle: false,
         showBackButton: true,
         onTapBackButton: () => updateState(() {
@@ -330,9 +331,9 @@ class __Web3APPPermissionViewState extends State<_Web3ApplicationPermissionView>
     updateState();
     final result = await walletProvider.wallet
         .removeWeb3ApplicationActivities(application);
-    assert(result.hasResult, result.error?.tr);
+    assert(result.hasResult, result.localizationError);
     if (result.hasError) {
-      controller.errorText(result.error!.tr);
+      controller.errorText(result.localizationError);
     } else {
       activities = [];
       controller.success();

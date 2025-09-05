@@ -4,7 +4,7 @@ import 'package:on_chain_wallet/crypto/utils/address/utils.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/global/pages/types.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 typedef ONADDCONTACT<NETWORKADDRESS> = void Function(
     ContactCore<NETWORKADDRESS>);
@@ -33,8 +33,8 @@ class _AddToContactListViewState<NETWORKADDRESS>
   final GlobalKey<AppTextFieldState> addressFieldKey =
       GlobalKey(debugLabel: "SelectAddress");
   ContactCore<NETWORKADDRESS>? contact;
-  final GlobalKey<PageProgressState> buttonProgressKey =
-      GlobalKey<PageProgressState>();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController();
   String address = '';
   late String name = widget.contact?.name ?? "";
   String? err;
@@ -86,7 +86,7 @@ class _AddToContactListViewState<NETWORKADDRESS>
     final contact = getCurrentContact();
     if (contact == null) return;
 
-    buttonProgressKey.progress();
+    progressKey.progress();
     final ContactCore<NETWORKADDRESS> newContact = ContactCore.newContact(
         network: widget.chain.network,
         address: contact.addressObject,
@@ -95,11 +95,11 @@ class _AddToContactListViewState<NETWORKADDRESS>
         () async => await widget.chain.addNewContact(newContact),
         delay: APPConst.animationDuraion);
     if (result.hasError) {
-      buttonProgressKey.backToIdle();
-      err = result.error?.tr;
+      progressKey.backToIdle();
+      err = result.localizationError;
       updateState();
     } else {
-      buttonProgressKey.successText("contact_saved".tr, backToIdle: false);
+      progressKey.successText("contact_saved".tr, backToIdle: false);
       updateState();
       widget.callBack(newContact);
     }
@@ -128,13 +128,18 @@ class _AddToContactListViewState<NETWORKADDRESS>
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Form(
       key: formKey,
-      child: PageProgress(
-        backToIdle: APPConst.oneSecoundDuration,
-        key: buttonProgressKey,
-        child: (context) => Column(
+      child: StreamPageProgress(
+        controller: progressKey,
+        builder: (context) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             PageTitleSubtitle(
@@ -160,7 +165,7 @@ class _AddToContactListViewState<NETWORKADDRESS>
               key: textFieldKey,
               label: "name_of_contact".tr,
               initialValue: name,
-              readOnly: buttonProgressKey.inProgress,
+              readOnly: progressKey.inProgress,
               minlines: 1,
               maxLines: 2,
               pasteIcon: true,

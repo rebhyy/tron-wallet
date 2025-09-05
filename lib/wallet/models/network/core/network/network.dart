@@ -12,7 +12,7 @@ import 'package:on_chain_wallet/wallet/models/network/network.dart';
 import 'package:on_chain_wallet/wallet/constant/tags/constant.dart';
 import 'package:on_chain_wallet/wallet/models/networks/tron/models/chain_type.dart';
 import 'package:on_chain_wallet/wallet/models/token/token/token.dart';
-import 'package:on_chain_wallet/crypto/models/networks.dart';
+import 'package:on_chain_wallet/crypto/types/networks.dart';
 
 abstract class WalletNetwork<PARAMS extends NetworkCoinParams>
     with Equatable, CborSerializable {
@@ -134,8 +134,8 @@ class WalletBitcoinNetwork extends WalletNetwork<BitcoinParams> {
   String get wsIdentifier => coinParam.transacationNetwork.identifier;
   factory WalletBitcoinNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.bitconNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.bitconNetwork);
     return WalletBitcoinNetwork(cbor.elementAs(0),
         BitcoinParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)));
   }
@@ -150,7 +150,7 @@ class WalletBitcoinNetwork extends WalletNetwork<BitcoinParams> {
   @override
   List<BipCoins> get coins => coinParam.transacationNetwork.coins;
 
-  CryptoCoins findCOinFromBitcoinAddressType(BitcoinAddressType type) {
+  CryptoCoins findCoinFromBitcoinAddressType(BitcoinAddressType type) {
     if (type.isP2sh) {
       return coins
           .firstWhere((element) => element.proposal == BipProposal.bip49);
@@ -224,8 +224,8 @@ class WalletBitcoinCashNetwork extends WalletBitcoinNetwork {
 
   factory WalletBitcoinCashNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.bitcoinCashNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.bitcoinCashNetwork);
     return WalletBitcoinCashNetwork(
       cbor.elementAs(0),
       BitcoinParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -256,8 +256,8 @@ class WalletXRPNetwork extends WalletNetwork<RippleNetworkParams> {
 
   factory WalletXRPNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor =
-        CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.xrpNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.xrpNetwork);
     return WalletXRPNetwork(
       cbor.elementAs(0),
       RippleNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -309,8 +309,8 @@ class WalletEthereumNetwork extends WalletNetwork<EthereumNetworkParams> {
   const WalletEthereumNetwork(this.value, this.coinParam);
   factory WalletEthereumNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor =
-        CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.evmNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.evmNetwork);
     return WalletEthereumNetwork(
       cbor.elementAs(0),
       EthereumNetworkParams.fromCborBytesOrObject(
@@ -393,8 +393,8 @@ class WalletTronNetwork extends WalletNetwork<TronNetworkParams> {
 
   factory WalletTronNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor =
-        CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.tvmNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.tvmNetwork);
     return WalletTronNetwork(
       cbor.elementAs(0),
       TronNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -448,8 +448,8 @@ class WalletSolanaNetwork extends WalletNetwork<SolanaNetworkParams> {
   const WalletSolanaNetwork(this.value, this.coinParam);
   factory WalletSolanaNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.solanaNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.solanaNetwork);
     return WalletSolanaNetwork(
       cbor.elementAs(0),
       SolanaNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -499,8 +499,8 @@ class WalletCardanoNetwork extends WalletNetwork<CardanoNetworkParams> {
   const WalletCardanoNetwork(this.value, this.coinParam);
   factory WalletCardanoNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.cardanoNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.cardanoNetwork);
     return WalletCardanoNetwork(
       cbor.elementAs(0),
       CardanoNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -573,8 +573,8 @@ class WalletCosmosNetwork extends WalletNetwork<CosmosNetworkParams> {
   const WalletCosmosNetwork(this.value, this.coinParam);
   factory WalletCosmosNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.cosmosNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.cosmosNetwork);
     return WalletCosmosNetwork(
       cbor.elementAs(0),
       CosmosNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -632,8 +632,8 @@ class WalletTonNetwork extends WalletNetwork<TonNetworkParams> {
   const WalletTonNetwork(this.value, this.coinParam);
   factory WalletTonNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor =
-        CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.tonNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.tonNetwork);
     return WalletTonNetwork(
       cbor.elementAs(0),
       TonNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -686,8 +686,8 @@ class WalletSubstrateNetwork extends WalletNetwork<SubstrateNetworkParams> {
   const WalletSubstrateNetwork(this.value, this.coinParam);
   factory WalletSubstrateNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.substrateNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.substrateNetwork);
     return WalletSubstrateNetwork(
         cbor.elementAs(0),
         SubstrateNetworkParams.fromCborBytesOrObject(
@@ -769,8 +769,8 @@ class WalletStellarNetwork extends WalletNetwork<StellarNetworkParams> {
   const WalletStellarNetwork(this.value, this.coinParam);
   factory WalletStellarNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.stellarNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.stellarNetwork);
     return WalletStellarNetwork(
       cbor.elementAs(0),
       StellarNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -822,8 +822,8 @@ class WalletMoneroNetwork extends WalletNetwork<MoneroNetworkParams> {
   const WalletMoneroNetwork(this.value, this.coinParam);
   factory WalletMoneroNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor = CborSerializable.decodeCborTags(
-        bytes, obj, CborTagsConst.moneroNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.moneroNetwork);
     return WalletMoneroNetwork(
       cbor.elementAs(0),
       MoneroNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -886,8 +886,8 @@ class WalletAptosNetwork extends WalletNetwork<AptosNetworkParams> {
   const WalletAptosNetwork(this.value, this.coinParam);
   factory WalletAptosNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor =
-        CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.aptosNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.aptosNetwork);
     return WalletAptosNetwork(
       cbor.elementAs(0),
       AptosNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),
@@ -938,8 +938,8 @@ class WalletSuiNetwork extends WalletNetwork<SuiNetworkParams> {
   const WalletSuiNetwork(this.value, this.coinParam);
   factory WalletSuiNetwork.fromCborBytesOrObject(
       {List<int>? bytes, CborObject? obj}) {
-    final CborListValue cbor =
-        CborSerializable.decodeCborTags(bytes, obj, CborTagsConst.suiNetwork);
+    final CborListValue cbor = CborSerializable.cborTagValue(
+        cborBytes: bytes, object: obj, tags: CborTagsConst.suiNetwork);
     return WalletSuiNetwork(
       cbor.elementAs(0),
       SuiNetworkParams.fromCborBytesOrObject(obj: cbor.elementAsCborTag(1)),

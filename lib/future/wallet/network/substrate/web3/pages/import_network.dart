@@ -4,9 +4,7 @@ import 'package:on_chain_wallet/future/wallet/global/pages/http_authenticated.da
 import 'package:on_chain_wallet/future/wallet/network/substrate/web3/operations/import_network.dart';
 import 'package:on_chain_wallet/future/wallet/web3/pages/web3_request_page_builder.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
-import 'package:on_chain_wallet/wallet/api/services/models/models/protocols.dart';
-import 'package:on_chain_wallet/wallet/constant/networks/substrate.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class Web3SubstrateImportNetworkStateView extends StatelessWidget {
   final Web3SubstrateImportOrUpdateNetworkStateController controller;

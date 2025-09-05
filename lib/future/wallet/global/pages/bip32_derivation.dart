@@ -2,7 +2,6 @@ import 'package:blockchain_utils/bip/bip/bip.dart';
 import 'package:blockchain_utils/bip/ecc/curve/elliptic_curve_types.dart';
 import 'package:blockchain_utils/bip/substrate/substrate.dart';
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/core.dart' show WalletException;
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/crypto/utils/utils.dart';
@@ -65,9 +64,7 @@ class _Bip32KeyDerivationViewState extends State<Bip32KeyDerivationView>
         return "ed25519_support_derivation_desc".tr;
       }
       if (parse.length > BlockchainConst.maxBip32LevelIndex) {
-        throw WalletException("hd_wallet_path_max_indeqxes"
-            .tr
-            .replaceOne(BlockchainConst.maxBip32LevelIndex.toString()));
+        return "invalid_hd_wallet_derivation_path".tr;
       }
     } catch (e) {
       return "invalid_hd_wallet_derivation_path".tr;

@@ -1,8 +1,7 @@
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/ripple/ripple.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ripple/client/ripple.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/cached_object.dart';
 import 'package:xrpl_dart/xrpl_dart.dart';
 
@@ -34,12 +33,12 @@ mixin XRPTransactionApiController on DisposableMixin {
   Future<void> checkAccountPermission(IXRPAddress address) async {
     final info = await client.getAccountInfo(address.networkAddress.toString());
     if (info == null) {
-      throw WalletException("account_not_found".tr);
+      throw AppException("account_not_found");
     }
     final String? regularKey = info.accountData.regularKey;
     final disableMasterKey = info.accountFlags?.disableMasterKey ?? false;
     if (!address.multiSigAccount) {
-      if (disableMasterKey) throw WalletException("disable_master_key_addr".tr);
+      if (disableMasterKey) throw AppException("disable_master_key_addr");
       return;
     }
     final multiSignatureAccount =
@@ -48,7 +47,7 @@ mixin XRPTransactionApiController on DisposableMixin {
       final multisigRegularAddress = RippleUtils.strPublicKeyToRippleAddress(
           multiSignatureAccount.signers.first.publicKey);
       if (multisigRegularAddress.address == regularKey) return;
-      throw WalletException("ripple_account_signature_updated_desc".tr);
+      throw AppException("ripple_account_signature_updated_desc");
     }
     final accountSigners =
         await client.getAccountSignerList(address.networkAddress.address);
@@ -66,7 +65,7 @@ mixin XRPTransactionApiController on DisposableMixin {
       }
       if (threshHold >= accountSigners.signerQuorum) return;
     }
-    throw WalletException("ripple_account_signature_updated_desc".tr);
+    throw AppException("ripple_account_signature_updated_desc");
   }
 
   Future<int?> getNetworkId() async {

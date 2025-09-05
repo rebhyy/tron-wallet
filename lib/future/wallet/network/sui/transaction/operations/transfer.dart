@@ -6,7 +6,7 @@ import 'package:on_chain_wallet/future/wallet/network/sui/transaction/controller
 import 'package:on_chain_wallet/future/wallet/network/sui/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/transaction/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 import 'package:on_chain_wallet/future/wallet/network/sui/web3/types/types.dart';
 
 class SuiTransactionTransferOperation

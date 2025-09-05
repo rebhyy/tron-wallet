@@ -41,6 +41,13 @@ mixin SafeState<T extends StatefulWidget> on State<T> {
   }
 }
 
-mixin ProgressMixin<T extends StatefulWidget> on State<T> {
-  final GlobalKey<PageProgressState> progressKey = GlobalKey();
+mixin ProgressMixin<T extends StatefulWidget> on SafeState<T> {
+  // final GlobalKey<PageProgressState> progressKey = GlobalKey();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController();
+  @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
 }

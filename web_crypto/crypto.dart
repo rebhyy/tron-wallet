@@ -1,6 +1,7 @@
 import 'package:blockchain_utils/crypto/crypto/crypto.dart';
 import 'package:blockchain_utils/crypto/quick_crypto.dart';
 import 'package:blockchain_utils/utils/utils.dart';
+import 'package:on_chain_wallet/app/dev/logging.dart' show Logg;
 import 'package:on_chain_wallet/crypto/isolate/controller/message_controller.dart';
 import 'package:on_chain_wallet/crypto/requets/argruments/argruments.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models.dart';
@@ -24,14 +25,17 @@ void _send(String message) {
 late _WebIsolateInitialData _cryptoHandler;
 bool _init = false;
 
-String _readKey() {
+String _readKey(String key) {
+  Logg.log("is key called?!");
   if (_init) return "";
   try {
     _init = true;
-    final key = QuickCrypto.generateRandom(32);
-    _cryptoHandler = _WebIsolateInitialData(key: key);
+    final k = X25519Keypair.generate();
+    final sharedKey =
+        X25519.scalarMult(k.privateKey, BytesUtils.fromHexString(key));
+    _cryptoHandler = _WebIsolateInitialData(key: sharedKey);
 
-    return BytesUtils.toHexString(key);
+    return k.publicKeyHex();
   } finally {
     cryptoJsActivation = null;
   }

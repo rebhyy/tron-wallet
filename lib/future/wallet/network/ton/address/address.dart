@@ -112,8 +112,10 @@ class _SetupTonAddressViewState extends State<SetupTonAddressView>
   }
 
   void generateAddress() async {
-    final keyIndex = await widget.controller
-        .getCoin(context: context, seedGeneration: SeedTypes.bip39);
+    final keyIndex = await widget.controller.getCoin(
+        context: context,
+        seedGeneration: SeedTypes.bip39,
+        selectedCoins: network.coins.first);
     if (keyIndex == null) return;
     if (widget.controller.form.ready()) {
       if (hasSubWalletId && subWalletId == null) return;

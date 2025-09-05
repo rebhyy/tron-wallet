@@ -87,14 +87,14 @@ abstract class MetadataFormValidator<METADATA extends MetadataTypeInfo> {
         break;
     }
     if (validator is! MetadataFormValidator<METADATA>) {
-      throw WalletExceptionConst.castingFailed;
+      throw AppExceptionConst.internalError("MetadataFormValidator");
     }
     return validator;
   }
   MetadataFormValidatorError? get error => null;
   T cast<T>() {
     if (this is! T) {
-      throw WalletExceptionConst.castingFailed;
+      throw AppExceptionConst.internalError("MetadataFormValidatorError");
     }
     return this as T;
   }
@@ -348,7 +348,7 @@ class MetadataFormValidatorInt
   int? getResult() {
     final r = super._getResult();
     if (r != null && !r.isValidInt) {
-      throw WalletException(info.primitiveType.name.toUpperCase());
+      throw AppException(info.primitiveType.name.toUpperCase());
     }
     return r?.toInt();
   }

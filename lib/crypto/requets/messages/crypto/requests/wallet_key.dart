@@ -13,8 +13,7 @@ class CryptoRequestWalletKey
       : key = key.asImmutableBytes,
         checksum = checksum.asImmutableBytes;
   factory CryptoRequestWalletKey.fromString(
-      {required String key, required List<int> checksum}) {
-    // final checksumBytes = BytesUtils.fromHexString(checksum);
+      {required String key, required List<int> checksum, int version = 2}) {
     final keyBytes = StringUtils.encode(key);
     return CryptoRequestWalletKey._(key: keyBytes, checksum: checksum);
   }
@@ -27,7 +26,7 @@ class CryptoRequestWalletKey
         hex: hex,
         tags: CryptoRequestMethod.walletKey.tag);
     return CryptoRequestWalletKey._(
-        key: values.elementAs(0), checksum: values.elementAs(1));
+        key: values.valueAs(0), checksum: values.valueAs(1));
   }
 
   @override
@@ -43,7 +42,8 @@ class CryptoRequestWalletKey
 
   @override
   MessageArgsOneBytes getResult() {
-    final walletKey = WorkerCryptoUtils.hashKey(key: key, checksum: checksum);
+    final walletKey =
+        WorkerCryptoUtils.hashKeyNew(key: key, checksum: checksum);
     return MessageArgsOneBytes(keyOne: walletKey);
   }
 
@@ -54,6 +54,6 @@ class CryptoRequestWalletKey
 
   @override
   List<int> result() {
-    return WorkerCryptoUtils.hashKey(key: key, checksum: checksum);
+    return WorkerCryptoUtils.hashKeyNew(key: key, checksum: checksum);
   }
 }

@@ -1,6 +1,7 @@
 import 'package:blockchain_utils/utils/binary/utils.dart';
 import 'package:blockchain_utils/utils/numbers/utils/int_utils.dart';
 import 'package:monero_dart/monero_dart.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
 import 'package:on_chain_wallet/app/live_listener/live.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/non_encrypted/requests/monero_generate_ring_output.dart';
 import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
@@ -40,7 +41,7 @@ mixin MoneroTransactionApiController on DisposableMixin {
           required List<BigInt> outKeysRequestOrder,
           required List<BigInt> outKeysRequests}) async {
     if (fakeOutsLength <= 0) {
-      throw const DartMoneroPluginException(
+      throw const AppException(
           "fake outs length should be greather than zero.");
     }
     final List<List<OutsEntery>> outs = [];
@@ -83,7 +84,7 @@ mixin MoneroTransactionApiController on DisposableMixin {
         }
       }
       if (!hasRealOut) {
-        throw const DartMoneroPluginException(
+        throw const AppException(
             "Daemon response did not include the requested real output");
       }
       out.add(OutsEntery(
@@ -101,7 +102,7 @@ mixin MoneroTransactionApiController on DisposableMixin {
           }
         }
         if (i == base + outputsCount) {
-          throw const DartMoneroPluginException(
+          throw const AppException(
               "Could not find index of picked output in requested outputs");
         }
         final fakeOutResponse = outKeysResponse[i];
@@ -118,7 +119,7 @@ mixin MoneroTransactionApiController on DisposableMixin {
       out.sort((a, b) => a.index.compareTo(b.index));
       outs.add(out);
       if (out.length < fakeOutsLength + 1) {
-        throw const DartMoneroPluginException("not enough outs to mix.");
+        throw const AppException("not enough outs to mix.");
       }
 
       base += outputsCount;
@@ -129,7 +130,7 @@ mixin MoneroTransactionApiController on DisposableMixin {
       final index =
           sourceOuts.indexWhere((e) => e.index == payment.globalIndex);
       if (index.isNegative) {
-        throw const DartMoneroPluginException("Index not found.");
+        throw const AppException("Index not found.");
       }
       return SpendablePayment<T>(
           payment: payment, outs: sourceOuts, realOutIndex: index);

@@ -6,30 +6,18 @@ import 'package:on_chain_wallet/crypto/requets/messages/core/message.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/create_wallet.dart';
 import 'package:on_chain_wallet/crypto/utils/crypto/utils.dart';
 
-class CryptoRequestCreateHDWallet
-    extends CryptoRequest<CryptoCreateWalletResponse, MessageArgsThreeBytes> {
+final class CryptoRequestCreateHDWallet
+    extends CryptoRequest<CryptoCreateWalletResponse, MessageArgsTwoBytes> {
   final String mnemonic;
   final String? passphrase;
   final String password;
   final List<int> checksum;
-  CryptoRequestCreateHDWallet._(
+  const CryptoRequestCreateHDWallet(
       {required this.mnemonic,
       required this.passphrase,
       required this.password,
       required this.checksum});
 
-  factory CryptoRequestCreateHDWallet({
-    required String mnemonic,
-    required String? passphrase,
-    required String password,
-    required List<int> checksum,
-  }) {
-    return CryptoRequestCreateHDWallet._(
-        mnemonic: mnemonic,
-        passphrase: passphrase,
-        password: password,
-        checksum: checksum.asImmutableBytes);
-  }
   factory CryptoRequestCreateHDWallet.deserialize(
       {List<int>? bytes, CborObject? object, String? hex}) {
     final CborListValue values = CborSerializable.cborTagValue(
@@ -38,14 +26,14 @@ class CryptoRequestCreateHDWallet
         hex: hex,
         tags: CryptoRequestMethod.createWallet.tag);
     return CryptoRequestCreateHDWallet(
-        mnemonic: values.elementAs(0),
-        passphrase: values.elementAs(1),
-        password: values.elementAs(2),
-        checksum: values.elementAs(3));
+        mnemonic: values.valueAs(0),
+        passphrase: values.valueAs(1),
+        password: values.valueAs(2),
+        checksum: values.valueAs(3));
   }
 
   /// MasterKey, storage encryptedBytes, checksum
-  static (EncryptedMasterKey a, List<int>, List<int>) createHdWallet({
+  static CryptoCreateWalletResponse createHdWallet({
     required String mnemonic,
     required String? passphrase,
     required String password,
@@ -53,30 +41,31 @@ class CryptoRequestCreateHDWallet
   }) {
     final masterKey =
         WalletMasterKeys.generate(mnemonic: mnemonic, passphrase: passphrase);
-    final key = WorkerCryptoUtils.hashKey(
+    final key = WorkerCryptoUtils.hashKeyNew(
         key: StringUtils.encode(password), checksum: checksum);
-    final encrypt = masterKey.encrypt(key: key);
-    return (encrypt.$1, encrypt.$2, checksum);
+    final encrypt = masterKey.encrypt_(
+        key: key,
+        rawKey: StringUtils.encode(password),
+        memoryKey: QuickCrypto.generateRandom());
+    return CryptoCreateWalletResponse(masterKey: encrypt, checksum: checksum);
   }
 
   @override
-  MessageArgsThreeBytes getResult() {
+  MessageArgsTwoBytes getResult() {
     final data = createHdWallet(
         mnemonic: mnemonic,
         passphrase: passphrase,
         password: password,
         checksum: checksum);
-    return MessageArgsThreeBytes(
-        keyOne: data.$1.toCbor().encode(), keyTwo: data.$2, keyThree: data.$3);
+    return MessageArgsTwoBytes(
+        keyOne: data.masterKey.toCbor().encode(), keyTwo: data.checksum);
   }
 
   @override
-  CryptoCreateWalletResponse parsResult(MessageArgsThreeBytes result) {
+  CryptoCreateWalletResponse parsResult(MessageArgsTwoBytes result) {
     return CryptoCreateWalletResponse(
         masterKey: EncryptedMasterKey.deserialize(bytes: result.keyOne),
-        storageData:
-            StringUtils.decode(result.keyTwo, type: StringEncoding.base64),
-        checksum: result.keyThree);
+        checksum: result.keyTwo);
   }
 
   @override
@@ -92,14 +81,10 @@ class CryptoRequestCreateHDWallet
 
   @override
   CryptoCreateWalletResponse result() {
-    final data = createHdWallet(
+    return createHdWallet(
         mnemonic: mnemonic,
         passphrase: passphrase,
         password: password,
         checksum: checksum);
-    return CryptoCreateWalletResponse(
-        masterKey: data.$1,
-        storageData: StringUtils.decode(data.$2, type: StringEncoding.base64),
-        checksum: data.$3);
   }
 }

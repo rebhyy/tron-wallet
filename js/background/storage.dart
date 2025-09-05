@@ -108,7 +108,9 @@ mixin JSExtensionBackgroudStorageHandler {
   Future<MainWallet?> _readWallet() async {
     final data = await _queryStorage(
         storageId: APPDatabaseConst.defaultStorageId,
-        storage: APPDatabaseConst.hdWalletStorage);
+        storage: APPDatabaseConst.hdWalletStorage,
+        key: "",
+        keyA: "");
     if (data == null) {
       return null;
     }

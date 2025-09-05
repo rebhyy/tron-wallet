@@ -3,6 +3,7 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/keys/access/crypto_keys/crypto_keys.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
 import 'package:on_chain_wallet/wallet/models/networks/aptos/aptos.dart';
 import 'package:on_chain_wallet/wallet/wallet.dart';
 
@@ -11,10 +12,11 @@ class AptosMultisigAccountInfoView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-      accsess: WalletAccsessType.unlock,
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       title: "multisig_address_infos".tr,
-      onAccsess: (credential, password, network) {
+      onAccsess: (_) {
         return NetworkAccountControllerView<AptosClient?, IAptosAddress,
             AptosChain>(
           addressRequired: true,
@@ -38,10 +40,12 @@ class _AptosMultisigAccountInfoView extends StatefulWidget {
 }
 
 class __AptosMultisigAccountInfoViewState
-    extends AptosAccountState<_AptosMultisigAccountInfoView>
-    with ProgressMixin {
+    extends AptosAccountState<_AptosMultisigAccountInfoView> {
   @override
   AptosChain get account => widget.account;
+
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
 
   List<_AptosMultisigAccountInfo> keyInfos = [];
   @override
@@ -72,14 +76,18 @@ class __AptosMultisigAccountInfoViewState
   }
 
   @override
+  void safeDispose() {
+    super.safeDispose();
+    progressKey.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageProgress(
-      initialStatus: PageProgressStatus.progress,
-      backToIdle: APPConst.oneSecoundDuration,
-      key: progressKey,
+    return StreamPageProgress(
+      controller: progressKey,
       initialWidget:
           ProgressWithTextView(text: "retrieve_account_informations".tr),
-      child: (context) {
+      builder: (context) {
         return CustomScrollView(slivers: [
           SliverConstraintsBoxView(
               padding: WidgetConstant.paddingHorizontal20,
@@ -164,10 +172,10 @@ class _ShowAddressView extends StatelessWidget {
               widget: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  OneLineTextWidget(account.publicKey,
+                      style: context.primaryTextTheme.titleMedium),
                   AddressDrivationInfo(account.keyIndex,
                       color: context.primaryContainer),
-                  OneLineTextWidget(account.publicKey,
-                      style: context.primaryTextTheme.titleMedium)
                 ],
               ),
             )),

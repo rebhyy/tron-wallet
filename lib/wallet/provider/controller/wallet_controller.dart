@@ -12,11 +12,10 @@ abstract class _WalletController with CryptoWokerImpl {
     return _walletCore!;
   }
 
-  /// wallet key
-  List<int>? _walletKey;
+  // /// wallet encryption data
+  EncryptedMasterKey? _walletKey;
 
-  /// wallet encryption data
-  EncryptedMasterKey? _massterKey;
+  bool get hasWalletKey => _walletKey != null;
 
   /// wallet information like name, settings and etc.
   MainWallet get _wallet => _appChains.wallet;
@@ -31,8 +30,9 @@ abstract class _WalletController with CryptoWokerImpl {
   WalletNetwork get network => _chain.network;
 
   /// update wallet storage.
-  Future<void> _updateWallet() async {
-    await _core._updateWallet(_wallet);
+  Future<void> _updateWallet(MainWallet wallet) async {
+    await _core._updateWallet(wallet);
+    _appChains.updateWalletData(wallet);
   }
 }
 
@@ -84,7 +84,6 @@ class WalletController extends _WalletController
   void _dispose() {
     _walletCore = null;
     _walletKey = null;
-    _massterKey = null;
     _chain.dispose();
     super._dispose();
   }

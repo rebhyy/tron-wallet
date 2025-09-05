@@ -5,7 +5,7 @@ import 'package:on_chain_wallet/future/wallet/network/cardano/web3/pages/get_acc
 import 'package:on_chain_wallet/future/wallet/network/cardano/web3/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/web3/core/state.dart';
 import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/web3/networks/cardano/cardano.dart';
 
 class Web3ADAGetAccountPubKeyStateController extends Web3CardanoStateController<

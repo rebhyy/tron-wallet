@@ -22,16 +22,7 @@ class TonRquestTransactionStatus
     _request = _getRequest();
     return _request!.buildRequest(v);
   }
-// final result =
-//         await provider.requestDynamic(TonApiGetBlockchainTransaction(txId));
-  // final tx =
-  //     MethodUtils.nullOnException(() => TransactionResponse.fromJson(result));
 
-  // if (tx != null) {
-  //   if (!tx.success) return WalletTransactionStatus.failed;
-  //   return WalletTransactionStatus.block;
-  // }
-//     return WalletTransactionStatus.block;
   @override
   String get method => throw UnimplementedError();
 

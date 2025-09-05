@@ -96,14 +96,19 @@ class JsonRpcWebSocketService {
   Future<void> _connect() async {
     await _lock.synchronized(() async {
       if (!status.value.allowReconnect) return;
-
-      final url = await MethodUtils.call(() async => await generateUrl());
-      assert(url.hasResult, "somthing wrong when generate url");
-      if (url.hasError) return;
+      final url = await () async {
+        try {
+          return await generateUrl();
+        } catch (_) {
+          return null;
+        }
+      }();
+      assert(url != null, "somthing wrong when generate url");
+      if (url == null) return;
       int reconnectAttempts = 0;
       while (status.value.allowReconnect) {
         final waitOnError = Duration(seconds: reconnectAttempts);
-        await _connectInternal(url.result, waitAtError: waitOnError);
+        await _connectInternal(url, waitAtError: waitOnError);
         if (reconnectAttempts < 30) {
           reconnectAttempts++;
         }

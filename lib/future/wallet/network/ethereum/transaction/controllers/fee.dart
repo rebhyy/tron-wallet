@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/ethereum/utils.dart';
-import 'package:on_chain_wallet/future/state_managment/extension/app_extensions/string.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/future/wallet/network/ethereum/transaction/types/types.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/ethereum/client/ethereum.dart';
@@ -117,7 +116,7 @@ mixin EthereumTransactionFeeController on DisposableMixin {
         controller.add(gas.result);
       } else {
         if (latestFee == null) {
-          _setDefaultFee(error: gas.error!.tr);
+          _setDefaultFee(error: gas.localizationError);
           isClosed = true;
           controller.close();
         } else {

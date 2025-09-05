@@ -7,10 +7,9 @@ import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/future/future.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cosmos/network/import/controller/form.dart';
-import 'package:on_chain_wallet/wallet/api/api.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
-
-import '../../update_native_token.dart';
+import 'package:on_chain_wallet/future/wallet/network/cosmos/network/update_native_token.dart';
+import 'package:on_chain_wallet/future/wallet/security/pages/accsess_wallet.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 enum _Page { selectChain, search, review }
 
@@ -19,10 +18,11 @@ class CosmosImportNetworkView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PasswordCheckerView(
-      accsess: WalletAccsessType.unlock,
+    return AccessWalletView<WalletCredentialResponseLogin,
+        WalletCredentialLogin>(
+      request: WalletCredentialLogin.instance,
       appbar: AppBar(title: Text("import_network".tr)),
-      onAccsess: (credential, password, network) {
+      onAccsess: (_) {
         return _CosmosImportNetworkView();
       },
     );
@@ -38,8 +38,10 @@ class _CosmosImportNetworkView extends StatefulWidget {
 }
 
 class __CosmosImportNetworkViewState extends State<_CosmosImportNetworkView>
-    with HttpImpl, CosmosCustomRequest, ProgressMixin, SafeState {
+    with HttpImpl, CosmosCustomRequest, SafeState {
   final form = CosmosAddNewChainFrom();
+  final StreamPageProgressController progressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
   late final List<CosmosChain> existChains;
   String? networkName;
   Map<ChainType, Widget> chainTypeWidgets = {};
@@ -120,7 +122,7 @@ class __CosmosImportNetworkViewState extends State<_CosmosImportNetworkView>
       return form.createNetwork(chainType: chaintype);
     });
     if (params.hasError) {
-      progressKey.errorText(params.error!.tr,
+      progressKey.errorText(params.localizationError,
           backToIdle: false, showBackButton: true);
       return;
     }
@@ -134,7 +136,7 @@ class __CosmosImportNetworkViewState extends State<_CosmosImportNetworkView>
       return wallet.wallet.updateImportNetwork(newNetwork);
     });
     if (result.hasError) {
-      progressKey.errorText(result.error!.tr,
+      progressKey.errorText(result.localizationError,
           backToIdle: false, showBackButton: true);
     } else {
       progressKey.successText("network_imported_to_your_wallet".tr,
@@ -172,6 +174,7 @@ class __CosmosImportNetworkViewState extends State<_CosmosImportNetworkView>
     super.safeDispose();
     _listener?.cancel();
     _listener = null;
+    progressKey.dispose();
     form.dispose();
   }
 
@@ -183,12 +186,10 @@ class __CosmosImportNetworkViewState extends State<_CosmosImportNetworkView>
           onBackButton();
         },
         canPop: chaintype == null || progressKey.isSuccess,
-        child: PageProgress(
-          key: progressKey,
-          initialStatus: StreamWidgetStatus.progress,
+        child: StreamPageProgress(
+          controller: progressKey,
           initialWidget: ProgressWithTextView(text: "retrieving_chains".tr),
-          backToIdle: APPConst.oneSecoundDuration,
-          child: (context) {
+          builder: (context) {
             return CustomScrollView(
               slivers: [
                 APPSliverAnimatedSwitcher<_Page>(

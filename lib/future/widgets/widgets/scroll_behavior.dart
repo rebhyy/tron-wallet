@@ -5,9 +5,8 @@ import 'package:on_chain_bridge/models/models.dart';
 class AppScrollBehavior extends MaterialScrollBehavior {
   AppScrollBehavior(this.platform);
   final AppPlatform platform;
-  late final bool isWindowsOrWeb = platform == AppPlatform.windows ||
-      platform == AppPlatform.web ||
-      platform == AppPlatform.macos;
+  late final bool isWindowsOrWeb =
+      platform.isDesktop || platform == AppPlatform.web;
   @override
   late final Set<PointerDeviceKind> dragDevices = isWindowsOrWeb
       ? {

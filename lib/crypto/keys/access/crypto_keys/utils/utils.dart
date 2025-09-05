@@ -27,7 +27,7 @@ class CryptoKeyUtils {
       required CryptoCoins coin,
       String? keyName}) {
     if (coin.conf is! BipCoinConfig) {
-      throw WalletExceptionConst.invalidCoin;
+      throw AppCryptoExceptionConst.invalidCoin;
     }
     final key = extendedKeyToBip32Key(extendedKey: extendedKey, coin: coin);
     return ImportedKeyStorage._(
@@ -63,7 +63,7 @@ class CryptoKeyUtils {
 
       return ripplePrivateKey.toBytes();
     } catch (e) {
-      throw WalletExceptionConst.invalidPrivateKey;
+      throw AppCryptoExceptionConst.invalidPrivateKey;
     }
   }
 
@@ -104,7 +104,7 @@ class CryptoKeyUtils {
   static ImportedKeyStorage wifToStorage(
       {required String wifKey, required CryptoCoins coin, String? keyName}) {
     if (!coin.conf.hasWif) {
-      throw WalletExceptionConst.invalidCoin;
+      throw AppCryptoExceptionConst.invalidCoin;
     }
     try {
       final keyBytes =
@@ -112,7 +112,7 @@ class CryptoKeyUtils {
       return _privateKeyToStorage(
           keyBytes: keyBytes, coin: coin, keyName: keyName);
     } catch (e) {
-      throw WalletExceptionConst.invalidWifKey;
+      throw AppCryptoExceptionConst.invalidWifKey;
     }
   }
 
@@ -120,7 +120,7 @@ class CryptoKeyUtils {
       {required String privateKey, required CryptoCoins coin}) {
     try {
       if (coin is! BipCoins) {
-        throw WalletExceptionConst.invalidCoin;
+        throw AppCryptoExceptionConst.invalidCoin;
       }
       final privateKeyBytes = BytesUtils.fromHexString(privateKey);
       if (coin.proposal == CustomProposal.cip0019) {
@@ -144,10 +144,10 @@ class CryptoKeyUtils {
         case EllipticCurveTypes.nist256p1Hybrid:
           return Bip32Slip10Nist256p1Hybrid.fromPrivateKey(privateKeyBytes);
         default:
-          throw WalletExceptionConst.invalidPrivateKey;
+          throw AppCryptoExceptionConst.invalidPrivateKey;
       }
     } catch (e) {
-      throw WalletExceptionConst.invalidPrivateKey;
+      throw AppCryptoExceptionConst.invalidPrivateKey;
     }
   }
 
@@ -156,12 +156,13 @@ class CryptoKeyUtils {
     try {
       final conf = coin.conf;
       if (!coin.conf.hasExtendedKeys) {
-        throw WalletExceptionConst.invalidExtendedKey;
+        throw AppCryptoExceptionConst.invalidExtendedKey;
       }
       if (coin.proposal == CustomProposal.cip0019) {
         return CardanoByronLegacyBip32.fromExtendedKey(
             extendedKey, conf.keyNetVer);
       }
+
       switch (conf.type) {
         case EllipticCurveTypes.secp256k1:
           return Bip32Slip10Secp256k1.fromExtendedKey(
@@ -186,16 +187,17 @@ class CryptoKeyUtils {
           return Bip32Slip10Nist256p1Hybrid.fromExtendedKey(
               extendedKey, conf.keyNetVer);
         default:
-          throw WalletExceptionConst.invalidExtendedKey;
+          throw AppCryptoExceptionConst.invalidExtendedKey;
       }
-    } catch (e) {
-      throw WalletExceptionConst.invalidExtendedKey;
+    } catch (e, s) {
+      Logg.error("err $e $s");
+      throw AppCryptoExceptionConst.invalidExtendedKey;
     }
   }
 
   static void validateMnemonic(String mnemonic) {
     if (!isValidMenemonic(mnemonic)) {
-      throw WalletExceptionConst.invalidMnemonic;
+      throw AppCryptoExceptionConst.invalidMnemonic;
     }
   }
 
@@ -208,10 +210,10 @@ class CryptoKeyUtils {
     try {
       final isValid = Bip39MnemonicValidator();
       if (!isValid.validateWords(mnemonic.join(" "))) {
-        throw WalletExceptionConst.invalidBip39MnemonicWords;
+        throw AppCryptoExceptionConst.invalidBip39MnemonicWords;
       }
     } catch (e) {
-      throw WalletExceptionConst.invalidBip39MnemonicWords;
+      throw AppCryptoExceptionConst.invalidBip39MnemonicWords;
     }
   }
 
@@ -226,13 +228,11 @@ class CryptoKeyUtils {
       if (bip32Obj.isPublicOnly) {
         if (depth < Bip44Levels.account.value ||
             depth > Bip44Levels.addressIndex.value) {
-          throw Bip44DepthError(
-              "Depth of the public-only Bip object ($depth) is below account level or beyond address index level");
+          throw AppCryptoExceptionConst.invalidKeyDerivationPath;
         }
       } else {
         if (depth < 0 || depth > Bip44Levels.addressIndex.value) {
-          throw Bip44DepthError(
-              "Depth of the Bip object ($depth) is invalid or beyond address index level");
+          throw AppCryptoExceptionConst.invalidKeyDerivationPath;
         }
       }
 
@@ -273,7 +273,7 @@ class CryptoKeyUtils {
         bip = Bip32Slip10Nist256p1Hybrid.fromSeed(seedBytes, keyNetVar);
         break;
       default:
-        throw const ArgumentException("invaid type");
+        throw AppCryptoExceptionConst.invalidCoin;
     }
 
     return validate(bip);
@@ -282,7 +282,7 @@ class CryptoKeyUtils {
   static IPrivateKey seedToSubstratePrivateKey(
       {required List<int> seedBytes, required CryptoCoins coin}) {
     if (coin.proposal != SubstratePropoosal.substrate) {
-      throw WalletExceptionConst.invalidCoin;
+      throw AppCryptoExceptionConst.invalidCoin;
     }
     final substrate = Substrate.fromSeed(seedBytes, coin as SubstrateCoins);
     return substrate.priveKey.privKey;
@@ -386,7 +386,7 @@ class CryptoKeyUtils {
   }) {
     final validate = MoneroMnemonicValidator().isValid(mnemonic);
     if (!validate) {
-      throw WalletExceptionConst.invalidMnemonic;
+      throw AppCryptoExceptionConst.invalidMnemonic;
     }
     final seed = MoneroSeedGenerator(Mnemonic.fromString(mnemonic)).generate();
     final account = MoneroAccount.fromSeed(seed);
@@ -394,6 +394,14 @@ class CryptoKeyUtils {
         privateKey: account.privateSpendKey.toHex(),
         publicKey: account.privateSpendKey.publicKey.toHex(),
         coin: coin);
+  }
+
+  static List<int> bip39MnemonicToBinary(Mnemonic mnemonic) {
+    final decoder = Bip39MnemonicDecoder();
+    final language = decoder.findLanguage(mnemonic);
+    final decode =
+        Bip39MnemonicDecoder().mnemonicToBinaryStr(mnemonic, language.item1);
+    return BytesUtils.fromBinary(decode);
   }
 
   static ImportCustomKeys tonMnemonicToPrivateKey(
@@ -409,5 +417,74 @@ class CryptoKeyUtils {
         privateKey: key.toHex(),
         publicKey: key.toPublicKey().toHex(),
         coin: coin);
+  }
+
+  static List<int> bip39MnemonicToBytes(Mnemonic mnemonic) {
+    if (mnemonic.wordsCount() > 127) {
+      throw AppCryptoExceptionConst.invalidMnemonic;
+    }
+    final decoder = Bip39MnemonicDecoder();
+    final language = decoder.findLanguage(mnemonic);
+    final mnemonicBinStr =
+        decoder.mnemonicToBinaryStr(mnemonic, language.item1);
+    final mnemonicBitLen = mnemonicBinStr.length;
+    final padBitLen = mnemonicBitLen % 8 == 0
+        ? mnemonicBitLen
+        : mnemonicBitLen + (8 - mnemonicBitLen % 8);
+    final result =
+        BytesUtils.fromBinary(mnemonicBinStr, zeroPadByteLen: padBitLen);
+    return [mnemonic.wordsCount(), ...result];
+  }
+
+// Bytes → Mnemonic
+  static Mnemonic bytesToBip39Mnemonic(
+      {required List<int> bytes, required MnemonicLanguages language}) {
+    if (bytes.isEmpty || bytes[0] > 127) {
+      throw AppCryptoExceptionConst.invalidMnemonic;
+    }
+    int length = bytes[0];
+    bytes = bytes.sublist(1);
+    final toBinary = BytesUtils.toBinary(bytes,
+        zeroPadBitLen: length * Bip39MnemonicConst.wordBitLen);
+    bytes = bytes.sublist(1);
+    final words = <String>[];
+    for (var i = 0;
+        i + Bip39MnemonicConst.wordBitLen <= toBinary.length;
+        i += Bip39MnemonicConst.wordBitLen) {
+      final wordBinStr =
+          toBinary.substring(i, i + Bip39MnemonicConst.wordBitLen);
+      final wordIdx = int.parse(wordBinStr, radix: 2);
+      words.add(language.wordList[wordIdx]);
+    }
+    return Mnemonic.fromList(words);
+  }
+
+  static List<int>? tryDecodeWebAuthPublicKeyCredential(String publicKey) {
+    final pubKeyBytes = BytesUtils.tryFromHexString(publicKey);
+    if (pubKeyBytes == null ||
+        pubKeyBytes.length < EcdsaKeysConst.pubKeyUncompressedByteLen) {
+      return null;
+    }
+    final rawKey = pubKeyBytes
+        .sublist(pubKeyBytes.length - EcdsaKeysConst.pubKeyUncompressedByteLen);
+    if (IPublicKey.isValidBytes(rawKey, EllipticCurveTypes.nist256p1)) {
+      return rawKey;
+    }
+    return null;
+  }
+
+  static bool validateWebAuthSecp256p1DerSignature(
+      {required List<int> authenticatorData,
+      required List<int> clientDataJSON,
+      required List<int> signature,
+      required List<int> pubKeyBytes}) {
+    final digest = QuickCrypto.sha256Hash([
+      ...authenticatorData,
+      ...QuickCrypto.sha256DoubleHash(clientDataJSON)
+    ]);
+    final derSignature = Secp256k1EcdsaSignature.fromDer(signature);
+    final pk = Nist256p1PublicKey.fromBytes(pubKeyBytes);
+    return pk.publicKey.verifies(
+        BigintUtils.fromBytes(digest), derSignature.toEcdsaSignature());
   }
 }

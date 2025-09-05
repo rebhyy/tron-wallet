@@ -30,7 +30,6 @@ class _UpdateTronProvider extends StatefulWidget {
 class _UpdateTronProviderState extends State<_UpdateTronProvider>
     with
         SafeState<_UpdateTronProvider>,
-        ProgressMixin<_UpdateTronProvider>,
         UpdateNetworkProviderState<
             _UpdateTronProvider,
             TronAPIProvider,
@@ -122,11 +121,11 @@ class _UpdateTronProviderState extends State<_UpdateTronProvider>
         httpProviderService: provider, network: network.toNetwork());
     bool init = await client.checkGenesis();
     if (!init) {
-      throw WalletException("network_genesis_hash_validator");
+      throw AppException("network_genesis_hash_validator");
     }
     init = await client.checkSolidityChainId();
     if (!init) {
-      throw WalletException("network_incorrect_chain_id");
+      throw AppException("network_incorrect_chain_id");
     }
     return provider;
   }
@@ -140,11 +139,9 @@ class _UpdateTronProviderState extends State<_UpdateTronProvider>
           onBackButton();
         },
         canPop: !inAddProvider,
-        child: PageProgress(
-          key: progressKey,
-          initialStatus: StreamWidgetStatus.progress,
-          backToIdle: APPConst.twoSecoundDuration,
-          child: (c) => CustomScrollView(
+        child: StreamPageProgress(
+          controller: progressKey,
+          builder: (c) => CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: ConstraintsBoxView(

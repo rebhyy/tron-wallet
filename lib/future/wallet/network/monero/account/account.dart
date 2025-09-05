@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:on_chain_wallet/app/core.dart';
-import 'package:on_chain_wallet/future/wallet/controller/controller.dart';
 import 'package:on_chain_wallet/future/wallet/global/global.dart';
-import 'package:on_chain_wallet/future/wallet/security/pages/password_checker.dart';
+import 'package:on_chain_wallet/future/wallet/network/monero/settings/pages/unlocking_account_output.dart';
 import 'package:on_chain_wallet/future/widgets/custom_widgets.dart';
 import 'package:on_chain_wallet/future/router/page_router.dart';
 import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
@@ -94,7 +92,6 @@ class MoneroAppBarActionView extends StatelessWidget {
   final MoneroChain chain;
   @override
   Widget build(BuildContext context) {
-    final wallet = context.watch<WalletProvider>(StateConst.main);
     return switch (chain.config.status) {
       MoneroChainStatus.outputReceived => AccountAppbarActionView(
           onHide: chain.hideStatus,
@@ -102,13 +99,7 @@ class MoneroAppBarActionView extends StatelessWidget {
             context.openDialogPage(
               "",
               child: (context) {
-                return PasswordCheckerView(
-                  accsess: WalletAccsessType.unlock,
-                  onWalletAccess: (password) async {
-                    wallet.wallet.moneroUpdatePendingTxes(account: chain);
-                    return null;
-                  },
-                );
+                return MoneroUnlockingAccountOutputView();
               },
             );
           },

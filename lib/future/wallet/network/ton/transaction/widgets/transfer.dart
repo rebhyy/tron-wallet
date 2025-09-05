@@ -9,7 +9,7 @@ import 'package:on_chain_wallet/future/wallet/network/ton/transaction/types/tran
 import 'package:on_chain_wallet/future/wallet/network/ton/transaction/widgets/token_list.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
 import 'package:on_chain_wallet/wallet/constant/networks/ton.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:ton_dart/ton_dart.dart';
 
 import 'fee.dart';

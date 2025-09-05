@@ -144,8 +144,9 @@ class _WorkerConnection {
     try {
       final initPort = RawReceivePort(null, mode.name);
       final connection = Completer<_WorkerConnection>.sync();
-      final List<int> key = QuickCrypto.generateRandom().immutable;
-      initPort.handler = (SendPort initialMessage) {
+      final k = X25519Keypair.generate();
+      initPort.handler = (_IoEncryptedInitialRequest initialMessage) {
+        final sharedKey = X25519.scalarMult(k.privateKey, initialMessage.key);
         final commandPort = initialMessage;
         _WorkerConnection worker;
         appLogger.debug(
@@ -161,16 +162,16 @@ class _WorkerConnection {
           case WorkerMode.sync6:
             worker = _SyncWorkerConnection(
                 receivePort: ReceivePort.fromRawReceivePort(initPort),
-                sendPort: commandPort,
-                key: key,
+                sendPort: commandPort.sendPort,
+                key: sharedKey,
                 onStreamRespone: onStreamRespone,
                 mode: mode);
             break;
           default:
             worker = _WorkerConnection(
                 receivePort: ReceivePort.fromRawReceivePort(initPort),
-                sendPort: commandPort,
-                key: key,
+                sendPort: commandPort.sendPort,
+                key: sharedKey,
                 onStreamRespone: onStreamRespone,
                 mode: mode);
             break;
@@ -188,7 +189,7 @@ class _WorkerConnection {
             await Isolate.spawn(
                 _WorkerConnection._startRemoteIsolate,
                 _IoEncryptedInitialRequest(
-                    sendPort: initPort.sendPort, key: key),
+                    sendPort: initPort.sendPort, key: k.publicKey),
                 debugName: "connector ${mode.name}",
                 errorsAreFatal: true,
                 onExit: enExit.sendPort);
@@ -202,7 +203,7 @@ class _WorkerConnection {
             await Isolate.spawn(
                 _WorkerConnection._startStreamRemoteIsolate,
                 _IoEncryptedInitialRequest(
-                    sendPort: initPort.sendPort, key: key),
+                    sendPort: initPort.sendPort, key: k.publicKey),
                 debugName: "connector ${mode.name}",
                 errorsAreFatal: true,
                 onExit: enExit.sendPort);
@@ -259,6 +260,7 @@ class _WorkerConnection {
         final encryptedMessage = msg.cast<WorkerEncryptedMessage>();
         final decrypt =
             chacha.decrypt(encryptedMessage.nonce, encryptedMessage.message);
+        Logg.log("dec ${decrypt != null}");
         return (CborMessageResponseArgs.deserialize(decrypt!), id);
       }
       if (msg.type == WorkerMessageType.cbor) {
@@ -272,11 +274,15 @@ class _WorkerConnection {
 
   static void _startRemoteIsolate(_IoEncryptedInitialRequest request) {
     final receivePort = ReceivePort();
-    request.sendPort.send(receivePort.sendPort);
+    final key = X25519Keypair.generate();
+    final sharedKey = X25519.scalarMult(key.privateKey, request.key);
+    final response = _IoEncryptedInitialRequest(
+        sendPort: receivePort.sendPort, key: key.publicKey);
+    request.sendPort.send(response);
     _handleCommandsToIsolate(
         receivePort,
         _IoEncryptedIsolateInitialData(
-            sendPort: request.sendPort, key: request.key));
+            sendPort: request.sendPort, key: sharedKey));
   }
 
   static void _handleCommandsToIsolate(
@@ -285,13 +291,16 @@ class _WorkerConnection {
   }
 
   static void _startStreamRemoteIsolate(_IoEncryptedInitialRequest request) {
-    // WidgetsFlutterBinding.
     final receivePort = ReceivePort();
-    request.sendPort.send(receivePort.sendPort);
+    final key = X25519Keypair.generate();
+    final sharedKey = X25519.scalarMult(key.privateKey, request.key);
+    final response = _IoEncryptedInitialRequest(
+        sendPort: receivePort.sendPort, key: key.publicKey);
+    request.sendPort.send(response);
     _handleStreamCommandsToIsolate(
         receivePort,
         _IoStreamIsolateInitialData(
-            sendPort: request.sendPort, key: request.key));
+            sendPort: request.sendPort, key: sharedKey));
   }
 
   static void _handleStreamCommandsToIsolate(
@@ -320,10 +329,10 @@ class _WorkerConnection {
       _sentRequest(request: args, requestId: next, encryptedPart: encryptPart);
       final result = await _requests[next]!.getResult(timeout: timeout);
       if (result.type == ArgsResponseType.exception) {
-        throw WalletException((result as MessageArgsException).message);
+        throw AppCryptoException((result as MessageArgsException).message);
       }
       if (result is! T) {
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.internalError("getStreamResult");
       }
       return result;
     } finally {
@@ -340,10 +349,10 @@ class _WorkerConnection {
       _sentRequest(request: args, requestId: next, encryptedPart: encryptPart);
       final result = await _requests[next]!.getResult(timeout: timeout);
       if (result.type == ArgsResponseType.exception) {
-        throw WalletException((result as MessageArgsException).message);
+        throw AppCryptoException((result as MessageArgsException).message);
       }
       if (result is! T) {
-        throw WalletExceptionConst.dataVerificationFailed;
+        throw AppCryptoExceptionConst.internalError("getResult");
       }
       return result;
     } catch (e) {
@@ -408,17 +417,17 @@ class _IoEncryptedInitialRequest {
 
 class _IoEncryptedIsolateInitialData {
   final SendPort sendPort;
-  final List<int> key;
+  // final List<int> key;
   late final EncryptedIsolateMessageController crypto =
       EncryptedIsolateMessageController((message, id) {
     final encrypted =
         _toEncryptedMessage(request: message, encrypted: true, requestId: id);
     sendPort.send(encrypted);
   });
-  late final ChaCha20Poly1305 chacha = ChaCha20Poly1305(key);
+  final ChaCha20Poly1305 chacha;
   _IoEncryptedIsolateInitialData(
       {required this.sendPort, required List<int> key})
-      : key = key.asImmutableBytes;
+      : chacha = ChaCha20Poly1305(key);
 
   Future<(CborMessageResponseArgs, bool, int)> _getResult(
       WorkerMessage msg) async {
@@ -449,6 +458,7 @@ class _IoEncryptedIsolateInitialData {
           args: args, id: id, encryptedPart: encryptedPart);
       return (response, encrypted, id);
     } catch (e) {
+      Logg.error("got error here ?");
       return (
         EncryptedIsolateMessageController.verificationFailed,
         encrypted ?? true,

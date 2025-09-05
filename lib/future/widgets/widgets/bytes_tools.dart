@@ -110,7 +110,7 @@ class _StringWriterViewState extends State<BytesToolsView>
       case _BytesTools.substrate:
         final ss58Format = int.tryParse(additionalFeild);
         if (ss58Format == null) {
-          throw const WalletException('invalid_ssh_58_format');
+          throw const AppException('invalid_ssh_58_format');
         }
         data = SS58Encoder.encode(bytes, ss58Format);
         break;
@@ -181,7 +181,7 @@ class _StringWriterViewState extends State<BytesToolsView>
     if (!formKey.ready()) return;
     final r = await MethodUtils.call(() async => encode(text));
     if (r.hasError) {
-      error = r.error!.tr;
+      error = r.localizationError;
     } else {
       inHex = r.result;
     }

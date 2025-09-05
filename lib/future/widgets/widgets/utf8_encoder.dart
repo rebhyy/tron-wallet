@@ -55,7 +55,6 @@ class _UTF8EncoderViewState extends State<UTF8EncoderView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("utf8_encoder".tr, style: context.textTheme.titleMedium),
-        Text("utf8_encoder_desc".tr),
         WidgetConstant.height20,
         AppTextField(
           label: "string".tr,

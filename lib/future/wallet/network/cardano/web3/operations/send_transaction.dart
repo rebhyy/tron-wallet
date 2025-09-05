@@ -6,13 +6,12 @@ import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
 import 'package:on_chain_wallet/app/utils/list/extension.dart';
 import 'package:on_chain_wallet/app/utils/method/utiils.dart';
 import 'package:on_chain_wallet/crypto/requets/messages/models/models/signing.dart';
-import 'package:on_chain_wallet/future/state_managment/state_managment.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/web3/web3.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/core/web3.dart';
 import 'package:on_chain_wallet/wallet/api/client/networks/cardano/client/cardano.dart';
-import 'package:on_chain_wallet/wallet/models/chain/chain/chain.dart';
+import 'package:on_chain_wallet/wallet/chain/account.dart';
 import 'package:on_chain_wallet/wallet/models/others/models/receipt_address.dart';
 import 'package:on_chain_wallet/wallet/models/signing/signing.dart';
 import 'package:on_chain_wallet/wallet/models/transaction/core/transaction.dart';
@@ -52,7 +51,9 @@ class WebCardanoSignTransactionStateController
         true => mAccount.addressInfo.stakeCredential,
         false => mAccount.addressInfo.credential
       };
-      if (cred == null) throw WalletExceptionConst.invalidAccountDetails;
+      if (cred == null) {
+        throw WalletExceptionConst.invalidAccountDeta("buildNativeScripts");
+      }
       if (cred.type == CardanoCredentialType.script) {
         final script = cred as CardanoMultiSignatureScript;
         scripts.add(script.script);
@@ -406,7 +407,7 @@ class WebCardanoSignTransactionStateController
       if (params.method != Web3ADARequestMethods.submitTxs) {
         throw txId.exception!;
       }
-      return SubmitTransactionFailed(txId.error!.tr);
+      return SubmitTransactionFailed(txId.localizationError);
     }
     return SubmitTransactionSuccess(
         txId: txId.result, signedTransaction: signedTransaction);
@@ -485,7 +486,8 @@ class WebCardanoSignTransactionStateController
               false => mAccount.addressInfo.credential
             };
             if (cred == null) {
-              throw WalletExceptionConst.invalidAccountDetails;
+              throw WalletExceptionConst.invalidAccountDeta(
+                  "_signTransactionInternal");
             }
             final indexes = cred.keyIndexes;
             List<Vkeywitness> witnesses = [];

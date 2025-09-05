@@ -7,8 +7,7 @@ import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/contro
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/types/types.dart';
 import 'package:on_chain_wallet/future/wallet/network/cardano/transaction/widgets/transfer.dart';
 import 'package:on_chain_wallet/future/wallet/transaction/transaction.dart';
-import 'package:on_chain_wallet/wallet/api/client/networks/cardano/client/cardano.dart';
-import 'package:on_chain_wallet/wallet/models/models.dart';
+import 'package:on_chain_wallet/wallet/wallet.dart';
 
 class ADATransactionTransferOperation extends ADATransactionStateController {
   ADATransactionTransferOperation(
@@ -251,7 +250,7 @@ class ADATransactionTransferOperation extends ADATransactionStateController {
       final remain = remainingAmount.value.amount.balance;
       BigInt amount = lockedMax.amount.balance;
       if (remain.isNegative) {
-        amount -= remain;
+        amount -= remain.abs();
       } else {
         amount += remain;
       }
@@ -279,7 +278,9 @@ class ADATransactionTransferOperation extends ADATransactionStateController {
         true => mAccount.addressInfo.stakeCredential,
         false => mAccount.addressInfo.credential
       };
-      if (cred == null) throw WalletExceptionConst.invalidAccountDetails;
+      if (cred == null) {
+        throw WalletExceptionConst.invalidAccountDeta("buildNativeScripts");
+      }
       if (cred.type == CardanoCredentialType.script) {
         final script = cred as CardanoMultiSignatureScript;
         scripts.add(script.script);

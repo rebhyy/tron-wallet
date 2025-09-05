@@ -6,7 +6,7 @@ class SolanaCryptoUtils {
     try {
       return SolanaPrivateKey.fromBase58(b58Key!);
     } catch (e) {
-      throw WalletExceptionConst.invalidPrivateKey;
+      throw AppCryptoExceptionConst.invalidPrivateKey;
     }
   }
 }

@@ -43,10 +43,10 @@ class _MonitorTronTokenViewState
   TronChain get account => widget.account;
   @override
   TronClient get client => widget.client;
-  final GlobalKey<PageProgressState> trc10ProgressKey =
-      GlobalKey<PageProgressState>(debugLabel: "_MonitorTronTokenView_trc10");
-  final GlobalKey<PageProgressState> trc20ProgressKey =
-      GlobalKey<PageProgressState>(debugLabel: "_MonitorTronTokenView_trc20");
+  final StreamPageProgressController trc10ProgressKey =
+      StreamPageProgressController(initialStatus: StreamWidgetStatus.progress);
+  final StreamPageProgressController trc20ProgressKey =
+      StreamPageProgressController();
   final Set<TronTRC10Token> tokens = {};
 
   bool get hasContractAddress => contractAddress != null;
@@ -77,7 +77,7 @@ class _MonitorTronTokenViewState
       return data;
     });
     if (result.hasError) {
-      trc20ProgressKey.errorText(result.error!.tr,
+      trc20ProgressKey.errorText(result.localizationError,
           backToIdle: false, showBackButton: true);
     } else if (result.result == null) {
       trc20ProgressKey.errorText("smart_contract_not_found".tr,
@@ -87,7 +87,7 @@ class _MonitorTronTokenViewState
           .addNewToken(token: result.result! as TronToken, address: address));
 
       if (addResult.hasError) {
-        trc20ProgressKey.errorText(addResult.error!.tr);
+        trc20ProgressKey.errorText(addResult.localizationError);
       } else {
         token = result.result! as TronTRC20Token;
         trc20ProgressKey.success();
@@ -122,7 +122,7 @@ class _MonitorTronTokenViewState
       return accountTokens;
     });
     if (result.hasError) {
-      trc10ProgressKey.errorText(result.error!.tr, backToIdle: false);
+      trc10ProgressKey.errorText(result.localizationError, backToIdle: false);
     } else {
       if (result.result == null) {
         trc10ProgressKey.errorText("account_not_found".tr, backToIdle: false);
@@ -157,6 +157,13 @@ class _MonitorTronTokenViewState
     } finally {
       setState(() {});
     }
+  }
+
+  @override
+  void safeDispose() {
+    super.safeDispose();
+    trc10ProgressKey.dispose();
+    trc20ProgressKey.dispose();
   }
 
   @override
@@ -203,13 +210,11 @@ class _TRC10TokenViewState extends State<_TRC10TokenView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return PageProgress(
-      key: widget.state.trc10ProgressKey,
-      initialStatus: PageProgressStatus.progress,
-      backToIdle: APPConst.oneSecoundDuration,
+    return StreamPageProgress(
+      controller: widget.state.trc10ProgressKey,
       initialWidget:
           ProgressWithTextView(text: "fetching_account_token_please_wait".tr),
-      child: (context) => CustomScrollView(
+      builder: (context) => CustomScrollView(
         slivers: [
           SliverConstraintsBoxView(
             padding: WidgetConstant.paddingHorizontal20,
@@ -267,10 +272,10 @@ class _TRC20TokenViewState extends State<_TRC20TokenView>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return PageProgress(
-      key: widget.state.trc20ProgressKey,
-      backToIdle: APPConst.oneSecoundDuration,
-      child: (context) => ConstraintsBoxView(
+    return StreamPageProgress(
+      controller: widget.state.trc20ProgressKey,
+      // backToIdle: APPConst.oneSecoundDuration,
+      builder: (context) => ConstraintsBoxView(
         padding: WidgetConstant.paddingHorizontal20,
         child: Center(
           child: widget.state.token != null

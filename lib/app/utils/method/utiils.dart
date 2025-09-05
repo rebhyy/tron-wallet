@@ -1,7 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:blockchain_utils/exception/exceptions.dart';
-import 'package:on_chain_wallet/app/core.dart';
+import 'package:on_chain_wallet/app/dev/logger.dart';
+import 'package:on_chain_wallet/app/error/exception/app_exception.dart';
+import 'package:on_chain_wallet/app/error/exception/exception.dart';
+import 'package:on_chain_wallet/app/error/exception/wallet_ex.dart';
+import 'package:on_chain_wallet/app/localization/localization.dart';
+// import 'package:on_chain_wallet/app/core.dart';
 
 class MethodUtils {
   static Future<void> wait(
@@ -40,7 +45,7 @@ class MethodUtils {
       final result = await r;
       return MethodResult.success(result);
     } catch (e, stackTrace) {
-      if (waitAtError != null && e is! CancelableExption) {
+      if (waitAtError != null && e != AppExceptionConst.requestCanceled) {
         await wait(duration: waitAtError);
       }
       return MethodResult.error(e, stackTrace);
@@ -132,51 +137,40 @@ class MethodResult<T> {
     return MethodResult._succsess(result);
   }
   factory MethodResult.error(Object exception, StackTrace? trace) {
-    final errorMessage = _errorMessage(exception);
+    final errorMessage = findErrorMessage(exception);
     appLogger.error(
         runtime: "MethodResult",
         functionName: "error",
-        msg: errorMessage.$1,
+        msg: errorMessage,
         trace: trace);
     return MethodResult._error(
-        error: errorMessage.$1,
-        trace: trace,
-        exception: exception,
-        unknownError: errorMessage.$2);
+        message: errorMessage, trace: trace, exception: exception);
   }
   MethodResult._error(
-      {required Object this.exception,
-      required this.error,
-      this.trace,
-      required this.unknownError});
+      {required Object this.exception, required this.message, this.trace});
   MethodResult._succsess(this._result)
       : exception = null,
         trace = null,
-        error = null,
-        unknownError = false;
+        message = null;
   late final T _result;
-  static (String, bool) _errorMessage(Object exception) {
-    if (exception is AppException ||
-        exception is ApiProviderException ||
-        exception is BlockchainUtilsException ||
-        exception is RPCError ||
-        exception is ArgumentError) {
-      return (exception.toString(), false);
-    }
-    return (findErrorMessage(exception), true);
-  }
 
   final Object? exception;
   final StackTrace? trace;
-  final String? error;
+  final String? message;
+
+  String get localizationError {
+    assert(message != null);
+    return message?.find ?? '';
+  }
+
+  String? get localizationErrorOrNull {
+    if (message == null) return null;
+    return localizationError;
+  }
 
   bool get hasError => exception != null;
   bool get hasResult => exception == null;
-  bool get isCancel => exception is CancelableExption;
-  final bool unknownError;
-  bool errorISA<E extends Object>() {
-    return exception is E;
-  }
+  bool get isCancel => exception == AppExceptionConst.requestCanceled;
 
   T get result {
     if (hasError) {
@@ -195,7 +189,7 @@ class MethodResult<T> {
   @override
   String toString() {
     if (hasError) {
-      return "Error $error";
+      return "Error $message";
     }
     return "Success $result";
   }
@@ -209,8 +203,8 @@ class Cancelable<T> {
     final completer = _setup?.call();
     if (completer?.isCompleted ?? true) return;
     _setup = null;
-    MethodUtils.nullOnException(
-        () => completer?.completeError(exception ?? const CancelableExption()));
+    MethodUtils.nullOnException(() => completer
+        ?.completeError(exception ?? AppExceptionConst.requestCanceled));
   }
 
   void success(Future<T> Function() func) async {
@@ -239,15 +233,4 @@ class Cancelable<T> {
   }
 }
 
-extension QuickFunction<T> on Function {
-  T? nullOnException({List<dynamic>? positionalArguments}) =>
-      MethodUtils.nullOnException(
-          () => Function.apply(this, positionalArguments));
-
-  T valueOrException(Object exception, {List<dynamic>? positionalArguments}) {
-    final result = MethodUtils.nullOnException(
-        () => Function.apply(this, positionalArguments));
-    if (result == null) throw exception;
-    return result as T;
-  }
-}
+extension QuickFunction<T> on Function {}
