@@ -346,8 +346,8 @@ class _ExtensionAndWebScriptsBuilder {
     final bool scripts = !commands.contains("--no-scripts");
     final bool extension = chrome | firefox | opera | ie;
     bool compileApp = !commands.contains("--no-app");
-    // final String baseHref = "--base-href=/onchain_wallet/";
-    final String baseHref = "--base-href=/";
+    final String baseHref = "--base-href=/onchain_wallet/";
+    // final String baseHref = "--base-href=/";
     if (clean) {
       await _FlutterCommands.clean();
     }

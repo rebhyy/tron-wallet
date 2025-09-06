@@ -91,6 +91,7 @@ dependencies:
   #   path: ../monero_dart
   
   cupertino_icons: ^1.0.2
+  msix: ^3.16.12
 
 dev_dependencies:
   flutter_test:
@@ -103,7 +104,6 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
   lints: ^5.1.1
-  msix: ^3.16.7
   test: ^1.25.2
 
 # For information on the generic Dart part of this file, see the
@@ -172,10 +172,17 @@ flutter_native_splash:
     fullscreen: true
 
 msix_config:
-    display_name: OnChain Wallet
-    publisher_display_name: mrtnetwork
-    identity_name: mrtnetwork
-    msix_version: 4.0.0.0
-    logo_path: D:\
-    publish_folder_path: D:\
-    store: false
+    # display_name: OnChain Wallet
+    # publisher_display_name: mrtnetwork
+    # identity_name: com.mrtnetwork.mrtnetwork
+    msix_version: 5.0.0.0
+    # logo_path: D:\onchain\assets\image\wallet.png
+    certificate_path: D:\mrt_wallet_key\mrt_certificate.pfx
+    certificate_password: Tomas@@1991
+    app_installer: #<-- app installer configuration
+      publish_folder_path: D:\onchain\release\windows
+      hours_between_update_checks: 0
+      automatic_background_task: false
+      update_blocks_activation: false
+      show_prompt: true
+      force_update_from_any_version: false

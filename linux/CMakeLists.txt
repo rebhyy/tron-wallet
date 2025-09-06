@@ -149,3 +149,14 @@ install(FILES "${ED_LIB}"
 install(FILES "${SQLITE_LIB}"
         DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
         COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/icons/icon.png"
+        DESTINATION icons)
+
+# # Create a portable .desktop file inside the bundle
+# configure_file(
+#     "${CMAKE_SOURCE_DIR}/my_app.desktop.in"
+#     "${CMAKE_BINARY_DIR}/my_app.desktop"
+#     @ONLY
+# )
+# install(FILES "${CMAKE_BINARY_DIR}/my_app.desktop"
+#         DESTINATION bundle)
