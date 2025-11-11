@@ -1,7 +1,6 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:on_chain/on_chain.dart';
 import 'package:on_chain/solidity/address/core.dart';
-import 'package:on_chain_wallet/app/core.dart';
 import 'package:on_chain_wallet/crypto/utils/solidity/solidity.dart';
 
 class RPCERC20Decimal extends EthereumRequest<int?, String> {
@@ -17,7 +16,6 @@ class RPCERC20Decimal extends EthereumRequest<int?, String> {
 
   @override
   int? onResonse(result) {
-    Logg.error("result $result");
     if (result == "0x") return null;
     return EthereumRequest.onIntResponse(result);
   }

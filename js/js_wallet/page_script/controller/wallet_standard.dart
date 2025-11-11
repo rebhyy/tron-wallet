@@ -70,13 +70,11 @@ class JSPageWalletStandardController {
             cancelable: false,
             detail: (StandardWalletAdapterRegisterEvent event) {
               event.register(_walletStandard);
-              Logg.log("is here!2");
             }.toJS));
     jsWindow.addEventListener(
         SolanaJSConstant.walletStandardAppReadyEvent,
         (JSAny _) {
           jsWindow.dispatchEvent(event);
-          Logg.log("is here!1");
         }.toJS);
     jsWindow.dispatchEvent(event);
   }

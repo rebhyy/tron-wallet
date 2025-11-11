@@ -136,12 +136,10 @@ class EthereumPageController extends WalletStandardPageController {
     super.onWalletEvent(message);
     final data = message.data as JSWalletNetworkEvent;
     final events = data.eventTypes;
-    Logg.log("on event change called!");
     for (final event in events) {
       switch (event) {
         case JSNetworkEventType.defaultAccountChanged:
           _ethereum?.selectedAddress = data.account?.address;
-          Logg.log("eth account changed!");
           break;
         case JSNetworkEventType.message:
           _eventEIPListeners(JSEventType.message, jsObject: data.message);
@@ -155,8 +153,6 @@ class EthereumPageController extends WalletStandardPageController {
           final chainChanged = data.chainChanged as JSEthereumEIPChainChanged?;
           _ethereum?.chainId = chainChanged?.chainId;
           _ethereum?.networkVersion = chainChanged?.netVersion;
-          Logg.log(
-              "eth account changed! ${_ethereum?.chainId} ${_ethereum?.networkVersion}");
           if (data.disconnect != null) {
             _eventEIPListeners(JSEventType.disconnect,
                 jsObject: data.disconnect);
@@ -196,7 +192,6 @@ class EthereumPageController extends WalletStandardPageController {
     if (event == null || events == null) return;
     if (events.any((e) => identical(e, listener)) ||
         events.contains(listener)) {
-      Logg.log("yes exists?");
       return;
     }
     _eipListeners[event]?.add(listener);

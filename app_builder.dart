@@ -2,8 +2,6 @@
 
 import 'dart:io';
 
-import 'package:on_chain_wallet/app/dev/logging.dart';
-
 // import 'package:on_chain_wallet/app/core.dart';
 
 // import 'package:on_chain_wallet/app/core.dart';
@@ -433,7 +431,6 @@ class _ExtensionAndWebScriptsBuilder {
         file = File("${_extensionDir}content.js");
         file.copySync("web/content.js");
       }
-      Logg.log("yes is chrome!");
       if (chrome || ie) {
         file = File("${_extensionDir}chrome_manifest.json");
         file.copySync("web/manifest.json");

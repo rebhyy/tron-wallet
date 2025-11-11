@@ -86,7 +86,6 @@ class EthereumClient extends NetworkClient<
     try {
       final decimal = await provider.request(RPCERC20Decimal(contractAddress,
           blockNumber: BlockTagOrNumber.latest));
-      Logg.log("decimals $decimal");
       if (decimal == null) return null;
       String? name;
       String? symbol;

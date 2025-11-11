@@ -1,7 +1,6 @@
 import 'dart:js_interop';
 
 import 'package:on_chain_bridge/web/api/core/js.dart';
-import 'package:on_chain_wallet/app/core.dart';
 
 import 'networks.dart';
 
@@ -35,7 +34,6 @@ class ProxyMethodHandler<T> {
       if (prop?.isDefinedAndNotNull ?? false) {
         if (prop.isA<JSString>()) {
           final propStr = (prop as JSString).toDart;
-          Logg.log("come set $prop");
           if (r.isUndefined) probs.add(propStr);
           allowAdd |= probs.contains(propStr);
         }

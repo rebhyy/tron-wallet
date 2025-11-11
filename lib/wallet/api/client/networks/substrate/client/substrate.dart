@@ -260,13 +260,8 @@ class SubstrateClient extends NetworkClient<SubstrateWalletTransaction,
     return StringUtils.strip0x(genesis.toHex()) == network?.genesisBlock;
   }
 
-  // BigInt? pokeDeposit(){
-  //   return api.getConstant(palletNameOrIndex, constantName)
-  // }
-
   Future<List<String>> queryStorage(
       List<SubstrateStorageQueryParams> requests) async {
-    Logg.log("is here!");
     final r = await api.queryStorageAtBlock(
         requestes: List.generate(requests.length, (i) {
           final request = requests[i];
@@ -384,7 +379,6 @@ class SubstrateClient extends NetworkClient<SubstrateWalletTransaction,
     Future<void> fetchToken() async {
       try {
         void add(List<SubstrateAccountAssetBalance> tokens) {
-          Logg.error("add ${tokens.length}");
           final jettons = tokens
               .map((e) => SubstrateNetworkToken(
                   status: e.asset.hasMetadata
@@ -403,7 +397,6 @@ class SubstrateClient extends NetworkClient<SubstrateWalletTransaction,
 
         final tokens = await internalController?.getAccountAssets(
             address: address, nativeBalance: false);
-        Logg.log("ts ${tokens?.assets.length}");
         add(tokens?.balances
                 .where(
                     (e) => e.asset.identifier != null && !e.asset.type.isNative)

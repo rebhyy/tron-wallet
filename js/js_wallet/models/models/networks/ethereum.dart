@@ -1,7 +1,6 @@
 import 'dart:js_interop';
 
 import 'package:on_chain_bridge/web/web.dart';
-import 'package:on_chain_wallet/app/dev/logging.dart';
 
 import '../../../constant/constant.dart';
 import '../../models.dart';
@@ -104,7 +103,6 @@ extension type EIP6963._(JSObject _) implements JSOBJ {
       jsWindow.dispatchEvent(event);
       jsWindow.removeEventListener(
           JSEthereumConst.eip6963Request, onRequestProvider.toJS);
-      Logg.log("is here!3");
     }
 
     jsWindow.addEventListener(
