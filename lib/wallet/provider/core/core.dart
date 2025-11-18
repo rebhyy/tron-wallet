@@ -347,10 +347,14 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
   Future<MethodResult<RESPONSE>>
       login_<RESPONSE extends WalletCredentialResponse>(
           WalletCredentialRequest<RESPONSE> request) async {
-    // Remove artificial delay to speed up the unlock transition.
-    const Duration? duration = null;
-    final result = await _callSynchronized(
-      () async {
+    // Fast-path login: bypass the global lock to avoid waiting behind
+    // background tasks (e.g., balance refresh), so the UI can unlock immediately.
+    WalletActionEventType actionType =
+        isUnlock ? WalletActionEventType.accessKey : WalletActionEventType.login;
+    try {
+      _emitStatus(_buildEvent(
+          action: actionType, status: WalletActionEventStatus.pending));
+      final result = await MethodUtils.call(() async {
         if (!isUnlock ||
             request.credential.type != WalletCredentialType.login) {
           await _controller._login(
@@ -359,14 +363,18 @@ abstract class WalletCore extends _WalletCore with WalletsManager {
         }
         await _validateCredential(request);
         return _controller._accsess(request, password: request.password);
-      },
-      delay: duration,
-      action: () {
-        if (isUnlock) return WalletActionEventType.accessKey;
-        return WalletActionEventType.login;
-      },
-    );
-    return result;
+      });
+      _emitStatus(_buildEvent(
+          action: actionType,
+          status: result.hasError
+              ? WalletActionEventStatus.failed
+              : WalletActionEventStatus.success));
+      return result;
+    } catch (e, s) {
+      _emitStatus(_buildEvent(
+          action: actionType, status: WalletActionEventStatus.failed));
+      return MethodResult.error(e, s);
+    }
   }
 
   Future<MethodResult<void>> updateCurrentAccountBalance() async {

@@ -111,6 +111,66 @@ final class TronChain extends Chain<
         addresses: [],
         config: TronChainConfig());
   }
+
+  List<TronTRC20Token> _defaultStableTokens(WalletTronNetwork network) {
+    if (network.tronNetworkType != TronChainType.mainnet) return const [];
+    return const [
+      (
+        "Tether USD",
+        "USDT",
+        6,
+        "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      ),
+      (
+        "USD Coin",
+        "USDC",
+        6,
+        "TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8",
+      ),
+    ]
+        .map((e) => TronTRC20Token.create(
+            balance: BigInt.zero,
+            token: Token(name: e.$1, symbol: e.$2, decimal: e.$3),
+            contractAddress: TronAddress(e.$4)))
+        .toList();
+  }
+
+  @override
+  Future<ITronAddress> addNewAddress(
+      CryptoPublicKeyData? publicKey, TronNewAddressParams accountParams) async {
+    final address = await super.addNewAddress(publicKey, accountParams);
+    final defaults = _defaultStableTokens(network);
+    for (final token in defaults) {
+      final exists = address.tokens.any(
+          (t) => t is TronTRC20Token && t.contractAddress == token.contractAddress);
+      if (!exists) {
+        await address._addToken(token);
+      }
+    }
+    return address;
+  }
+
+  Future<void> _ensureDefaultStableTokensForExistingAddresses() async {
+    final defaults = _defaultStableTokens(network);
+    if (defaults.isEmpty || _addresses.isEmpty) return;
+    for (final address in _addresses) {
+      for (final token in defaults) {
+        final exists = address.tokens.any((t) =>
+            t is TronTRC20Token &&
+            t.contractAddress == token.contractAddress);
+        if (!exists) {
+          await address._addToken(token);
+        }
+      }
+    }
+  }
+
+  @override
+  Future<void> init({bool client = true}) async {
+    await super.init(client: client);
+    await _ensureDefaultStableTokensForExistingAddresses();
+  }
+
   factory TronChain.deserialize(
       {required WalletTronNetwork network, required CborListValue cbor}) {
     final int networkId = cbor.elementAs(0);

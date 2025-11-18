@@ -55,6 +55,28 @@ mixin WalletManager on _WalletController {
     if (!hasWalletKey && password == null) {
       throw WalletExceptionConst.authFailed;
     }
+
+    // Fast unlock: if we already have the master key in memory, we still
+    // require a credential but avoid re-deriving the key.
+    if (hasWalletKey && _status.isLock) {
+      if (platformCredential == true) {
+        final pCredential = _wallet.platformCredential;
+        if (pCredential == null) {
+          throw WalletExceptionConst.authFailed;
+        }
+        final auth = await PlatformCryptoMethods.authenticate(
+            credential: pCredential, reason: APPConst.authenticateReason);
+        if (auth != BiometricResult.success) {
+          throw WalletExceptionConst.authFailed;
+        }
+      } else if (password == null) {
+        throw WalletExceptionConst.authFailed;
+      }
+      _status = WStatus.unlock;
+      _onUnlock();
+      return;
+    }
+
     if (password != null) {
       final key = await _getMemoryKey(newKey: !hasWalletKey);
       final request = CryptoRequestGenerateMasterKey.fromStorageWithStringKey(
