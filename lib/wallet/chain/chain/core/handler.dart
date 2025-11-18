@@ -10,16 +10,19 @@ class ChainsHandler {
   StreamSubscription<bool>? _networkStream;
   StreamSubscription<dynamic>? _ping;
   final Map<NetworkType, NetworkController> _networks;
+  final Map<NetworkType, List<Chain>> _lazyChains;
   Chain _chain;
   String get id => _wallet.key;
   WalletNetwork get network => _chain.network;
   Chain get chain => _chain;
   ChainsHandler._(
       {required List<NetworkController> networks,
+      required Map<NetworkType, List<Chain>> lazyChains,
       required int network,
       required MainWallet wallet,
       required Chain chain})
       : _networks = {for (final i in networks) i.type: i},
+        _lazyChains = lazyChains,
         _wallet = wallet,
         _chain = chain;
 
@@ -59,76 +62,157 @@ class ChainsHandler {
       await Future.wait(newChains.map((e) => e._saveAccountInternal()));
     }
 
-    // OPTIMIZATION: Only create network controllers for types we actually have chains for
+    // MAJOR OPTIMIZATION: Only create controllers for active chains (lazy load the rest)
     final List<Chain> n = toMap.values.toList();
-    final activeChainsTypes = n.map((e) => e.network.type).toSet();
+
+    // Group chains by network type for lazy initialization
+    final Map<NetworkType, List<Chain>> chainsByType = {};
+    for (final chain in n) {
+      chainsByType.putIfAbsent(chain.network.type, () => []).add(chain);
+    }
+
+    // Only create controllers for network types that have active chains
+    final List<NetworkController> activeControllers = [];
+    final Map<NetworkType, List<Chain>> lazyChainMap = {};
+
+    for (final networkType in NetworkType.values) {
+      final chains = chainsByType[networkType] ?? [];
+
+      if (chains.isNotEmpty) {
+        // Add missing default networks (e.g., testnets) for this type
+        final allChainsForType = _addMissingDefaultNetworks(chains, networkType, wallet.key);
+        // Create controller immediately for active chains (with testnets)
+        activeControllers.add(_createNetworkController(networkType, allChainsForType, wallet.key));
+      } else {
+        // Store for lazy initialization later
+        lazyChainMap[networkType] = [];
+      }
+    }
 
     return ChainsHandler._(
-        networks: List.generate(NetworkType.values.length, (i) {
-          final networkType = NetworkType.values[i];
-          final chains = n.where((e) => e.network.type == networkType).toList();
-
-          // Skip creating controller if we have no chains of this type
-          if (chains.isEmpty && !activeChainsTypes.contains(networkType)) {
-            // Create empty controller as placeholder
-            chains.add(Chain.setup(
-              network: ChainConst.defaultCoins.values
-                  .firstWhere((net) => net.type == networkType,
-                      orElse: () => ChainConst.defaultCoins.values.first),
-              id: wallet.key,
-            ));
-          }
-
-          switch (networkType) {
-            case NetworkType.aptos:
-              return AptosNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.bitcoinAndForked:
-              return BitcoinNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.bitcoinCash:
-              return BitcoinCashNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.ethereum:
-              return EthereumNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.xrpl:
-              return XRPNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.cardano:
-              return ADANetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.cosmos:
-              return CosmosNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.monero:
-              return MoneroNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.sui:
-              return SuiNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.solana:
-              return SolanaNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.stellar:
-              return StellarNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.substrate:
-              return SubstrateNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.tron:
-              return TronNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            case NetworkType.ton:
-              return TonNetworkController(
-                  networks: chains.cast(), id: wallet.key);
-            default:
-              throw WalletExceptionConst.networkDoesNotExist;
-          }
-        }),
+        networks: activeControllers,
+        lazyChains: lazyChainMap,
         network: currentNetwork,
         wallet: wallet,
         chain: toMap[currentNetwork]!);
+  }
+
+  static List<Chain> _addMissingDefaultNetworks(
+      List<Chain> existingChains, NetworkType networkType, String walletKey) {
+    // Get all default networks for this type (mainnet + testnets)
+    final defaultNetworksForType = ChainConst.defaultCoins.values
+        .where((net) => net.type == networkType)
+        .toList();
+
+    // Create a map of existing chains by network ID
+    final Map<int, Chain> chainMap = {
+      for (final c in existingChains) c.network.value: c
+    };
+
+    // Add missing default networks (e.g., testnets)
+    for (final defaultNetwork in defaultNetworksForType) {
+      if (!chainMap.containsKey(defaultNetwork.value)) {
+        final newChain = Chain.setup(network: defaultNetwork, id: walletKey);
+        chainMap[defaultNetwork.value] = newChain;
+        // Save in background
+        // ignore: unawaited_futures
+        newChain._saveAccountInternal();
+      }
+    }
+
+    return chainMap.values.toList();
+  }
+
+  static NetworkController _createNetworkController(
+      NetworkType networkType, List<Chain> chains, String walletKey) {
+    switch (networkType) {
+      case NetworkType.aptos:
+        return AptosNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.bitcoinAndForked:
+        return BitcoinNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.bitcoinCash:
+        return BitcoinCashNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.ethereum:
+        return EthereumNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.xrpl:
+        return XRPNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.cardano:
+        return ADANetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.cosmos:
+        return CosmosNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.monero:
+        return MoneroNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.sui:
+        return SuiNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.solana:
+        return SolanaNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.stellar:
+        return StellarNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.substrate:
+        return SubstrateNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.tron:
+        return TronNetworkController(networks: chains.cast(), id: walletKey);
+      case NetworkType.ton:
+        return TonNetworkController(networks: chains.cast(), id: walletKey);
+      default:
+        throw WalletExceptionConst.networkDoesNotExist;
+    }
+  }
+
+  NetworkController _getOrCreateController(NetworkType type) {
+    // If controller exists, return it
+    if (_networks.containsKey(type)) {
+      return _networks[type]!;
+    }
+
+    // Lazy initialize controller if not yet created
+    final chains = _lazyChains[type];
+    if (chains == null) {
+      throw WalletExceptionConst.networkDoesNotExist;
+    }
+
+    // Get all default networks for this type (mainnet + testnets)
+    final defaultNetworksForType = ChainConst.defaultCoins.values
+        .where((net) => net.type == type)
+        .toList();
+
+    // Create chains for all default networks of this type if not already loaded
+    final Map<int, Chain> existingChains = {for (final c in chains) c.network.value: c};
+    final List<Chain> newlyCreatedChains = [];
+
+    for (final defaultNetwork in defaultNetworksForType) {
+      if (!existingChains.containsKey(defaultNetwork.value)) {
+        final newChain = Chain.setup(network: defaultNetwork, id: id);
+        existingChains[defaultNetwork.value] = newChain;
+        newlyCreatedChains.add(newChain);
+      }
+    }
+
+    // Save newly created chains to database (e.g., testnets) - fire and forget
+    // This runs in background so testnets persist across app restarts
+    if (newlyCreatedChains.isNotEmpty) {
+      // ignore: unawaited_futures
+      Future.wait(newlyCreatedChains.map((e) => e._saveAccountInternal()));
+    }
+
+    // If no default networks exist for this type, create a placeholder
+    final chainsToUse = existingChains.isEmpty
+        ? [
+            Chain.setup(
+              network: ChainConst.defaultCoins.values.firstWhere(
+                (net) => net.type == type,
+                orElse: () => ChainConst.defaultCoins.values.first,
+              ),
+              id: id,
+            )
+          ]
+        : existingChains.values.toList();
+
+    final controller = _createNetworkController(type, chainsToUse, id);
+    _networks[type] = controller;
+    _lazyChains.remove(type);
+
+    return controller;
   }
 
   static Future<ChainsHandler> fromBackup(
@@ -152,20 +236,27 @@ class ChainsHandler {
   }
 
   List<Chain> chains() {
+    // Lazy load all controllers when getting all chains (e.g., for network switcher)
+    // This is acceptable because it only happens when user opens network selector
+    for (final type in NetworkType.values) {
+      try {
+        _getOrCreateController(type);
+      } catch (_) {
+        // Skip if controller can't be created
+      }
+    }
     return _networks.values.expand((e) => e.getChains()).toList();
   }
 
   T controller<T extends NetworkController>(NetworkType type) {
-    final controller = _networks[type];
-    if (controller == null) {
-      throw WalletExceptionConst.internalError("ChainsHandler.controller");
-    }
+    // Use lazy initialization
+    final controller = _getOrCreateController(type);
     return controller.cast<T>();
   }
 
   Future<bool> switchNetwork(Chain network) async {
     if (_chain == network ||
-        !_networks[network.network.type]!
+        !_getOrCreateController(network.network.type)
             ._networks
             .containsKey(network.network.value)) {
       return false;
@@ -181,10 +272,10 @@ class ChainsHandler {
   }
 
   Future<Chain> updateNetwork(WalletNetwork network) async {
-    final controller = _networks[network.type];
-    if (controller == null || !network.isWalletNetwork) {
+    if (!network.isWalletNetwork) {
       throw WalletExceptionConst.networkDoesNotExist;
     }
+    final controller = _getOrCreateController(network.type);
     int networkId = network.value;
     Chain? existChain = controller._networks[networkId];
     if (existChain == null) {
@@ -203,12 +294,10 @@ class ChainsHandler {
 
   Future<Chain> importNewNetwork(
       WalletNetwork network, List<APIProvider> providers) async {
-    final controller = _networks[network.type];
-    if (controller == null ||
-        network.isWalletNetwork ||
-        !network.supportImportNetwork) {
+    if (network.isWalletNetwork || !network.supportImportNetwork) {
       throw WalletExceptionConst.invalidNetworkInformation;
     }
+    final controller = _getOrCreateController(network.type);
     final chains =
         controller.getChains().where((e) => e.network.type == network.type);
     if (chains.any((e) => e.network.identifier == network.identifier)) {
@@ -242,10 +331,7 @@ class ChainsHandler {
     if (!removeChain.network.isWalletNetwork || hasDefaultNetwork != null) {
       throw WalletExceptionConst.internalError("removeChain");
     }
-    final controller = _networks[removeChain.network.type];
-    if (controller == null) {
-      throw WalletExceptionConst.internalError("removeChain");
-    }
+    final controller = _getOrCreateController(removeChain.network.type);
     if (chain == removeChain) {
       final changeNetwork =
           controller._networks.values.firstWhere((e) => e != removeChain);
@@ -261,14 +347,14 @@ class ChainsHandler {
       {List<NetworkType>? networks}) {
     networks ??= NetworkType.values;
     return Future.wait(networks.map((e) =>
-        _networks[e]!._getWeb3InternalChainAuthenticated(authenticated)));
+        _getOrCreateController(e)._getWeb3InternalChainAuthenticated(authenticated)));
   }
 
   Future<void> disconnectWeb3Chain(Web3ApplicationAuthentication app,
       {List<NetworkType>? networks}) async {
     networks ??= NetworkType.values;
     await Future.wait(
-        networks.map((e) => _networks[e]!._disconnectWeb3Chain(app)));
+        networks.map((e) => _getOrCreateController(e)._disconnectWeb3Chain(app)));
   }
 
   Future<Web3APPData> createAuth(Web3ApplicationAuthentication app,
@@ -281,7 +367,7 @@ class ChainsHandler {
         applicationId: app.applicationId,
         chains: app.active
             ? await Future.wait(networks
-                .map((e) => _networks[e]!.createWeb3ChainAuthenticated(app)))
+                .map((e) => _getOrCreateController(e).createWeb3ChainAuthenticated(app)))
             : []);
   }
 
@@ -317,7 +403,7 @@ class ChainsHandler {
       required List<Web3InternalChain> chains}) async {
     if (app.active) {
       await Future.wait(chains.map((e) =>
-          _networks[e.type]!._updateWeb3InternalChain(app: app, web3Chain: e)));
+          _getOrCreateController(e.type)._updateWeb3InternalChain(app: app, web3Chain: e)));
     } else {
       await Future.wait(
           _networks.values.map((e) => e._disconnectWeb3Chain(app)));
