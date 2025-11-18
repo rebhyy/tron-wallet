@@ -520,6 +520,7 @@ class Localization {
               "Press Volume Up, then Down, then Up (while this screen is open) to trigger soft panic.",
           "panic_trigger_volume_hint":
               "Pattern: Volume Up → Volume Down → Volume Up.",
+          "panic_sequence_started": "Panic sequence started.",
           "trigger_soft_panic_now": "Trigger Soft Panic Now",
           "panic_soft_title": "Trigger soft panic?",
           "panic_soft_desc":
