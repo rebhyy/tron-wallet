@@ -14,6 +14,8 @@ mixin TronTransactionApiController on DisposableMixin {
   final Map<TronAddress, bool> _accountActivities = {};
   final CachedObject<TronChainParameters> _chainParamets =
       CachedObject(interval: const Duration(minutes: 10));
+  final CachedObject<ITronTransactionDataRequirment> _blockRequirementCache =
+      CachedObject(interval: const Duration(seconds: 5));
   TronClient get client;
 
   Future<(MaxDelegatedResourceAmount, MaxDelegatedResourceAmount)>
@@ -37,15 +39,19 @@ mixin TronTransactionApiController on DisposableMixin {
           expiration: timestamp,
           timestamp: timestamp);
     }
-    final BigInt expiration = BigInt.from(DateTime.now()
-        .add(TronUtils.defaultTronTrasactionExpiration)
-        .millisecondsSinceEpoch);
-    final block = await client.getNowBlock();
-    return ITronTransactionDataRequirment(
-        refBlockBytes: block.blockHeader.rawData.refBlockBytes,
-        refBlockHash: block.blockHeader.rawData.refBlockHash,
-        expiration: expiration,
-        timestamp: block.blockHeader.rawData.timestamp);
+    return _blockRequirementCache.get(
+        onFetch: () async {
+          final BigInt expiration = BigInt.from(DateTime.now()
+              .add(TronUtils.defaultTronTrasactionExpiration)
+              .millisecondsSinceEpoch);
+          final block = await client.getNowBlock();
+          return ITronTransactionDataRequirment(
+              refBlockBytes: block.blockHeader.rawData.refBlockBytes,
+              refBlockHash: block.blockHeader.rawData.refBlockHash,
+              expiration: expiration,
+              timestamp: block.blockHeader.rawData.timestamp);
+        },
+        cachedTimeout: const Duration(seconds: 5));
   }
 
   Future<bool> isAccountActive(TronAddress address) async {

@@ -69,25 +69,28 @@ mixin TronTransactionFeeController on TronTransactionApiController {
     final transaction = await simulateTransaction();
     final rawTransaction = transaction.transaction;
     final contract = rawTransaction.getContract();
-    bool isAccountActive = true;
     final destination = _getContractDestinationAccount(contract);
-    if (destination != null) {
-      isAccountActive = await this.isAccountActive(destination);
-    }
-    int energy = 0;
+    final isAccountActiveFuture = destination != null
+        ? this.isAccountActive(destination)
+        : Future<bool>.value(true);
+    Future<int> energyFuture = Future.value(0);
     if (contract.contractType == TransactionContractType.triggerSmartContract) {
-      energy =
-          await estimateContractTrigger(contract.cast<TriggerSmartContract>());
+      energyFuture =
+          estimateContractTrigger(contract.cast<TriggerSmartContract>());
     } else if (contract.contractType ==
         TransactionContractType.createSmartContract) {
       final sc = contract.cast<CreateSmartContract>();
-      energy = await client.estimateCreateContractEnergy(
+      energyFuture = client.estimateCreateContractEnergy(
           ownerAddress: sc.ownerAddress,
           byteCode: BytesUtils.toHexString(sc.newContract.bytecode),
           callTokenValue: sc.callTokenValue,
           tokenID: sc.tokenId);
     }
-    final chainParameters = await getChainParameters();
+    final results = await Future.wait<Object>(
+        [isAccountActiveFuture, energyFuture, getChainParameters()]);
+    final bool isAccountActive = results[0] as bool;
+    final int energy = results[1] as int;
+    final chainParameters = results[2] as TronChainParameters;
     final fee = TronTransactionFee.calculate(
         raw: rawTransaction,
         chainParameters: chainParameters,
