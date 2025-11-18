@@ -65,7 +65,7 @@ class _PanicModeViewState extends State<PanicModeView>
       context.showAlert("panic_sequence_started".tr);
     });
     _volumeController = VolumeController();
-    _volumeController.addListener((volume) {
+    _volumeController.listener((volume) {
       if (!wallet.appSetting.walletSetting.enablePanicVolume) return;
       if (volume == null) return;
       final dir = volume > _lastVolume ? VolumePress.up : VolumePress.down;
@@ -149,3 +149,4 @@ class _PanicModeViewState extends State<PanicModeView>
     );
   }
 }
+//fdfdf fd dfdf dfqfqd fqdf qfqdf qfqdf qdfqdfqdf q
